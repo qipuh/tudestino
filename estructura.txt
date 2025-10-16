@@ -1,0 +1,222 @@
+Descripción General
+
+Desarrollar una plataforma completa que combine:
+- Marketplace de alojamientos (estilo Airbnb)
+- Descubrimiento de experiencias (comida, diversión, eventos)
+- Red social de viajes con contenido en formato Reels
+
+🏨 MÓDULO PRINCIPAL: ALOJAMIENTOS (Existente - Expandir)
+Gestión de Propiedades
+- Crear/Editar/Eliminar propiedades
+- Galerías virtuales
+- Sistema de calificaciones y reviews
+- Precios dinámicos por temporada
+- Reglas de convivencia y políticas
+
+Tipos de Alojamiento
+- Apartamentos completos
+- Casas vacacionales
+- Habitaciones privadas
+- Hostels y albergues
+- Glamping y experiencias únicas
+
+🍽️ NUEVO MÓDULO: GASTRONOMÍA Y COMIDA
+Restaurantes y Cafés
+- Perfiles de establecimientos
+- Menús digitales con precios
+- Sistema de reservas de mesas
+- Reviews y calificaciones de platos
+- Fotos de alimentos y ambiente
+- Experiencias Culinarias
+- Clases de cocina local
+
+Tours gastronómicos
+- Cenas con anfitriones locales
+- Degustaciones y maridajes
+- Mercados de comida local
+
+Características Especiales
+- Filtros por tipo de cocina
+- Precios por rango
+- Horarios y disponibilidad
+- Opciones dietéticas (vegano, sin gluten, etc.)
+- Sistema de delivery/para llevar
+
+🎉 NUEVO MÓDULO: DIVERSIÓN Y ENTRETENIMIENTO
+Categorías de Entretenimiento
+- Bares y Vida Nocturna
+- Bares temáticos
+- Discotecas y clubs
+- Lounges y rooftops
+- Eventos especiales nocturnos
+- Actividades Recreativas
+- Parques de atracciones
+- Escape rooms
+- Karting y deportes extremos
+- Tours de aventura
+- Cultura y Ocio
+- Museos y galerías
+- Teatros y espectáculos
+- Cines y festivales
+- Bibliotecas y centros culturales
+
+🎪 NUEVO MÓDULO: EVENTOS Y ACTIVIDADES
+Tipos de Eventos
+- Conciertos y Música
+- Conciertos en vivo
+- Festivales musicales
+- Eventos de DJ
+- Presentaciones acústicas
+- Eventos Culturales
+- Ferias artesanales
+- Exposiciones de arte
+- Presentaciones de danza
+- Conferencias culturales
+- Fiestas y Festivales
+- Fiestas tradicionales
+- Festivales temáticos
+- Eventos estacionales
+- Celebraciones locales
+- Eventos Deportivos
+- Partidos y competiciones
+- Maratones y carreras
+- Eventos de deportes extremos
+- Exhibiciones deportivas
+- Gestión de Eventos
+- Creación y promoción
+- Venta de entradas online
+- Gestión de aforo
+- Sistema de recomendaciones
+- Recordatorios y notificaciones
+
+📱 NUEVO MÓDULO: RED SOCIAL DE VIAJES
+Perfiles de Usuario
+- Perfil Simple pero Completo
+- Foto de perfil
+- Biografía de viajero
+- Destinos visitados
+- Intereses y preferencias
+- Estadísticas de viajes
+- Sistema de seguidores/seguidos
+- Sistema de Reels de Viajes (Videos Cortos, 1 minuto máximo)
+
+Upload y edición básica en app
+- Filtros y efectos de viaje
+- Música de fondo y sonidos
+- Textos y stickers de ubicación
+- Etiquetado de lugares visitados
+
+Funcionalidades Sociales
+- Feed de Contenido
+- Algoritmo personalizado
+- Contenido de usuarios seguidos
+- Descubrimiento de nuevos creadores
+- Trending de destinos
+- Interacción Social
+- Likes, comentarios y shares
+- Guardar reels en colecciones
+- Mensajes directos entre usuarios
+- Sistema de hashtags de viajes
+- Mapas de reels por ubicación
+/////////////////////////////////////////////////////////
+Sistema de badges por logros
+
+🔄 INTEGRACIONES ENTRE MÓDULOS
+Sistema de Recomendaciones Inteligentes
+- Recomendaciones cruzadas entre módulos
+- "Quienes vieron este alojamiento también fueron a..."
+- Paquetes de experiencias combinadas
+- Itinerarios automáticos basados en intereses
+- Sistema de Reservas Unificado
+- Carrito único para múltiples servicios
+- Calendario integrado de actividades
+- Presupuestos de viaje completos
+- Historial unificado de experiencias
+- Mapa Interactivo Integrado
+- Capas de diferentes servicios
+- Ruta optimizada de experiencias
+- Distancias y tiempos de traslado
+
+Agrupación por zonas geográficas
+
+🏗️ ARQUITECTURA TÉCNICA EXPANDIDA
+Backend (Nuevos Módulos)
+apps/api/src/modules/
+├── restaurants/              # Gestión de restaurantes
+├── entertainment/            # Entretenimiento y diversión
+├── events/                   # Gestión de eventos
+├── social/                   # Red social
+│   ├── profiles/            # Perfiles de usuario
+│   ├── reels/               # Sistema de videos
+│   ├── feed/                # Feed de contenido
+│   └── interactions/        # Likes, comentarios
+└── recommendations/         # Sistema de recomendaciones
+
+Frontend React (Nuevos Módulos)
+apps/web/src/modules/
+├── restaurants/
+│   ├── components/
+│   ├── pages/
+│   └── services/
+├── entertainment/
+│   ├── components/
+│   ├── pages/
+│   └── services/
+├── events/
+│   ├── components/
+│   ├── pages/
+│   └── services/
+├── social/
+│   ├── profile/
+│   ├── reels/
+│   ├── feed/
+│   └── notifications/
+└── map/                      # Mapa integrado
+
+📊 MODELO DE NEGOCIO
+Fuentes de Ingresos
+- Comisiones por reservas (alojamiento, restaurantes, eventos)
+- Publicidad para establecimientos premium
+- Suscripciones para anfitriones/negocios (features avanzados)
+- Promoción de reels patrocinados
+- Venta de entradas a eventos
+
+Ventajas Competitivas
+✅ Ecosistema completo de viajes
+✅ Contenido user-generated auténtico
+✅ Recomendaciones personalizadas
+✅ Comunidad activa de viajeros
+✅ Experiencias locales verificadas
+
+🎯 PÚBLICO OBJETIVO
+- Viajeros Modernos
+- Millennials y Gen Z (18-40 años)
+- Viajeros que buscan experiencias auténticas
+- Usuarios activos en redes sociales
+- Personas que valoran recomendaciones reales
+- Proveedores de Servicios
+- Anfitriones de alojamientos
+- Restaurantes y cafés
+- Organizadores de eventos
+- Guías turísticos y experiencias
+
+🚀 ROADMAP DE IMPLEMENTACIÓN
+Fase 1 (MVP)
+- Módulo de alojamientos existente
+- Perfiles sociales básicos
+- Sistema de reels simple
+
+Fase 2
+- Módulo de restaurantes y comida
+- Sistema de eventos básico
+- Mejoras en la red social
+
+Fase 3
+- Módulo completo de entretenimiento
+- Sistema de recomendaciones AI
+- Funcionalidades sociales avanzadas
+
+Fase 4
+- Integraciones avanzadas
+- App móvil nativa
+- Expansión internacional

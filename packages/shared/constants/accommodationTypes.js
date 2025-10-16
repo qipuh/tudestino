@@ -1,0 +1,39 @@
+export const ACCOMMODATION_TYPES = {
+  APARTMENT: 'apartment',
+  HOTEL: 'hotel',
+  MOTEL: 'motel',
+  HOSTEL: 'hostel',
+  ROOM: 'room',
+  HOUSE: 'house',
+  VILLA: 'villa',
+  CABIN: 'cabin',
+  RESORT: 'resort',
+  BED_AND_BREAKFAST: 'bed_and_breakfast',
+  GUESTHOUSE: 'guesthouse',
+};
+
+export const ACCOMMODATION_TYPE_LABELS = {
+  [ACCOMMODATION_TYPES.APARTMENT]: 'Departamento',
+  [ACCOMMODATION_TYPES.HOTEL]: 'Hotel',
+  [ACCOMMODATION_TYPES.MOTEL]: 'Motel',
+  [ACCOMMODATION_TYPES.HOSTEL]: 'Hostal',
+  [ACCOMMODATION_TYPES.ROOM]: 'Habitación',
+  [ACCOMMODATION_TYPES.HOUSE]: 'Casa',
+  [ACCOMMODATION_TYPES.VILLA]: 'Villa',
+  [ACCOMMODATION_TYPES.CABIN]: 'Cabaña',
+  [ACCOMMODATION_TYPES.RESORT]: 'Resort',
+  [ACCOMMODATION_TYPES.BED_AND_BREAKFAST]: 'Bed & Breakfast',
+  [ACCOMMODATION_TYPES.GUESTHOUSE]: 'Casa de Huéspedes',
+};
+
+// Types that support multiple rooms/units
+export const MULTI_UNIT_TYPES = [
+  ACCOMMODATION_TYPES.HOTEL,
+  ACCOMMODATION_TYPES.MOTEL,
+  ACCOMMODATION_TYPES.HOSTEL,
+  ACCOMMODATION_TYPES.RESORT,
+  ACCOMMODATION_TYPES.BED_AND_BREAKFAST,
+  ACCOMMODATION_TYPES.GUESTHOUSE,
+];
+
+export const isMultiUnitType = (type) => MULTI_UNIT_TYPES.includes(type);

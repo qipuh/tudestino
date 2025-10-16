@@ -1,0 +1,13 @@
+{
+  "name": "@tudestino/shared",
+  "version": "1.0.0",
+  "description": "Shared utilities and types for TuDestino",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": ["shared", "types", "utils"],
+  "author": "TuDestino Team",
+  "license": "MIT"
+}

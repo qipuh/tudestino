@@ -1,0 +1,37 @@
+{
+  "name": "tudestino-monorepo",
+  "version": "1.0.0",
+  "description": "TuDestino - Plataforma de alojamiento tipo Airbnb",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n \"API,WEB,ADMIN\" -c \"bgBlue.bold,bgMagenta.bold,bgGreen.bold\" \"npm run dev:api\" \"npm run dev:web\" \"npm run dev:admin\"",
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:admin": "npm run dev --workspace=apps/admin",
+    "seed": "npm run seed --workspace=apps/api",
+    "seed:mysql": "npm run seed:mysql --workspace=apps/api",
+    "verify": "node verificar-proyecto.js",
+    "build:api": "npm run build --workspace=apps/api",
+    "build:web": "npm run build --workspace=apps/web",
+    "build:admin": "npm run build --workspace=apps/admin",
+    "lint": "npm run lint --workspaces",
+    "test": "npm run test --workspaces"
+  },
+  "keywords": [
+    "airbnb",
+    "booking",
+    "accommodation"
+  ],
+  "author": "TuDestino Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5"
+  }
+}

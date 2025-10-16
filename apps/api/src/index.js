@@ -1,0 +1,83 @@
+import express from 'express';
+import { createServer } from 'http';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { connectDB } from './config/database-mysql.js';
+import { setupAssociations } from './config/associations.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import { initializeSocket } from './config/socket.js';
+
+// Routes
+import authRoutes from './modules/auth/auth.routes.js';
+import userRoutes from './modules/users/users.routes.js';
+import propertyRoutes from './modules/properties/properties.routes.js';
+import bookingRoutes from './modules/bookings/bookings.routes.js';
+import paymentRoutes from './modules/payments/payments.routes.js';
+import reviewRoutes from './modules/reviews/reviews.routes.js';
+import messageRoutes from './modules/messaging/messaging.routes.js';
+import searchRoutes from './modules/search/search.routes.js';
+import adminRoutes from './modules/admin/admin.routes.js';
+import socialRoutes from './modules/social/social.routes.js';
+import postsRoutes from './modules/social/posts.routes.js';
+import migrationsRoutes from './modules/migrations/migrations.routes.js';
+
+dotenv.config();
+
+const app = express();
+const server = createServer(app);
+const PORT = process.env.PORT || 3000;
+
+// Initialize Socket.IO
+const io = initializeSocket(server);
+
+// Middleware
+app.use(cors());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
+
+// Hacer io disponible en req
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+// Database connection and model associations
+setupAssociations();
+connectDB();
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/properties', propertyRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/social', socialRoutes);
+app.use('/api/social', postsRoutes);
+app.use('/api/migrations', migrationsRoutes);
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Error handling
+app.use(errorHandler);
+
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📡 API disponible en http://localhost:${PORT}`);
+  console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+  console.log(`🔌 Socket.IO initialized`);
+});
+
+export default app;
+
+
+ 

@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(cat:*)",
+      "Bash(npm install multer)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(npm run dev:api:*)",
+      "Bash(taskkill:*)",
+      "Bash(npm run dev)",
+      "Bash(npm run dev:web:*)",
+      "Bash(node:*)",
+      "Bash(dir \"C:\\laragon\\bin\\mysql\" //B)",
+      "Bash(\"C:\\laragon\\bin\\mysql\\mysql-8.4.3-winx64\\bin\\mysql.exe\" -u root -e \"USE tudestino; ALTER TABLE rooms ADD COLUMN quantity INT NOT NULL DEFAULT 1 COMMENT ''Cantidad de habitaciones de este tipo'' AFTER name;\")",
+      "Bash(curl:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -52,7 +52,7 @@ const Property = sequelize.define('Property', {
   },
   description: {
     type: DataTypes.TEXT,
-    allowNull: true,
+    allowNull: false,
     comment: 'Descripción detallada del alojamiento',
   },
 

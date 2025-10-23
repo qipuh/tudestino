@@ -217,6 +217,22 @@ function RoomRecommendation({ recommendations, onSelectRecommendation }) {
           Los precios mostrados son por noche por habitación.
         </p>
       </div>
+
+      {/* Manual Selection Option */}
+      <div className="mt-3">
+        <button
+          onClick={() => {
+            // Scroll to room selector
+            const roomSelector = document.querySelector('[data-room-selector]');
+            if (roomSelector) {
+              roomSelector.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }}
+          className="w-full py-2 text-sm text-primary hover:text-primary-dark font-medium border border-primary/30 rounded-lg hover:bg-primary/5 transition"
+        >
+          O selecciona habitaciones manualmente
+        </button>
+      </div>
     </div>
   );
 }

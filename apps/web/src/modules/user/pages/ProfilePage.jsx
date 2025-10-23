@@ -2,15 +2,18 @@ import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import {
   Edit, MapPin, Calendar, Home, Video, Share2, Briefcase,
-  Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Play, Users, UserCheck, Plus
+  Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Play, Users, UserCheck, Plus, Star, PlusCircle, Image as ImageIcon
 } from 'lucide-react';
 import useAuthStore from '../../../store/authStore';
 import { getUserProfile, getMyProfile, getFollowers, getFollowing } from '../../../services/socialService';
 import { getHostProperties } from '../../../services/propertyService';
+import { getUserPosts, getUserReels } from '../../../services/socialService';
 import FollowButton from '../../../components/social/FollowButton';
 import EditSocialProfileModal from '../../../components/social/EditSocialProfileModal';
 import ReelViewer from '../../../components/social/ReelViewer';
 import FloatingChatBubble from '../../../components/messaging/FloatingChatBubble';
+import CreateContentSidebar from '../../social/components/CreateContentSidebar';
+import PostCard from '../../social/components/PostCard';
 
 // Datos de ejemplo para Host Demo
 const DEMO_POSTS = [
@@ -127,15 +130,60 @@ function ProfilePage({ userIdProp }) {
   const [properties, setProperties] = useState([]);
   const [loadingProperties, setLoadingProperties] = useState(false);
   const [showChatBubble, setShowChatBubble] = useState(false);
+  const [showCreateSidebar, setShowCreateSidebar] = useState(false);
+  const [contentType, setContentType] = useState('post'); // 'post' | 'reel'
+  const [realPosts, setRealPosts] = useState([]);
+  const [realReels, setRealReels] = useState([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
+  const [loadingReels, setLoadingReels] = useState(false);
 
   const isOwnProfile = !userId || (currentUser && userId === currentUser.id);
   const isHost = profile?.role === 'host';
+
+  // Función para obtener el nombre de la propiedad
+  const getPropertyName = (property) => {
+    if (property.propertyName) return property.propertyName;
+    if (property.hotelName) return property.hotelName;
+
+    const typeTranslations = {
+      'apartment': 'Departamento',
+      'house': 'Casa',
+      'villa': 'Villa',
+      'cabin': 'Cabaña',
+      'room': 'Habitación',
+      'hotel': 'Hotel',
+      'motel': 'Motel',
+      'hostel': 'Hostal',
+      'resort': 'Resort',
+      'bed_and_breakfast': 'Bed & Breakfast',
+      'guesthouse': 'Casa de huéspedes',
+    };
+
+    const typeName = typeTranslations[property.accommodationType] || property.accommodationType;
+    return `${typeName} en ${property.addressCity}`;
+  };
+
+  // Función para obtener el precio de la propiedad
+  const getPropertyPrice = (property) => {
+    if (property.rooms && property.rooms.length > 0) {
+      return property.rooms[0].pricePerNight;
+    }
+    return 0;
+  };
 
   useEffect(() => {
     if (currentUser || userId) {
       loadProfile();
     }
   }, [userId, currentUser?.id]);
+
+  // Load posts and reels when profile is loaded
+  useEffect(() => {
+    if (profile?.id || currentUser?.id) {
+      loadRealPosts();
+      loadRealReels();
+    }
+  }, [profile?.id, currentUser?.id]);
 
   // Guardar likes en localStorage
   useEffect(() => {
@@ -222,6 +270,98 @@ function ProfilePage({ userIdProp }) {
     }
   };
 
+  const loadRealPosts = async (force = false) => {
+  const targetUserId = profile?.id || currentUser?.id;
+  console.log('🔍 loadRealPosts called:', { force, targetUserId, hasExistingPosts: realPosts.length > 0 });
+
+  if (!force && realPosts.length > 0) {
+    console.log('⏭️ Skipping - already have posts');
+    return;
+  }
+  if (!targetUserId) {
+    console.log('⚠️ No target user ID');
+    return;
+  }
+
+  setLoadingPosts(true);
+    try {
+      console.log('📡 Fetching posts for user:', targetUserId);
+      const response = await getUserPosts(targetUserId, 1, 20);
+      console.log('✅ Full response:', response);
+      
+      // Mapear los datos de la API al formato que PostCard espera
+      const posts = (response.posts || response.data?.posts || []).map(post => ({
+        id: post.id,
+        userId: post.user_id,
+        content: post.caption,
+        location: post.location,
+        images: post.media ? post.media.filter(item => item.type === 'image').map(item => item.url) : [],
+        videos: post.media ? post.media.filter(item => item.type === 'video').map(item => ({
+          url: item.url,
+          thumbnail: item.thumbnail
+        })) : [],
+        likes: post.likes_count || 0,
+        comments: post.comments_count || 0,
+        shares: post.shares_count || 0,
+        createdAt: post.created_at,
+        updatedAt: updated_at,
+        isActive: post.is_active,
+        // Información del usuario para el post
+        user: post.user || {
+          id: post.user_id,
+          name: profile?.name || 'Usuario',
+          avatar: profile?.avatar
+        }
+      }));
+      
+      console.log('📝 Mapped posts:', posts.length, posts);
+      setRealPosts(posts);
+    } catch (error) {
+      console.error('❌ Error loading posts:', error);
+      setRealPosts([]);
+    } finally {
+      setLoadingPosts(false);
+    }
+  };
+
+  const loadRealReels = async (force = false) => {
+  const targetUserId = profile?.id || currentUser?.id;
+  if (!force && realReels.length > 0) return;
+  if (!targetUserId) return;
+
+  setLoadingReels(true);
+  try {
+    const response = await getUserReels(targetUserId, 1, 20);
+    
+    // Mapear los reels de forma similar
+    const reels = (response.reels || response.data?.reels || []).map(reel => ({
+      id: reel.id,
+      userId: reel.user_id,
+      videoUrl: reel.media?.[0]?.url || '',
+      thumbnailUrl: reel.media?.[0]?.thumbnail || '',
+      content: reel.caption,
+      viewsCount: reel.views_count || 0,
+      likesCount: reel.likes_count || 0,
+      commentsCount: reel.comments_count || 0,
+      sharesCount: reel.shares_count || 0,
+      duration: reel.duration,
+      createdAt: reel.created_at,
+      user: reel.user || {
+        id: reel.user_id,
+        name: profile?.name || 'Usuario',
+        avatar: profile?.avatar
+      }
+    }));
+    
+    setRealReels(reels);
+  } catch (error) {
+    console.error('Error loading reels:', error);
+    setRealReels([]);
+  } finally {
+    setLoadingReels(false);
+  }
+};
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setSearchParams({ tab });
@@ -229,6 +369,16 @@ function ProfilePage({ userIdProp }) {
     // Load properties when switching to servicios tab
     if (tab === 'servicios' && isHost && properties.length === 0) {
       loadProperties();
+    }
+
+    // Load posts when switching to muro tab
+    if (tab === 'muro' && realPosts.length === 0) {
+      loadRealPosts();
+    }
+
+    // Load reels when switching to reels tab
+    if (tab === 'reels' && realReels.length === 0) {
+      loadRealReels();
     }
   };
 
@@ -494,9 +644,38 @@ function ProfilePage({ userIdProp }) {
       {/* Content */}
       <div className="max-w-5xl mx-auto px-4 py-6">
         {/* Muro Tab */}
-        {activeTab === 'muro' && (
+        {activeTab === 'muro' && (() => {
+          console.log('🎨 Rendering Muro tab:', { loadingPosts, postsCount: realPosts.length, realPosts });
+          return (
           <div className="space-y-6">
-            {profile.name === 'Host Demo' ? (
+            {/* Real posts from API */}
+            {loadingPosts ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <p className="mt-2 text-gray-600">Cargando publicaciones...</p>
+              </div>
+            ) : realPosts.length > 0 ? (
+              realPosts.map((post) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  currentUserId={currentUser?.id}
+                  onDelete={(postId) => setRealPosts(prev => prev.filter(p => p.id !== postId))}
+                />
+              ))
+            ) : (
+              <div className="text-center py-20">
+                <ImageIcon size={64} className="mx-auto mb-4 text-gray-300" />
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  No hay publicaciones aún
+                </h3>
+                <p className="text-gray-500">
+                  {isOwnProfile ? 'Comparte tus experiencias de viaje' : 'Este usuario no ha compartido publicaciones aún'}
+                </p>
+              </div>
+            )}
+            {/* Demo posts for Host Demo only */}
+            {profile.name === 'Host Demo' && realPosts.length === 0 && (
               postsData.map((post) => {
                 const isLiked = likedPosts.has(post.id);
                 const isSaved = savedPosts.has(post.id);
@@ -683,19 +862,62 @@ function ProfilePage({ userIdProp }) {
                   </div>
                 );
               })
-            ) : (
-              <div className="text-center py-16 bg-white rounded-xl">
-                <Home size={48} className="mx-auto mb-4 text-gray-300" />
-                <p className="text-gray-500">No hay publicaciones aún</p>
-              </div>
             )}
           </div>
-        )}
+          );
+        })()}
 
         {/* Reels Tab */}
         {activeTab === 'reels' && (
           <div className="grid grid-cols-3 gap-1">
-            {profile.name === 'Host Demo' ? (
+            {loadingReels ? (
+              <div className="col-span-3 text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <p className="mt-2 text-gray-600">Cargando reels...</p>
+              </div>
+            ) : realReels.length > 0 ? (
+              realReels.map((reel, index) => (
+                <div
+                  key={reel.id}
+                  onClick={() => {
+                    setSelectedReel(reel);
+                    setSelectedReelIndex(index);
+                  }}
+                  className="aspect-[9/16] relative group cursor-pointer overflow-hidden rounded bg-gray-900"
+                >
+                  {/* Thumbnail */}
+                  {reel.thumbnailUrl ? (
+                    <img
+                      src={`http://localhost:3000${reel.thumbnailUrl}`}
+                      alt="Reel"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <video
+                      src={`http://localhost:3000${reel.videoUrl}`}
+                      className="w-full h-full object-cover"
+                      preload="metadata"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center">
+                    <Play size={48} className="text-white opacity-0 group-hover:opacity-100 transition" />
+                  </div>
+                  <div className="absolute bottom-2 left-2 text-white text-xs font-semibold flex items-center gap-1 drop-shadow-lg">
+                    <Play size={12} fill="white" />
+                    {reel.viewsCount || 0}
+                  </div>
+                  {reel.duration && (
+                    <div className="absolute bottom-2 right-2 text-white text-xs bg-black/50 px-1 rounded">
+                      {Math.floor(reel.duration / 60)}:{(reel.duration % 60).toString().padStart(2, '0')}
+                    </div>
+                  )}
+                  {/* Play icon overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <Play size={32} className="text-white drop-shadow-lg" fill="white" />
+                  </div>
+                </div>
+              ))
+            ) : profile.name === 'Host Demo' ? (
               DEMO_REELS.map((reel, index) => (
                 <div
                   key={reel.id}
@@ -769,55 +991,50 @@ function ProfilePage({ userIdProp }) {
                   <Link
                     key={property.id}
                     to={`/properties/${property.id}`}
-                    className="bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-lg transition group"
+                    className="group border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-primary hover:shadow-2xl transition-all duration-300"
                   >
-                    {/* Property Image */}
-                    <div className="relative aspect-[4/3] overflow-hidden bg-gray-200">
-                      {property.images && property.images.length > 0 ? (
+                    <div className="h-48 bg-gray-200 relative overflow-hidden">
+                      {property.rooms && property.rooms.length > 0 && property.rooms[0].images && property.rooms[0].images.length > 0 ? (
                         <img
-                          src={property.images[0]}
-                          alt={property.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                          src={property.rooms[0].images[0]}
+                          alt={getPropertyName(property)}
+                          className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
-                          <Home size={48} className="text-gray-400" />
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          Sin imagen
                         </div>
                       )}
-                      {/* Property Type Badge */}
-                      <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium">
-                        {property.type}
-                      </div>
-                      {/* Price Badge */}
-                      <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-bold">
-                        ${property.pricePerNight}/noche
-                      </div>
+                      {property.ratingAverage >= 4.5 && (
+                        <div className="absolute top-3 right-3 bg-gradient-to-r from-primary to-primary-dark px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
+                          <Star size={14} className="fill-white text-white" />
+                          <span className="text-sm font-bold text-white">Destacado</span>
+                        </div>
+                      )}
                     </div>
-
-                    {/* Property Info */}
                     <div className="p-4">
-                      <h3 className="font-bold text-lg mb-1 line-clamp-1 group-hover:text-primary transition">
-                        {property.title}
+                      <h3 className="font-semibold text-lg truncate group-hover:text-primary transition">
+                        {getPropertyName(property)}
                       </h3>
-                      <p className="text-sm text-gray-600 mb-2 flex items-center gap-1">
-                        <MapPin size={14} />
-                        {property.location?.city || property.city}, {property.location?.country || property.country}
-                      </p>
-                      <p className="text-sm text-gray-700 line-clamp-2 mb-3">
-                        {property.description}
-                      </p>
-                      <div className="flex items-center justify-between text-sm text-gray-600">
-                        <span>{property.guests} huéspedes</span>
-                        <span>{property.bedrooms} habitaciones</span>
-                        <span>{property.bathrooms} baños</span>
+                      <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
+                        <MapPin size={14} className="text-primary" />
+                        <span className="truncate">{property.addressCity}, {property.addressCountry}</span>
                       </div>
-                      {property.rating && (
-                        <div className="mt-3 pt-3 border-t flex items-center gap-2">
-                          <Heart size={14} className="text-red-500" fill="currentColor" />
-                          <span className="text-sm font-semibold">{property.rating}</span>
-                          <span className="text-sm text-gray-500">({property.reviewsCount || 0} reseñas)</span>
+                      {property.ratingAverage > 0 && (
+                        <div className="flex items-center gap-1 mt-2">
+                          <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm font-medium">
+                            {typeof property.ratingAverage === 'number'
+                              ? property.ratingAverage.toFixed(1)
+                              : property.ratingAverage}
+                          </span>
+                          <span className="text-sm text-gray-600">({property.ratingCount})</span>
                         </div>
                       )}
+                      <div className="mt-3">
+                        <span className="text-lg font-bold text-primary-dark">${getPropertyPrice(property)}</span>
+                        <span className="text-gray-600"> / noche</span>
+                      </div>
                     </div>
                   </Link>
                 ))}
@@ -901,6 +1118,60 @@ function ProfilePage({ userIdProp }) {
           }}
           onClose={() => setShowChatBubble(false)}
         />
+      )}
+
+      {/* Floating Action Button - Solo en perfil propio */}
+      {isOwnProfile && (
+        <>
+          {/* Botón principal flotante */}
+          <div className="fixed bottom-24 right-8 z-30 flex flex-col gap-3">
+            {/* Botones secundarios (aparecen cuando está abierto) */}
+            <div className={`flex flex-col gap-3 transition-all duration-300 ${showCreateSidebar ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
+              <button
+                onClick={() => {
+                  setContentType('post');
+                  setShowCreateSidebar(true);
+                }}
+                className="group relative bg-white text-primary p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
+                title="Crear publicación"
+              >
+                <ImageIcon size={24} />
+                <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-sm px-3 py-1 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                  Nueva publicación
+                </span>
+              </button>
+              <button
+                onClick={() => {
+                  setContentType('reel');
+                  setShowCreateSidebar(true);
+                }}
+                className="group relative bg-white text-primary p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
+                title="Crear reel"
+              >
+                <Video size={24} />
+                <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-sm px-3 py-1 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                  Nuevo reel
+                </span>
+              </button>
+            </div>
+
+            {/* Botón principal */}
+            <button
+              onClick={() => setShowCreateSidebar(!showCreateSidebar)}
+              className={`bg-gradient-to-r from-primary to-primary-dark text-white p-5 rounded-full shadow-2xl hover:shadow-3xl transition-all transform hover:scale-110 ${showCreateSidebar ? 'rotate-45' : ''}`}
+              title="Crear contenido"
+            >
+              <Plus size={28} strokeWidth={3} />
+            </button>
+          </div>
+
+          {/* Create Content Sidebar */}
+          <CreateContentSidebar
+            isOpen={showCreateSidebar}
+            onClose={() => setShowCreateSidebar(false)}
+            type={contentType}
+          />
+        </>
       )}
     </div>
   );

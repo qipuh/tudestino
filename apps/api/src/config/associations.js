@@ -1,5 +1,5 @@
 import User from '../modules/users/user.model-mysql.js';
-import Property from '../modules/properties/property.model-mysql.js';
+import { Property, Room } from '../modules/properties/property.model.sequelize.js';
 import Booking from '../modules/bookings/booking.model.js';
 import Message from '../modules/messaging/message.model.js';
 import Conversation from '../modules/messaging/conversation.model.js';
@@ -9,6 +9,7 @@ import Post from '../modules/social/post.model.js';
 import Comment from '../modules/social/comment.model.js';
 import PostLike from '../modules/social/postLike.model.js';
 import CommentLike from '../modules/social/commentLike.model.js';
+import { Post as SocialPost, Reel, Like, Comment as SocialComment } from '../modules/social/social.model.sequelize.js';
 
 export const setupAssociations = () => {
   // User - Property (Host relationship)
@@ -87,6 +88,24 @@ export const setupAssociations = () => {
   CommentLike.belongsTo(Comment, { foreignKey: 'commentId', as: 'comment' });
   User.hasMany(CommentLike, { foreignKey: 'userId', as: 'commentLikes' });
   CommentLike.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+  // ==================== NEW SOCIAL MEDIA ASSOCIATIONS ====================
+
+  // User - SocialPost (Posts from new social model)
+  User.hasMany(SocialPost, { foreignKey: 'userId', as: 'socialPosts' });
+  SocialPost.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+  // User - Reel
+  User.hasMany(Reel, { foreignKey: 'userId', as: 'reels' });
+  Reel.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+  // User - SocialComment
+  User.hasMany(SocialComment, { foreignKey: 'userId', as: 'socialComments' });
+  SocialComment.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+  // User - Like
+  User.hasMany(Like, { foreignKey: 'userId', as: 'socialLikes' });
+  Like.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
   console.log('✅ Model associations configured');
 };

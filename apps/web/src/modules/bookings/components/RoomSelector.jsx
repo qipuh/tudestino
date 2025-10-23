@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Bed, Users, Check, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { BED_TYPE_LABELS, ROOM_AMENITY_LABELS } from '@tudestino/shared';
 
-function RoomSelector({ rooms, selectedRoomId, onSelectRoom }) {
+function RoomSelector({ rooms, selectedRoomId, onSelectRoom, multiSelect = false, selectedRoomIds = [] }) {
   const [expandedRoomId, setExpandedRoomId] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [modalRoomId, setModalRoomId] = useState(null);
@@ -24,12 +24,23 @@ function RoomSelector({ rooms, selectedRoomId, onSelectRoom }) {
   const modalRoom = showDetailsModal ? rooms.find(r => r.id === modalRoomId) : null;
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">Selecciona una habitación</h3>
+    <div className="space-y-4" data-room-selector>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">
+          {multiSelect ? 'Selecciona habitaciones' : 'Selecciona una habitación'}
+        </h3>
+        {multiSelect && selectedRoomIds.length > 0 && (
+          <span className="text-sm text-gray-600">
+            {selectedRoomIds.length} habitación{selectedRoomIds.length > 1 ? 'es' : ''} seleccionada{selectedRoomIds.length > 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 gap-4">
         {rooms.map((room) => {
-          const isSelected = selectedRoomId === room.id;
+          const isSelected = multiSelect
+            ? selectedRoomIds.includes(room.id)
+            : selectedRoomId === room.id;
           const isExpanded = expandedRoomId === room.id;
           const price = parseFloat(room.pricePerNight);
 

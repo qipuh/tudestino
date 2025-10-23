@@ -17,10 +17,33 @@ if (!fs.existsSync(postsDir)) {
   fs.mkdirSync(postsDir, { recursive: true });
 }
 
+// Create social media directory
+const socialDir = path.join(uploadsDir, 'social');
+if (!fs.existsSync(socialDir)) {
+  fs.mkdirSync(socialDir, { recursive: true });
+}
+
+// Create thumbnails directory for videos
+const thumbnailsDir = path.join(socialDir, 'thumbnails');
+if (!fs.existsSync(thumbnailsDir)) {
+  fs.mkdirSync(thumbnailsDir, { recursive: true });
+}
+
 // Configure storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, postsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+// Configure storage for social media
+const socialStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, socialDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -41,6 +64,15 @@ const fileFilter = (req, file, cb) => {
 // Create multer instance
 const upload = multer({
   storage: storage,
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100MB max file size
+  },
+  fileFilter: fileFilter,
+});
+
+// Create multer instance for social media
+export const uploadSocial = multer({
+  storage: socialStorage,
   limits: {
     fileSize: 100 * 1024 * 1024, // 100MB max file size
   },

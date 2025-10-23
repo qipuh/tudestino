@@ -8,7 +8,7 @@ import { recommendRooms } from '../services/roomRecommendationService';
 import GuestSelector from './GuestSelector';
 import RoomRecommendation from './RoomRecommendation';
 
-function BookingCard({ property, preSelectedRoomId }) {
+function BookingCard({ property, preSelectedRoomId, selectedRoomIds = [], selectionMode = 'single' }) {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { createBooking, checkAvailability, loading } = useBookingStore();
@@ -22,8 +22,10 @@ function BookingCard({ property, preSelectedRoomId }) {
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
 
-  // Usar preSelectedRoomId si se proporciona, de lo contrario usar el primer room
-  const selectedRoomId = preSelectedRoomId || (hasRooms ? rooms[0]?.id : null);
+  // Usar preSelectedRoomId o selectedRoomIds según el modo
+  const selectedRoomId = selectionMode === 'single'
+    ? (preSelectedRoomId || (hasRooms ? rooms[0]?.id : null))
+    : null;
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectingField, setSelectingField] = useState(null); // 'checkIn' | 'checkOut'
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -41,9 +43,17 @@ function BookingCard({ property, preSelectedRoomId }) {
 
   // Obtener el precio base según si hay habitaciones o no
   const getBasePrice = () => {
-    if (hasRooms && selectedRoomId) {
-      const selectedRoom = rooms.find(r => r.id === selectedRoomId);
-      return selectedRoom ? parseFloat(selectedRoom.pricePerNight) : 0;
+    if (hasRooms) {
+      if (selectionMode === 'multiple' && selectedRoomIds.length > 0) {
+        // Sumar precios de todas las habitaciones seleccionadas
+        return selectedRoomIds.reduce((total, roomId) => {
+          const room = rooms.find(r => r.id === roomId);
+          return total + (room ? parseFloat(room.pricePerNight) : 0);
+        }, 0);
+      } else if (selectedRoomId) {
+        const selectedRoom = rooms.find(r => r.id === selectedRoomId);
+        return selectedRoom ? parseFloat(selectedRoom.pricePerNight) : 0;
+      }
     }
     return parseFloat(property.basePrice || 0);
   };
@@ -67,7 +77,7 @@ function BookingCard({ property, preSelectedRoomId }) {
     } else {
       setPriceBreakdown(null);
     }
-  }, [checkIn, checkOut, selectedRoomId, property.basePrice, property.cleaningFee]);
+  }, [checkIn, checkOut, selectedRoomId, selectedRoomIds, selectionMode, property.basePrice, property.cleaningFee]);
 
   // Verificar disponibilidad cuando cambien las fechas
   useEffect(() => {
@@ -118,9 +128,15 @@ function BookingCard({ property, preSelectedRoomId }) {
     }
 
     // Validar selección de habitación si la propiedad tiene habitaciones
-    if (hasRooms && !selectedRoomId) {
-      alert('Por favor selecciona una habitación');
-      return;
+    if (hasRooms) {
+      if (selectionMode === 'single' && !selectedRoomId) {
+        alert('Por favor selecciona una habitación');
+        return;
+      }
+      if (selectionMode === 'multiple' && selectedRoomIds.length === 0) {
+        alert('Por favor selecciona al menos una habitación');
+        return;
+      }
     }
 
     try {
@@ -231,8 +247,8 @@ function BookingCard({ property, preSelectedRoomId }) {
         <span className="text-gray-600"> / noche</span>
       </div>
 
-      {/* Habitación seleccionada (solo mostrar info si hay habitaciones) */}
-      {hasRooms && selectedRoom && (
+      {/* Habitación(es) seleccionada(s) */}
+      {hasRooms && selectionMode === 'single' && selectedRoom && (
         <div className="mb-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-semibold text-gray-700">Habitación seleccionada</span>
@@ -248,11 +264,43 @@ function BookingCard({ property, preSelectedRoomId }) {
         </div>
       )}
 
+      {/* Múltiples habitaciones seleccionadas */}
+      {hasRooms && selectionMode === 'multiple' && selectedRoomIds.length > 0 && (
+        <div className="mb-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-semibold text-gray-700">
+              {selectedRoomIds.length} habitación{selectedRoomIds.length > 1 ? 'es' : ''} seleccionada{selectedRoomIds.length > 1 ? 's' : ''}
+            </span>
+            <span className="text-xs text-gray-500">Cambia abajo</span>
+          </div>
+          <div className="space-y-2">
+            {selectedRoomIds.map(roomId => {
+              const room = rooms.find(r => r.id === roomId);
+              if (!room) return null;
+              return (
+                <div key={roomId} className="text-xs bg-white p-2 rounded border border-primary/20">
+                  <p className="font-medium text-gray-900">{room.name}</p>
+                  <p className="text-gray-600">
+                    {room.guestCapacity} huéspedes · ${parseFloat(room.pricePerNight).toFixed(2)}/noche
+                  </p>
+                </div>
+              );
+            })}
+            <p className="text-xs text-gray-600 mt-2">
+              Capacidad total: {selectedRoomIds.reduce((total, roomId) => {
+                const room = rooms.find(r => r.id === roomId);
+                return total + (room ? room.guestCapacity : 0);
+              }, 0)} huéspedes
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Mensaje si no hay habitación seleccionada */}
-      {hasRooms && !selectedRoomId && (
+      {hasRooms && ((selectionMode === 'single' && !selectedRoomId) || (selectionMode === 'multiple' && selectedRoomIds.length === 0)) && (
         <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
           <p className="text-sm text-amber-800">
-            Por favor selecciona una habitación abajo para continuar con la reserva
+            Por favor selecciona {selectionMode === 'multiple' ? 'las habitaciones' : 'una habitación'} abajo para continuar con la reserva
           </p>
         </div>
       )}

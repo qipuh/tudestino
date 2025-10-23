@@ -12,46 +12,55 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Icono personalizado para propiedades
+// Icono personalizado para propiedades (estilo Airbnb)
 const createPropertyIcon = (price, isHovered = false) => {
   return L.divIcon({
     className: 'custom-marker',
     html: `
       <div style="
-        background: ${isHovered ? '#e91e63' : 'white'};
-        color: ${isHovered ? 'white' : '#1f2937'};
-        padding: 6px 12px;
-        border-radius: 20px;
+        background: ${isHovered ? '#222222' : 'white'};
+        color: ${isHovered ? 'white' : '#222222'};
+        padding: 8px 14px;
+        border-radius: 24px;
         font-weight: 600;
         font-size: 14px;
-        border: 2px solid ${isHovered ? '#c2185b' : '#e5e7eb'};
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        border: 1px solid ${isHovered ? '#222222' : 'rgba(0,0,0,0.08)'};
+        box-shadow: ${isHovered ? '0 6px 16px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0,0,0,0.18)'};
         white-space: nowrap;
-        transform: ${isHovered ? 'scale(1.1)' : 'scale(1)'};
-        transition: all 0.2s;
+        transform: ${isHovered ? 'scale(1.05)' : 'scale(1)'};
+        transition: all 0.2s ease;
+        cursor: pointer;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       ">
         $${price}
       </div>
     `,
-    iconSize: [60, 30],
-    iconAnchor: [30, 30],
+    iconSize: [70, 36],
+    iconAnchor: [35, 36],
   });
 };
 
 // Componente para ajustar el mapa a los límites de las propiedades
-function MapBounds({ properties }) {
+function MapBounds({ properties, initialized, setInitialized }) {
   const map = useMap();
 
   useEffect(() => {
-    if (properties.length > 0) {
-      const validCoords = properties.filter(p => p.latitude && p.longitude);
+    // Solo ajustar bounds UNA VEZ al cargar las propiedades
+    if (!initialized && properties.length > 0) {
+      const validCoords = properties.filter(p =>
+        (p.latitude && p.longitude) || (p.addressLatitude && p.addressLongitude)
+      );
 
       if (validCoords.length > 0) {
-        const bounds = validCoords.map(p => [p.latitude, p.longitude]);
-        map.fitBounds(bounds, { padding: [50, 50] });
+        const bounds = validCoords.map(p => [
+          p.latitude || p.addressLatitude,
+          p.longitude || p.addressLongitude
+        ]);
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+        setInitialized(true);
       }
     }
-  }, [properties, map]);
+  }, [properties, map, initialized, setInitialized]);
 
   return null;
 }
@@ -68,26 +77,41 @@ function PropertiesMap({
   center = null,
   zoom = 12
 }) {
-  const [mapCenter, setMapCenter] = useState(center || [51.505, -0.09]); // Default: Londres
+  const [mapCenter, setMapCenter] = useState(center || [-7.1619, -78.5128]); // Default: Cajamarca
   const [mapZoom, setMapZoom] = useState(zoom);
+  const [initialized, setInitialized] = useState(false);
 
-  // Calcular centro basado en propiedades
+  // Calcular centro basado en propiedades SOLO una vez
   useEffect(() => {
-    if (!center && properties.length > 0) {
-      const validCoords = properties.filter(p => p.latitude && p.longitude);
+    if (!initialized && !center && properties.length > 0) {
+      const validCoords = properties.filter(p =>
+        (p.latitude && p.longitude) || (p.addressLatitude && p.addressLongitude)
+      );
 
       if (validCoords.length > 0) {
-        const avgLat = validCoords.reduce((sum, p) => sum + p.latitude, 0) / validCoords.length;
-        const avgLng = validCoords.reduce((sum, p) => sum + p.longitude, 0) / validCoords.length;
+        const avgLat = validCoords.reduce((sum, p) =>
+          sum + (p.latitude || p.addressLatitude || 0), 0
+        ) / validCoords.length;
+        const avgLng = validCoords.reduce((sum, p) =>
+          sum + (p.longitude || p.addressLongitude || 0), 0
+        ) / validCoords.length;
         setMapCenter([avgLat, avgLng]);
       }
     } else if (center) {
       setMapCenter(center);
     }
-  }, [properties, center]);
+  }, [properties, center, initialized]);
 
   // Filtrar propiedades con coordenadas válidas
-  const propertiesWithCoords = properties.filter(p => p.latitude && p.longitude);
+  const propertiesWithCoords = properties.filter(p =>
+    (p.latitude && p.longitude) || (p.addressLatitude && p.addressLongitude)
+  );
+
+  console.log('🗺️ PropertiesMap Debug:', {
+    totalProperties: properties.length,
+    propertiesWithCoords: propertiesWithCoords.length,
+    sampleProperty: properties[0],
+  });
 
   if (propertiesWithCoords.length === 0) {
     return (
@@ -95,6 +119,7 @@ function PropertiesMap({
         <div className="text-center">
           <Home className="mx-auto text-gray-400 mb-2" size={48} />
           <p className="text-gray-600">No hay propiedades con ubicación para mostrar</p>
+          <p className="text-xs text-gray-400 mt-2">Total propiedades: {properties.length}</p>
         </div>
       </div>
     );
@@ -107,25 +132,42 @@ function PropertiesMap({
       scrollWheelZoom={true}
       className="h-full w-full rounded-lg"
       style={{ height: '100%', minHeight: '400px' }}
+      zoomControl={true}
+      whenReady={() => setInitialized(false)}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
+        url="https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHVkZXN0aW5vIiwiYSI6ImNtZ3lucTYzNjBjM3YybHBwdmlrNDF0Y24ifQ.p6uS0CGkHOhLxSE8ad8guw"
+        tileSize={512}
+        zoomOffset={-1}
       />
 
       {/* Ajustar mapa a las propiedades */}
-      <MapBounds properties={propertiesWithCoords} />
+      <MapBounds
+        properties={propertiesWithCoords}
+        initialized={initialized}
+        setInitialized={setInitialized}
+      />
 
       {/* Marcadores de propiedades */}
       {propertiesWithCoords.map((property) => {
         const isHovered = hoveredPropertyId === property.id;
         const isSelected = selectedPropertyId === property.id;
 
+        // Obtener coordenadas (con fallback a addressLatitude/addressLongitude)
+        const lat = property.latitude || property.addressLatitude;
+        const lng = property.longitude || property.addressLongitude;
+
+        // Obtener precio (de rooms o basePrice)
+        const price = property.rooms && property.rooms.length > 0
+          ? property.rooms[0].pricePerNight
+          : property.basePrice || 0;
+
         return (
           <Marker
             key={property.id}
-            position={[property.latitude, property.longitude]}
-            icon={createPropertyIcon(property.basePrice, isHovered || isSelected)}
+            position={[lat, lng]}
+            icon={createPropertyIcon(price, isHovered || isSelected)}
             eventHandlers={{
               click: () => onMarkerClick(property),
               mouseover: () => onMarkerHover(property.id),
@@ -134,35 +176,37 @@ function PropertiesMap({
           >
             <Popup>
               <div className="min-w-[200px]">
-                {property.images && property.images[0] && (
+                {property.rooms && property.rooms[0] && property.rooms[0].images && property.rooms[0].images[0] && (
                   <img
-                    src={property.images[0]}
-                    alt={property.title}
+                    src={property.rooms[0].images[0]}
+                    alt={property.propertyName || property.hotelName}
                     className="w-full h-32 object-cover rounded-lg mb-2"
                   />
                 )}
-                <h3 className="font-semibold text-sm mb-1">{property.title}</h3>
+                <h3 className="font-semibold text-sm mb-1">
+                  {property.propertyName || property.hotelName || `${property.accommodationType} en ${property.addressCity}`}
+                </h3>
                 <p className="text-xs text-gray-600 mb-2">
-                  {property.city}, {property.country}
+                  {property.addressCity}, {property.addressCountry}
                 </p>
 
-                {property.averageRating > 0 && (
+                {property.ratingAverage > 0 && (
                   <div className="flex items-center gap-1 mb-2">
                     <Star size={12} className="fill-yellow-400 text-yellow-400" />
                     <span className="text-xs font-medium">
-                      {typeof property.averageRating === 'number'
-                        ? property.averageRating.toFixed(1)
-                        : property.averageRating}
+                      {typeof property.ratingAverage === 'number'
+                        ? property.ratingAverage.toFixed(1)
+                        : property.ratingAverage}
                     </span>
                     <span className="text-xs text-gray-600">
-                      ({property.ratingCount})
+                      ({property.ratingCount || 0})
                     </span>
                   </div>
                 )}
 
                 <div className="flex items-center gap-1 text-sm font-bold">
                   <DollarSign size={14} />
-                  <span>${property.basePrice}</span>
+                  <span>${price}</span>
                   <span className="text-xs font-normal text-gray-600">/ noche</span>
                 </div>
               </div>

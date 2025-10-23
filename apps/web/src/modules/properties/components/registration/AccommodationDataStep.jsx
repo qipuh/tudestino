@@ -1,13 +1,17 @@
-import { useState, useMemo } from 'react';
-import { MapPin, DollarSign } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { MapPin, DollarSign, MapPinned, Loader2 } from 'lucide-react';
 import {
   PROPERTY_AMENITY_LABELS,
   getAvailableAmenitiesByType,
   PROPERTY_AMENITY_CATEGORY_LABELS,
 } from '@tudestino/shared';
 
+const MAPBOX_TOKEN = 'pk.eyJ1IjoidHVkZXN0aW5vIiwiYSI6ImNtZ3lucTYzNjBjM3YybHBwdmlrNDF0Y24ifQ.p6uS0CGkHOhLxSE8ad8guw';
+
 function AccommodationDataStep({ formData, updateFormData }) {
   const [parkingExpanded, setParkingExpanded] = useState(formData.parkingType === 'paid');
+  const [geocoding, setGeocoding] = useState(false);
+  const [geocodeError, setGeocodeError] = useState(null);
 
   const handleAddressChange = (field, value) => {
     updateFormData({
@@ -17,6 +21,63 @@ function AccommodationDataStep({ formData, updateFormData }) {
       },
     });
   };
+
+  // Geocode address when key fields change
+  useEffect(() => {
+    const { street, city, state, country } = formData.address;
+
+    // Only geocode if we have the essential fields
+    if (!street || !city || !country) {
+      return;
+    }
+
+    const geocodeAddress = async () => {
+      setGeocoding(true);
+      setGeocodeError(null);
+
+      try {
+        // Build the full address string
+        const addressParts = [street, city, state, country].filter(Boolean);
+        const fullAddress = addressParts.join(', ');
+
+        // Call Mapbox Geocoding API
+        const response = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${MAPBOX_TOKEN}&limit=1`
+        );
+
+        if (!response.ok) {
+          throw new Error('Error al geocodificar la dirección');
+        }
+
+        const data = await response.json();
+
+        if (data.features && data.features.length > 0) {
+          const [longitude, latitude] = data.features[0].center;
+
+          updateFormData({
+            address: {
+              ...formData.address,
+              latitude,
+              longitude,
+            },
+          });
+
+          console.log('✅ Dirección geocodificada:', { latitude, longitude });
+        } else {
+          setGeocodeError('No se pudo encontrar la ubicación. Verifica la dirección.');
+        }
+      } catch (error) {
+        console.error('Error geocoding:', error);
+        setGeocodeError('Error al buscar las coordenadas de la dirección');
+      } finally {
+        setGeocoding(false);
+      }
+    };
+
+    // Debounce geocoding to avoid too many API calls
+    const timeoutId = setTimeout(geocodeAddress, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [formData.address.street, formData.address.city, formData.address.state, formData.address.country]);
 
   const handleAmenityToggle = (amenity) => {
     const amenities = formData.propertyAmenities || [];
@@ -113,7 +174,24 @@ function AccommodationDataStep({ formData, updateFormData }) {
         <div className="flex items-center gap-2 mb-4">
           <MapPin className="text-primary" size={20} />
           <h3 className="text-lg font-semibold text-gray-900">Dirección del alojamiento</h3>
+          {geocoding && (
+            <div className="flex items-center gap-2 text-sm text-blue-600">
+              <Loader2 size={16} className="animate-spin" />
+              <span>Buscando coordenadas...</span>
+            </div>
+          )}
+          {!geocoding && formData.address.latitude && formData.address.longitude && (
+            <div className="flex items-center gap-2 text-sm text-green-600">
+              <MapPinned size={16} />
+              <span>Ubicación confirmada</span>
+            </div>
+          )}
         </div>
+        {geocodeError && (
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+            {geocodeError}
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">

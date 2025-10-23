@@ -1,6 +1,7 @@
 import express from 'express';
 import * as socialController from './social.controller.js';
 import { authenticate, optionalAuthenticate } from '../../middleware/auth.middleware.js';
+import { uploadSocial } from '../../middleware/upload.js';
 
 const router = express.Router();
 
@@ -45,5 +46,40 @@ router.get('/username/check/:username', optionalAuthenticate, socialController.c
 
 // Obtener perfil por username
 router.get('/profile/by-username/:username', optionalAuthenticate, socialController.getProfileByUsername);
+
+// ==================== POST & REEL ROUTES ====================
+
+// Crear post (múltiples archivos)
+router.post('/posts', authenticate, uploadSocial.array('media', 10), socialController.createPost);
+
+// Crear reel (un video)
+router.post('/reels', authenticate, uploadSocial.single('video'), socialController.createReel);
+
+// Obtener posts de un usuario
+router.get('/users/:userId/posts', socialController.getUserPosts);
+
+// Obtener reels de un usuario
+router.get('/users/:userId/reels', socialController.getUserReels);
+
+// Obtener feed de posts
+router.get('/feed', authenticate, socialController.getFeed);
+
+// Obtener feed de reels
+router.get('/reels/feed', authenticate, socialController.getReelsFeed);
+
+// Toggle like
+router.post('/like', authenticate, socialController.toggleLike);
+
+// Agregar comentario
+router.post('/comments', authenticate, socialController.addComment);
+
+// Obtener comentarios
+router.get('/comments/:contentType/:contentId', socialController.getComments);
+
+// Eliminar post
+router.delete('/posts/:postId', authenticate, socialController.deletePost);
+
+// Eliminar reel
+router.delete('/reels/:reelId', authenticate, socialController.deleteReel);
 
 export default router;

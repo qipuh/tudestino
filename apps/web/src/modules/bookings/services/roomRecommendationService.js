@@ -195,14 +195,10 @@ export const recommendRooms = (rooms, adults, children, guestConfig = null) => {
     neededCouples = guestConfig.couples || 0;
     neededSingles = guestConfig.singles || 0;
   } else {
-    // Inferencia automática: si hay número par de adultos, asumir parejas
-    if (adults % 2 === 0) {
-      neededCouples = Math.floor(adults / 2);
-      neededSingles = 0;
-    } else {
-      neededCouples = Math.floor(adults / 2);
-      neededSingles = 1;
-    }
+    // Inferencia automática: asumir todos son individuales por defecto
+    // Esto da más opciones de combinación y evita sobre-recomendar habitaciones grandes
+    neededCouples = 0;
+    neededSingles = adults;
   }
 
   // Filtrar habitaciones disponibles y con suficiente capacidad

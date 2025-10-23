@@ -83,3 +83,20 @@ export const getProfileByUsername = async (username) => {
   const response = await api.get(`/social/profile/by-username/${username}`);
   return response.data;
 };
+// ==================== POST SERVICES ====================
+
+// Obtener posts de un usuario
+export const getUserPosts = async (userId, page = 1, limit = 20) => {
+  const response = await api.get(`/social/posts/user/${userId}`, {
+    params: { page, limit }
+  });
+  return response.data;
+};
+
+// Obtener reels de un usuario  
+export const getUserReels = async (userId, page = 1, limit = 20) => {
+  const response = await api.get(`/social/reels/user/${userId}`, {
+    params: { page, limit }
+  });
+  return response.data;
+};

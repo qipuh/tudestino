@@ -228,7 +228,7 @@ function SearchHero() {
                             type="button"
                             onClick={() => handleGuestChange('children', 'decrement')}
                             disabled={searchParams.children <= 0}
-                            className="w-8 h-8 rounded-full border-2 border-gray-300 text-gray-600 hover:border-gray-900 disabled:opacity-30 disabled:hover:border-gray-300 transition"
+                            className="w-8 h-8 mr-4 rounded-full border-2 border-gray-300 text-gray-600 hover:border-gray-900 disabled:opacity-30 disabled:hover:border-gray-300 transition"
                           >
                             −
                           </button>

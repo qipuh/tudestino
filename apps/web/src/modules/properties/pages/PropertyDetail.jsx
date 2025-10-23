@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MapPin, Users, Bed, Bath, Wifi, Star, ArrowLeft, Calendar, DollarSign, MessageCircle } from 'lucide-react';
-import BookingCard from '../../bookings/components/BookingCard';
-import RoomSelector from '../../bookings/components/RoomSelector';
+import BookingFlow from '../../bookings/components/BookingFlow';
 import api from '../../../services/api';
 import useAuthStore from '../../../store/authStore';
 
@@ -29,7 +28,6 @@ function PropertyDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedRoomId, setSelectedRoomId] = useState(null);
 
   useEffect(() => {
     fetchProperty();
@@ -287,16 +285,6 @@ function PropertyDetail() {
               <p className="text-gray-700 whitespace-pre-line">{description}</p>
             </div>
 
-            {/* Rooms Section - Solo para propiedades con habitaciones */}
-            {hasRooms && (
-              <div className="mb-6 pb-6 border-b">
-                <RoomSelector
-                  rooms={rooms}
-                  selectedRoomId={selectedRoomId}
-                  onSelectRoom={setSelectedRoomId}
-                />
-              </div>
-            )}
 
             {/* Amenities */}
             {amenities.length > 0 && (
@@ -332,12 +320,9 @@ function PropertyDetail() {
             </div>
           </div>
 
-          {/* Booking Card */}
+          {/* Booking Flow */}
           <div className="lg:col-span-1">
-            <BookingCard
-              property={property}
-              preSelectedRoomId={selectedRoomId}
-            />
+            <BookingFlow property={property} />
           </div>
         </div>
       </div>

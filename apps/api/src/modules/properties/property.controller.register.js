@@ -4,6 +4,7 @@ import sequelize from '../../config/database-mysql.js';
 /**
  * Registrar una nueva propiedad con sus habitaciones
  * POST /api/properties/register
+ *
  */
 export const registerProperty = async (req, res) => {
   const transaction = await sequelize.transaction();
@@ -15,6 +16,10 @@ export const registerProperty = async (req, res) => {
       multipleUnits,
       hotelName,
       hotelCategory,
+
+      // Información general
+      propertyName,
+      description,
 
       // Política de cancelación
       cancellationPolicy,
@@ -59,6 +64,14 @@ export const registerProperty = async (req, res) => {
       });
     }
 
+    if (!description || description.trim().length === 0) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: 'La descripción es requerida',
+      });
+    }
+
     if (!address || !address.street || !address.city || !address.country) {
       await transaction.rollback();
       return res.status(400).json({
@@ -83,6 +96,8 @@ export const registerProperty = async (req, res) => {
         multipleUnits: multipleUnits || false,
         hotelName: hotelName || null,
         hotelCategory: hotelCategory || null,
+        propertyName: propertyName || null,
+        description: description,
         cancellationPolicy: cancellationPolicy || 'standard',
 
         // Dirección
@@ -197,6 +212,8 @@ export const updatePropertyFull = async (req, res) => {
         multipleUnits: propertyData.multipleUnits,
         hotelName: propertyData.hotelName,
         hotelCategory: propertyData.hotelCategory,
+        propertyName: propertyData.propertyName,
+        description: propertyData.description,
         cancellationPolicy: propertyData.cancellationPolicy,
         addressStreet: propertyData.address.street,
         addressCity: propertyData.address.city,
@@ -304,6 +321,8 @@ export const updatePropertyConfig = async (req, res) => {
         multipleUnits: propertyData.multipleUnits,
         hotelName: propertyData.hotelName,
         hotelCategory: propertyData.hotelCategory,
+        propertyName: propertyData.propertyName,
+        description: propertyData.description,
         cancellationPolicy: propertyData.cancellationPolicy,
         addressStreet: propertyData.address.street,
         addressCity: propertyData.address.city,

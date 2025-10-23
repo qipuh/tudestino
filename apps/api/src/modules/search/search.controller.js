@@ -1,3 +1,7 @@
+import { Op } from 'sequelize';
+import { Property, Room } from '../properties/property.model.sequelize.js';
+import User from '../users/user.model-mysql.js';
+
 // Servicio para obtener ubicación por IP
 const getLocationByIP = async (ip) => {
   try {
@@ -84,80 +88,198 @@ export const searchProperties = async (req, res) => {
       limit
     } = req.query;
 
-    // TODO: Implementar con Sequelize/Mongoose según tu modelo
-    // Por ahora retornamos estructura de ejemplo
-
-    const filters = {};
-    const searchParams = {
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 20,
-      sortBy: sortBy || 'relevance'
+    // Construir condiciones WHERE
+    const whereConditions = {
+      status: 'published',
+      isActive: true
     };
 
-    // Construir query de búsqueda
+    // Filtro por ubicación (ciudad o país)
     if (location) {
-      // Buscar por ciudad o país
-      filters.location = location;
+      // Dividir la ubicación por coma para manejar "Ciudad, País"
+      const locationParts = location.split(',').map(part => part.trim());
+
+      if (locationParts.length > 1) {
+        // Si tiene formato "Ciudad, País", buscar coincidencia en ambos campos
+        whereConditions[Op.and] = [
+          {
+            [Op.or]: [
+              { addressCity: { [Op.like]: `%${locationParts[0]}%` } },
+              { addressState: { [Op.like]: `%${locationParts[0]}%` } }
+            ]
+          },
+          {
+            [Op.or]: [
+              { addressCountry: { [Op.like]: `%${locationParts[1]}%` } },
+              { addressState: { [Op.like]: `%${locationParts[1]}%` } }
+            ]
+          }
+        ];
+      } else {
+        // Búsqueda simple en cualquier campo
+        whereConditions[Op.or] = [
+          { addressCity: { [Op.like]: `%${location}%` } },
+          { addressCountry: { [Op.like]: `%${location}%` } },
+          { addressState: { [Op.like]: `%${location}%` } }
+        ];
+      }
     }
 
-    if (latitude && longitude) {
-      // Búsqueda por proximidad geográfica
-      filters.coordinates = {
-        latitude: parseFloat(latitude),
-        longitude: parseFloat(longitude),
-        radius: parseInt(radius) || 50 // km
-      };
-    }
+    // Filtro por número de huéspedes
+    // NOTA: Ya no filtramos por guests aquí porque ahora la capacidad está en la tabla rooms
+    // TODO: Implementar join con rooms para filtrar por capacidad total
+    const totalGuests = (parseInt(adults) || 0) + (parseInt(children) || 0);
+    // if (totalGuests > 0) {
+    //   whereConditions.guests = { [Op.gte]: totalGuests };
+    // }
 
-    if (adults || children) {
-      filters.guests = {
-        adults: parseInt(adults) || 0,
-        children: parseInt(children) || 0,
-        total: (parseInt(adults) || 0) + (parseInt(children) || 0)
-      };
-    }
+    // Filtro por rango de precio
+    // NOTA: Ya no filtramos por basePrice aquí porque ahora el precio está en la tabla rooms
+    // TODO: Implementar join con rooms para filtrar por rango de precio
+    // if (minPrice) {
+    //   whereConditions.basePrice = { [Op.gte]: parseFloat(minPrice) };
+    // }
+    // if (maxPrice) {
+    //   if (whereConditions.basePrice) {
+    //     whereConditions.basePrice[Op.lte] = parseFloat(maxPrice);
+    //   } else {
+    //     whereConditions.basePrice = { [Op.lte]: parseFloat(maxPrice) };
+    //   }
+    // }
 
-    if (minPrice || maxPrice) {
-      filters.price = {
-        min: parseFloat(minPrice) || 0,
-        max: parseFloat(maxPrice) || Infinity
-      };
-    }
-
+    // Filtro por tipo de propiedad (ahora es accommodationType)
     if (propertyType) {
-      filters.type = propertyType;
+      whereConditions.accommodationType = propertyType;
     }
 
-    if (amenities) {
-      filters.amenities = Array.isArray(amenities) ? amenities : [amenities];
-    }
-
+    // Filtro por rating mínimo
     if (minRating) {
-      filters.minRating = parseFloat(minRating);
+      whereConditions.ratingAverage = { [Op.gte]: parseFloat(minRating) };
     }
 
-    if (checkIn && checkOut) {
-      filters.availability = {
-        checkIn: new Date(checkIn),
-        checkOut: new Date(checkOut)
-      };
+    // Filtro por amenidades (verificar que tenga TODAS las amenidades solicitadas)
+    // TODO: Implementar cuando amenities sea un campo JSON en la BD
+    // if (amenities) {
+    //   const amenitiesList = Array.isArray(amenities) ? amenities : [amenities];
+    //   whereConditions.amenities = { [Op.contains]: amenitiesList };
+    // }
+
+    // Configurar paginación
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 20;
+    const offset = (pageNum - 1) * limitNum;
+
+    // Configurar ordenamiento
+    let order = [];
+    switch (sortBy) {
+      case 'price_asc':
+        // TODO: Implementar ordenamiento por precio de rooms
+        order = [['createdAt', 'DESC']];
+        break;
+      case 'price_desc':
+        // TODO: Implementar ordenamiento por precio de rooms
+        order = [['createdAt', 'DESC']];
+        break;
+      case 'rating':
+        order = [['ratingAverage', 'DESC'], ['ratingCount', 'DESC']];
+        break;
+      case 'newest':
+        order = [['createdAt', 'DESC']];
+        break;
+      default:
+        // Relevancia: combinar rating y cantidad de reviews
+        order = [['ratingAverage', 'DESC'], ['ratingCount', 'DESC']];
     }
 
-    // Placeholder response
+    // Buscar propiedades
+    const { count, rows: properties } = await Property.findAndCountAll({
+      where: whereConditions,
+      attributes: [
+        'id', 'hostId', 'accommodationType', 'multipleUnits', 'hotelName', 'hotelCategory',
+        'propertyName', 'description', 'cancellationPolicy',
+        'addressStreet', 'addressCity', 'addressState', 'addressCountry', 'addressZipCode',
+        'addressLatitude', 'addressLongitude',
+        'propertyAmenities', 'breakfastIncluded', 'parkingType', 'parkingDetails',
+        'checkInTime', 'checkOutTime', 'childrenAllowed', 'petsAllowed', 'petFee', 'petFeePer',
+        'additionalRules', 'status', 'ratingAverage', 'ratingCount', 'isActive',
+        'createdAt', 'updatedAt'
+      ],
+      include: [
+        {
+          model: User,
+          as: 'host',
+          attributes: ['id', 'name', 'email', 'hostRating', 'hostReviewCount']
+        },
+        {
+          model: Room,
+          as: 'rooms',
+          attributes: ['id', 'roomType', 'name', 'quantity', 'guestCapacity', 'beds', 'pricePerNight', 'amenities', 'images', 'isAvailable']
+        }
+      ],
+      order,
+      limit: limitNum,
+      offset,
+      distinct: true
+    });
+
+    // Si hay coordenadas, calcular distancia y reordenar si es necesario
+    let propertiesWithDistance = properties;
+    if (latitude && longitude) {
+      const lat = parseFloat(latitude);
+      const lng = parseFloat(longitude);
+
+      // Calcular distancia para cada propiedad usando fórmula Haversine
+      propertiesWithDistance = properties.map(property => {
+        const propData = property.toJSON();
+        const distance = calculateDistance(
+          lat,
+          lng,
+          property.latitude,
+          property.longitude
+        );
+        return {
+          ...propData,
+          distance: Math.round(distance * 10) / 10 // Redondear a 1 decimal
+        };
+      });
+
+      // Filtrar por radio SOLO si se especificó explícitamente
+      if (radius) {
+        const radiusKm = parseInt(radius);
+        propertiesWithDistance = propertiesWithDistance.filter(
+          p => p.distance <= radiusKm
+        );
+      }
+
+      // Si sortBy es 'distance', ordenar por distancia
+      if (sortBy === 'distance') {
+        propertiesWithDistance.sort((a, b) => a.distance - b.distance);
+      }
+    }
+
+    // Calcular paginación
+    const totalPages = Math.ceil(count / limitNum);
+
     res.json({
       success: true,
       data: {
-        properties: [],
-        filters: filters,
-        searchParams: searchParams,
+        properties: propertiesWithDistance,
         pagination: {
-          page: searchParams.page,
-          limit: searchParams.limit,
-          total: 0,
-          totalPages: 0
+          page: pageNum,
+          limit: limitNum,
+          total: count,
+          totalPages
+        },
+        filters: {
+          location,
+          coordinates: latitude && longitude ? { latitude, longitude, radius: radius || 50 } : null,
+          guests: totalGuests || null,
+          priceRange: { min: minPrice || null, max: maxPrice || null },
+          propertyType: propertyType || null,
+          minRating: minRating || null,
+          sortBy: sortBy || 'relevance'
         }
-      },
-      message: 'Búsqueda implementada - conectar con base de datos'
+      }
     });
 
   } catch (error) {
@@ -169,6 +291,23 @@ export const searchProperties = async (req, res) => {
     });
   }
 };
+
+// Función para calcular distancia entre dos puntos (Haversine formula)
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radio de la Tierra en km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function toRad(degrees) {
+  return degrees * (Math.PI / 180);
+}
 
 // GET /api/search/suggestions - Autocompletado de ubicaciones
 export const getLocationSuggestions = async (req, res) => {

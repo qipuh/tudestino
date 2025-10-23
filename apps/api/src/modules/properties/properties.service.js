@@ -17,19 +17,29 @@ class PropertiesService {
 
     const properties = await Property.findAll({
       where: { status: 'published', ...queryFilters },
+      attributes: [
+        'id', 'hostId', 'accommodationType', 'multipleUnits', 'hotelName', 'hotelCategory',
+        'propertyName', 'description', 'cancellationPolicy',
+        'addressStreet', 'addressCity', 'addressState', 'addressCountry', 'addressZipCode',
+        'addressLatitude', 'addressLongitude',
+        'propertyAmenities', 'breakfastIncluded', 'parkingType', 'parkingDetails',
+        'checkInTime', 'checkOutTime', 'childrenAllowed', 'petsAllowed', 'petFee', 'petFeePer',
+        'additionalRules', 'status', 'ratingAverage', 'ratingCount', 'isActive',
+        'createdAt', 'updatedAt'
+      ],
       offset,
       limit,
       include: [
         {
+          model: User,
+          as: 'host',
+          attributes: ['id', 'name', 'email', 'avatar', 'hostRating', 'hostReviewCount']
+        },
+        {
           model: Room,
           as: 'rooms',
-        },
-        // Descomentar cuando User esté configurado con Sequelize
-        // {
-        //   model: User,
-        //   as: 'host',
-        //   attributes: ['id', 'name', 'avatar', 'hostRating']
-        // }
+          attributes: ['id', 'roomType', 'name', 'quantity', 'guestCapacity', 'beds', 'pricePerNight', 'amenities', 'images', 'isAvailable']
+        }
       ]
     });
 
@@ -40,15 +50,15 @@ class PropertiesService {
     const property = await Property.findByPk(propertyId, {
       include: [
         {
+          model: User,
+          as: 'host',
+          attributes: ['id', 'name', 'email', 'avatar', 'hostRating', 'hostReviewCount']
+        },
+        {
           model: Room,
           as: 'rooms',
-        },
-        // Descomentar cuando User esté configurado con Sequelize
-        // {
-        //   model: User,
-        //   as: 'host',
-        //   attributes: ['id', 'name', 'avatar', 'hostRating']
-        // }
+          attributes: ['id', 'roomType', 'name', 'quantity', 'guestCapacity', 'beds', 'pricePerNight', 'amenities', 'images', 'isAvailable']
+        }
       ]
     });
 

@@ -34,7 +34,7 @@ class Room {
       quantity: json['quantity'],
       guestCapacity: json['guestCapacity'] ?? 1,
       beds: (json['beds'] as List?)?.map((bed) => Bed.fromJson(bed)).toList() ?? [],
-      pricePerNight: (json['pricePerNight'] ?? 0).toDouble(),
+      pricePerNight: double.tryParse(json['pricePerNight']?.toString() ?? '0') ?? 0.0,
       amenities: (json['amenities'] as List?)?.map((e) => e.toString()).toList() ?? [],
       images: (json['images'] as List?)?.map((e) => e.toString()).toList() ?? [],
       isAvailable: json['isAvailable'] ?? true,
@@ -70,7 +70,7 @@ class Bed {
   factory Bed.fromJson(Map<String, dynamic> json) {
     return Bed(
       type: json['type'] ?? '',
-      quantity: json['quantity'] ?? 1,
+      quantity: json['count'] ?? json['quantity'] ?? 1, // count es el campo del backend
     );
   }
 

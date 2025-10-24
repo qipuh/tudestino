@@ -27,8 +27,8 @@ class PropertiesService {
         'additionalRules', 'status', 'ratingAverage', 'ratingCount', 'isActive',
         'createdAt', 'updatedAt'
       ],
-      offset,
-      limit,
+      offset: parseInt(offset),
+      limit: parseInt(limit),
       include: [
         {
           model: User,

@@ -7,7 +7,7 @@ class Property {
   final String accommodationType;
   final bool multipleUnits;
   final String? hotelName;
-  final String? hotelCategory;
+  final int? hotelCategory; // Cambiado de String? a int?
   final String? propertyName;
   final String description;
   final String cancellationPolicy;
@@ -103,8 +103,12 @@ class Property {
       addressState: json['addressState'],
       addressCountry: json['addressCountry'] ?? '',
       addressZipCode: json['addressZipCode'],
-      addressLatitude: json['addressLatitude']?.toDouble(),
-      addressLongitude: json['addressLongitude']?.toDouble(),
+      addressLatitude: json['addressLatitude'] != null
+          ? double.tryParse(json['addressLatitude'].toString())
+          : null,
+      addressLongitude: json['addressLongitude'] != null
+          ? double.tryParse(json['addressLongitude'].toString())
+          : null,
       propertyAmenities: (json['propertyAmenities'] as List?)?.map((e) => e.toString()).toList() ?? [],
       breakfastIncluded: json['breakfastIncluded'] ?? false,
       parkingType: json['parkingType'] ?? 'no',
@@ -117,7 +121,7 @@ class Property {
       petFeePer: json['petFeePer'],
       additionalRules: json['additionalRules'],
       status: json['status'] ?? 'draft',
-      ratingAverage: (json['ratingAverage'] ?? 0).toDouble(),
+      ratingAverage: double.tryParse(json['ratingAverage']?.toString() ?? '0') ?? 0.0,
       ratingCount: json['ratingCount'] ?? 0,
       isActive: json['isActive'] ?? true,
       host: json['host'] != null ? User.fromJson(json['host']) : null,

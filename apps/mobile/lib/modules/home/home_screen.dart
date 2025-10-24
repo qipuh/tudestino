@@ -3,8 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/properties_provider.dart';
+import '../../providers/social_provider.dart';
 import '../../models/property.dart';
+import '../../models/social_post.dart';
 import 'package:intl/intl.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,7 +17,14 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _searchController = TextEditingController();
+  // Search state
+  String? _selectedLocation;
+  double? _selectedLat;
+  double? _selectedLng;
+  DateTime? _checkInDate;
+  DateTime? _checkOutDate;
+  int _adults = 2;
+  int _children = 0;
 
   @override
   void initState() {
@@ -22,133 +32,380 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<PropertiesProvider>(context, listen: false)
           .loadFeaturedProperties();
+      Provider.of<SocialProvider>(context, listen: false)
+          .loadFeed();
     });
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
+  Future<void> _startSearchFlow() async {
+    // Step 1: Location Search
+    final locationResult = await Navigator.of(context).pushNamed('/location-search');
 
-  void _navigateToSearch() {
-    Navigator.of(context).pushNamed('/search', arguments: {
-      'location': _searchController.text.trim(),
+    if (locationResult == null) return; // User cancelled
+
+    final location = locationResult as Map<String, dynamic>;
+    setState(() {
+      _selectedLocation = location['name'] as String?;
+      _selectedLat = location['lat'] as double?;
+      _selectedLng = location['lng'] as double?;
     });
+
+    // Step 2: Date Selection
+    final dateResult = await Navigator.of(context).pushNamed(
+      '/date-selector',
+      arguments: {
+        'checkIn': _checkInDate,
+        'checkOut': _checkOutDate,
+      },
+    );
+
+    if (dateResult == null) return; // User cancelled
+
+    final dates = dateResult as Map<String, DateTime?>;
+    setState(() {
+      _checkInDate = dates['checkIn'];
+      _checkOutDate = dates['checkOut'];
+    });
+
+    // Step 3: Guests Selection
+    final guestsResult = await Navigator.of(context).pushNamed(
+      '/guests-selector',
+      arguments: {
+        'adults': _adults,
+        'children': _children,
+      },
+    );
+
+    if (guestsResult == null) return; // User cancelled
+
+    final guests = guestsResult as Map<String, int>;
+    setState(() {
+      _adults = guests['adults']!;
+      _children = guests['children']!;
+    });
+
+    // Step 4: Navigate to Results
+    Navigator.of(context).pushNamed(
+      '/search-results',
+      arguments: {
+        'location': _selectedLocation,
+        'lat': _selectedLat,
+        'lng': _selectedLng,
+        'checkIn': _checkInDate,
+        'checkOut': _checkOutDate,
+        'adults': _adults,
+        'children': _children,
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final propertiesProvider = Provider.of<PropertiesProvider>(context);
+    final socialProvider = Provider.of<SocialProvider>(context);
     final theme = Theme.of(context);
+    final screenHeight = MediaQuery.of(context).size.height;
+    final headerHeight = screenHeight * 0.6;
 
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // App Bar
+          // Hero Header with Background Image
           SliverAppBar(
-            expandedHeight: 200,
+            expandedHeight: headerHeight,
             floating: false,
             pinned: true,
+            backgroundColor: const Color(0xFF16BED8),
+            elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text('TuDestino'),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      theme.primaryColor,
-                      theme.primaryColor.withOpacity(0.8),
-                    ],
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Background Image
+                  Image.asset(
+                    'assets/images/bg.png',
+                    fit: BoxFit.cover,
                   ),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.flight_takeoff,
-                    size: 80,
-                    color: Colors.white70,
-                  ),
-                ),
-              ),
-            ),
-            actions: [
-              if (authProvider.isAuthenticated)
-                IconButton(
-                  icon: const Icon(Icons.person),
-                  onPressed: () {
-                    Navigator.of(context).pushNamed('/profile');
-                  },
-                )
-              else
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pushNamed('/login');
-                  },
-                  child: const Text(
-                    'Ingresar',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-            ],
-          ),
-
-          // Search Bar
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Card(
-                elevation: 4,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '¿A dónde quieres ir?',
-                        style: theme.textTheme.titleLarge,
+                  // Gradient Overlay
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.3),
+                          Colors.black.withOpacity(0.5),
+                          const Color(0xFF16BED8).withOpacity(0.7),
+                          const Color(0xFF16BED8),
+                        ],
+                        stops: const [0.0, 0.3, 0.7, 1.0],
                       ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Buscar destino...',
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  // Content
+                  SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Top Bar
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Logo
+                              Container(
+                                height: 40,
+                                width: 140,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.9),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                child: Image.asset(
+                                  'assets/images/tudestino-logo.png',
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                              // Auth Button
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: Colors.white.withOpacity(0.3)),
+                                ),
+                                child: authProvider.isAuthenticated
+                                    ? IconButton(
+                                        icon: const Icon(Icons.person, color: Colors.white),
+                                        onPressed: () => Navigator.of(context).pushNamed('/profile'),
+                                      )
+                                    : TextButton(
+                                        onPressed: () => Navigator.of(context).pushNamed('/login'),
+                                        child: const Text(
+                                          'Ingresar',
+                                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                              ),
+                            ],
                           ),
-                          filled: true,
-                          fillColor: Colors.grey.shade100,
-                        ),
-                        onSubmitted: (_) => _navigateToSearch(),
+
+                          const Spacer(),
+
+                          // Welcome Text
+                          Text(
+                            '¡Descubre tu próximo',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w300,
+                              shadows: [
+                                Shadow(
+                                  offset: const Offset(0, 2),
+                                  blurRadius: 4,
+                                  color: Colors.black.withOpacity(0.3),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            'destino!',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                Shadow(
+                                  offset: const Offset(0, 2),
+                                  blurRadius: 4,
+                                  color: Colors.black.withOpacity(0.3),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 32),
+
+                          // Search Bar with Transparency
+                          GestureDetector(
+                            onTap: _startSearchFlow,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.95),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF16BED8).withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: const Icon(
+                                          Icons.search,
+                                          color: Color(0xFF16BED8),
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      const Expanded(
+                                        child: Text(
+                                          '¿A dónde quieres ir?',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF1a1a1a),
+                                          ),
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.arrow_forward_ios,
+                                        size: 16,
+                                        color: Colors.grey[400],
+                                      ),
+                                    ],
+                                  ),
+
+                                  if (_selectedLocation != null ||
+                                      _checkInDate != null ||
+                                      _adults != 2 ||
+                                      _children != 0) ...[
+                                    const SizedBox(height: 16),
+                                    const Divider(),
+                                    const SizedBox(height: 12),
+
+                                    // Search Summary
+                                    if (_selectedLocation != null)
+                                      _buildSearchDetail(
+                                        Icons.location_on,
+                                        _selectedLocation!,
+                                      ),
+                                    if (_checkInDate != null && _checkOutDate != null)
+                                      _buildSearchDetail(
+                                        Icons.calendar_today,
+                                        '${DateFormat('d MMM').format(_checkInDate!)} - ${DateFormat('d MMM').format(_checkOutDate!)}',
+                                      ),
+                                    _buildSearchDetail(
+                                      Icons.people,
+                                      '$_adults ${_adults == 1 ? "adulto" : "adultos"}${_children > 0 ? ", $_children ${_children == 1 ? "niño" : "niños"}" : ""}',
+                                    ),
+                                  ] else ...[
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'Busca destinos increíbles para tus vacaciones',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _navigateToSearch,
-                          child: const Text('Buscar'),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
 
-          // Section Title
+          // Social Feed Section
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: theme.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.photo_camera, color: theme.primaryColor, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Experiencias',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pushNamed('/feed'),
+                    child: Row(
+                      children: [
+                        Text('Ver todo', style: TextStyle(color: theme.primaryColor)),
+                        Icon(Icons.arrow_forward_ios, size: 12, color: theme.primaryColor),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Horizontal Social Posts
+          if (socialProvider.feedPosts.isNotEmpty)
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 260,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: socialProvider.feedPosts.take(5).length,
+                  itemBuilder: (context, index) {
+                    final post = socialProvider.feedPosts[index];
+                    return _buildCompactSocialCard(context, post, theme);
+                  },
+                ),
+              ),
+            ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+
+          // Properties Section Title
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
               child: Row(
                 children: [
-                  Icon(Icons.star, color: theme.primaryColor),
-                  const SizedBox(width: 8),
-                  Text(
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.home_work, color: theme.primaryColor, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
                     'Propiedades destacadas',
-                    style: theme.textTheme.titleLarge?.copyWith(
+                    style: TextStyle(
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -199,16 +456,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             )
           else
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final property = propertiesProvider.properties[index];
-                    return PropertyCard(property: property);
-                  },
-                  childCount: propertiesProvider.properties.length,
-                ),
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final property = propertiesProvider.properties[index];
+                  return PropertyCard(property: property);
+                },
+                childCount: propertiesProvider.properties.length,
               ),
             ),
 
@@ -219,6 +473,113 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       bottomNavigationBar: _buildBottomNavBar(context, authProvider),
+    );
+  }
+
+  Widget _buildSearchDetail(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: const Color(0xFF16BED8)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactSocialCard(BuildContext context, SocialPost post, ThemeData theme) {
+    return Container(
+      width: 180,
+      margin: const EdgeInsets.only(right: 16),
+      child: InkWell(
+        onTap: () => Navigator.of(context).pushNamed('/feed'),
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Post Image
+            Container(
+              height: 180,
+              width: 180,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: post.mediaUrls.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: post.mediaUrls.first,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          color: Colors.grey.shade300,
+                          child: const Center(child: CircularProgressIndicator()),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: Colors.grey.shade300,
+                          child: const Icon(Icons.image_not_supported, size: 40),
+                        ),
+                      )
+                    : Container(
+                        color: Colors.grey.shade300,
+                        child: const Icon(Icons.photo, size: 40),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // User Info
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 12,
+                  backgroundColor: theme.primaryColor.withOpacity(0.2),
+                  child: Text(
+                    post.user?.name.substring(0, 1).toUpperCase() ?? 'U',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    post.user?.name ?? 'Usuario',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            if (post.caption.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                post.caption,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -236,12 +597,12 @@ class _HomeScreenState extends State<HomeScreen> {
           label: 'Buscar',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.favorite_border),
-          label: 'Favoritos',
+          icon: Icon(Icons.chat_bubble_outline),
+          label: 'Mensajes',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.book_online),
-          label: 'Reservas',
+          icon: Icon(Icons.video_library),
+          label: 'Reels',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person),
@@ -254,22 +615,19 @@ class _HomeScreenState extends State<HomeScreen> {
             // Ya estamos en home
             break;
           case 1:
-            Navigator.of(context).pushNamed('/search');
+            // Trigger new search flow
+            _startSearchFlow();
             break;
           case 2:
-            // TODO: Implementar favoritos
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Próximamente')),
-            );
+            // Navigate to Messages
+            Navigator.of(context).pushNamed('/messages');
             break;
           case 3:
-            if (authProvider.isAuthenticated) {
-              Navigator.of(context).pushNamed('/bookings');
-            } else {
-              Navigator.of(context).pushNamed('/login');
-            }
+            // Permitir acceso a Reels sin autenticación
+            Navigator.of(context).pushNamed('/reels');
             break;
           case 4:
+            // Profile requiere autenticación
             if (authProvider.isAuthenticated) {
               Navigator.of(context).pushNamed('/profile');
             } else {
@@ -280,6 +638,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
+
 }
 
 class PropertyCard extends StatelessWidget {
@@ -292,11 +651,18 @@ class PropertyCard extends StatelessWidget {
     final theme = Theme.of(context);
     final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: InkWell(
         onTap: () {
@@ -305,51 +671,64 @@ class PropertyCard extends StatelessWidget {
             arguments: property.id,
           );
         },
+        borderRadius: BorderRadius.circular(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Property Image
             Stack(
               children: [
-                SizedBox(
-                  height: 200,
-                  width: double.infinity,
-                  child: property.rooms.isNotEmpty &&
-                          property.rooms.first.images.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: property.rooms.first.images.first,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            color: Colors.grey.shade300,
-                            child: const Center(
-                              child: CircularProgressIndicator(),
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: SizedBox(
+                    height: 220,
+                    width: double.infinity,
+                    child: property.rooms.isNotEmpty &&
+                            property.rooms.first.images.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: property.rooms.first.images.first,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              color: Colors.grey.shade200,
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
                             ),
+                            errorWidget: (context, url, error) => Container(
+                              color: Colors.grey.shade200,
+                              child: const Icon(Icons.image_not_supported,
+                                  size: 60, color: Colors.grey),
+                            ),
+                          )
+                        : Container(
+                            color: Colors.grey.shade200,
+                            child: const Icon(Icons.hotel, size: 60, color: Colors.grey),
                           ),
-                          errorWidget: (context, url, error) => Container(
-                            color: Colors.grey.shade300,
-                            child: const Icon(Icons.image_not_supported,
-                                size: 60),
-                          ),
-                        )
-                      : Container(
-                          color: Colors.grey.shade300,
-                          child: const Icon(Icons.hotel, size: 60),
-                        ),
+                  ),
                 ),
+                // Badge
                 if (property.ratingAverage >= 4.5)
                   Positioned(
                     top: 12,
                     right: 12,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
+                        horizontal: 10,
+                        vertical: 6,
                       ),
                       decoration: BoxDecoration(
                         color: theme.primaryColor,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: theme.primaryColor.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: const Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.star, size: 14, color: Colors.white),
                           SizedBox(width: 4),
@@ -357,8 +736,8 @@ class PropertyCard extends StatelessWidget {
                             'Destacado',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -370,32 +749,35 @@ class PropertyCard extends StatelessWidget {
 
             // Property Info
             Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Title
                   Text(
                     property.displayName,
-                    style: theme.textTheme.titleMedium?.copyWith(
+                    style: const TextStyle(
+                      fontSize: 17,
                       fontWeight: FontWeight.bold,
+                      height: 1.3,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
 
                   // Location
                   Row(
                     children: [
                       Icon(Icons.location_on,
-                          size: 16, color: Colors.grey.shade600),
-                      const SizedBox(width: 4),
+                          size: 16, color: Colors.grey[600]),
+                      const SizedBox(width: 6),
                       Expanded(
                         child: Text(
                           '${property.addressCity}, ${property.addressCountry}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.grey.shade600,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -403,37 +785,62 @@ class PropertyCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
 
                   // Rating and Price
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       if (property.ratingCount > 0)
-                        Row(
-                          children: [
-                            const Icon(Icons.star,
-                                size: 16, color: Colors.amber),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${property.ratingAverage.toStringAsFixed(1)} (${property.ratingCount})',
-                              style: theme.textTheme.bodySmall,
-                            ),
-                          ],
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.star,
+                                  size: 14, color: Colors.amber),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${property.ratingAverage.toStringAsFixed(1)} (${property.ratingCount})',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         )
                       else
                         Text(
                           'Sin reseñas',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.grey.shade600,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[500],
                           ),
                         ),
-                      Text(
-                        '${currencyFormat.format(property.minPrice)}/noche',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.primaryColor,
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            currencyFormat.format(property.minPrice),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: theme.primaryColor,
+                            ),
+                          ),
+                          Text(
+                            'por noche',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

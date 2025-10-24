@@ -99,63 +99,92 @@ class _CommentsScreenState extends State<CommentsScreen> {
                         },
                       ),
           ),
-          if (authProvider.isAuthenticated)
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  top: BorderSide(color: Colors.grey.shade300),
-                ),
-              ),
-              padding: const EdgeInsets.all(8.0),
-              child: SafeArea(
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 18,
-                      backgroundImage: authProvider.user?.profilePicture != null
-                          ? CachedNetworkImageProvider(
-                              authProvider.user!.profilePicture!)
-                          : null,
-                      child: authProvider.user?.profilePicture == null
-                          ? const Icon(Icons.person, size: 20)
-                          : null,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: _commentController,
-                        decoration: InputDecoration(
-                          hintText: 'Añade un comentario...',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey.shade100,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                        ),
-                        maxLines: null,
-                        textInputAction: TextInputAction.send,
-                        onSubmitted: (_) => _submitComment(),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.send,
-                        color: _commentController.text.isEmpty
-                            ? Colors.grey
-                            : Theme.of(context).primaryColor,
-                      ),
-                      onPressed: _submitComment,
-                    ),
-                  ],
-                ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                top: BorderSide(color: Colors.grey.shade300),
               ),
             ),
+            padding: const EdgeInsets.all(8.0),
+            child: SafeArea(
+              child: authProvider.isAuthenticated
+                  ? Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundImage: authProvider.user?.profilePicture != null
+                              ? CachedNetworkImageProvider(
+                                  authProvider.user!.profilePicture!)
+                              : null,
+                          child: authProvider.user?.profilePicture == null
+                              ? const Icon(Icons.person, size: 20)
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: _commentController,
+                            decoration: InputDecoration(
+                              hintText: 'Añade un comentario...',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey.shade100,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                            ),
+                            maxLines: null,
+                            textInputAction: TextInputAction.send,
+                            onSubmitted: (_) => _submitComment(),
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.send,
+                            color: _commentController.text.isEmpty
+                                ? Colors.grey
+                                : Theme.of(context).primaryColor,
+                          ),
+                          onPressed: _submitComment,
+                        ),
+                      ],
+                    )
+                  : GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pushNamed('/login');
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.login, color: Theme.of(context).primaryColor),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Inicia sesión para comentar',
+                              style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+            ),
+          ),
         ],
       ),
     );

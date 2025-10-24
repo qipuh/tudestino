@@ -1,4 +1,5 @@
 import 'user.dart';
+import '../core/utils/url_helper.dart';
 
 class SocialPost {
   final String id;
@@ -26,11 +27,20 @@ class SocialPost {
   });
 
   factory SocialPost.fromJson(Map<String, dynamic> json) {
+    // Parsear el campo 'media' que viene como array de objetos
+    List<String> mediaUrls = [];
+    if (json['media'] != null && json['media'] is List) {
+      mediaUrls = (json['media'] as List).map((media) {
+        final url = media['url']?.toString() ?? '';
+        return UrlHelper.getFullImageUrl(url);
+      }).toList();
+    }
+
     return SocialPost(
       id: json['id'] ?? '',
       userId: json['userId'] ?? '',
       caption: json['caption'] ?? '',
-      mediaUrls: (json['mediaUrls'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      mediaUrls: mediaUrls,
       likesCount: json['likesCount'] ?? 0,
       commentsCount: json['commentsCount'] ?? 0,
       isLiked: json['isLiked'] ?? false,
@@ -66,9 +76,11 @@ class Reel {
   final String caption;
   final String videoUrl;
   final String? thumbnailUrl;
+  final String? location;
   final int likesCount;
   final int commentsCount;
   final int viewsCount;
+  final int sharesCount;
   final bool isLiked;
   final User? user;
   final DateTime createdAt;
@@ -80,9 +92,11 @@ class Reel {
     required this.caption,
     required this.videoUrl,
     this.thumbnailUrl,
+    this.location,
     required this.likesCount,
     required this.commentsCount,
     required this.viewsCount,
+    required this.sharesCount,
     required this.isLiked,
     this.user,
     required this.createdAt,
@@ -94,11 +108,15 @@ class Reel {
       id: json['id'] ?? '',
       userId: json['userId'] ?? '',
       caption: json['caption'] ?? '',
-      videoUrl: json['videoUrl'] ?? '',
-      thumbnailUrl: json['thumbnailUrl'],
+      videoUrl: UrlHelper.getFullImageUrl(json['videoUrl'] ?? ''),
+      thumbnailUrl: json['thumbnailUrl'] != null
+          ? UrlHelper.getFullImageUrl(json['thumbnailUrl'])
+          : null,
+      location: json['location'],
       likesCount: json['likesCount'] ?? 0,
       commentsCount: json['commentsCount'] ?? 0,
       viewsCount: json['viewsCount'] ?? 0,
+      sharesCount: json['sharesCount'] ?? 0,
       isLiked: json['isLiked'] ?? false,
       user: json['user'] != null ? User.fromJson(json['user']) : null,
       createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
@@ -111,6 +129,7 @@ class Reel {
     bool? isLiked,
     int? commentsCount,
     int? viewsCount,
+    int? sharesCount,
   }) {
     return Reel(
       id: id,
@@ -118,9 +137,11 @@ class Reel {
       caption: caption,
       videoUrl: videoUrl,
       thumbnailUrl: thumbnailUrl,
+      location: location,
       likesCount: likesCount ?? this.likesCount,
       commentsCount: commentsCount ?? this.commentsCount,
       viewsCount: viewsCount ?? this.viewsCount,
+      sharesCount: sharesCount ?? this.sharesCount,
       isLiked: isLiked ?? this.isLiked,
       user: user,
       createdAt: createdAt,

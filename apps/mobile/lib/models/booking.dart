@@ -44,17 +44,19 @@ class Booking {
 
   factory Booking.fromJson(Map<String, dynamic> json) {
     return Booking(
-      id: json['id'] ?? '',
-      userId: json['userId'] ?? '',
-      propertyId: json['propertyId'] ?? '',
-      roomId: json['roomId'] ?? '',
+      id: json['id']?.toString() ?? '',
+      userId: json['userId']?.toString() ?? '',
+      propertyId: json['propertyId']?.toString() ?? '',
+      roomId: json['roomId']?.toString() ?? '',
       checkIn: DateTime.parse(json['checkIn']),
       checkOut: DateTime.parse(json['checkOut']),
-      adults: json['adults'] ?? 1,
-      children: json['children'] ?? 0,
-      totalPrice: (json['totalPrice'] ?? 0).toDouble(),
-      status: json['status'] ?? 'pending',
-      cancellationReason: json['cancellationReason'],
+      adults: json['adults'] is int ? json['adults'] : int.tryParse(json['adults']?.toString() ?? '1') ?? 1,
+      children: json['children'] is int ? json['children'] : int.tryParse(json['children']?.toString() ?? '0') ?? 0,
+      totalPrice: json['totalPrice'] is num
+          ? (json['totalPrice'] as num).toDouble()
+          : double.tryParse(json['totalPrice']?.toString() ?? '0') ?? 0.0,
+      status: json['status']?.toString() ?? 'pending',
+      cancellationReason: json['cancellationReason']?.toString(),
       user: json['user'] != null ? User.fromJson(json['user']) : null,
       property: json['property'] != null ? Property.fromJson(json['property']) : null,
       room: json['room'] != null ? Room.fromJson(json['room']) : null,

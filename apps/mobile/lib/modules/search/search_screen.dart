@@ -63,8 +63,8 @@ class _SearchScreenState extends State<SearchScreen> {
       context: context,
       initialDate: isCheckIn
           ? (_checkIn ?? DateTime.now())
-          : (_checkOut ?? DateTime.now().add(const Duration(days: 1))),
-      firstDate: DateTime.now(),
+          : (_checkOut ?? (_checkIn?.add(const Duration(days: 1)) ?? DateTime.now().add(const Duration(days: 1)))),
+      firstDate: isCheckIn ? DateTime.now() : (_checkIn ?? DateTime.now()),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       locale: const Locale('es', 'ES'),
     );
@@ -73,11 +73,22 @@ class _SearchScreenState extends State<SearchScreen> {
       setState(() {
         if (isCheckIn) {
           _checkIn = picked;
-          // Si check-out es antes del nuevo check-in, ajustarlo
-          if (_checkOut != null && _checkOut!.isBefore(picked)) {
+          // Si check-out es antes o igual al nuevo check-in, ajustarlo
+          if (_checkOut != null && !_checkOut!.isAfter(picked)) {
             _checkOut = picked.add(const Duration(days: 1));
           }
         } else {
+          // Validar que checkout sea después de checkin
+          if (_checkIn != null && !picked.isAfter(_checkIn!)) {
+            // Mostrar mensaje de error
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('La fecha de salida debe ser posterior a la fecha de entrada'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+            return;
+          }
           _checkOut = picked;
         }
       });
@@ -300,7 +311,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
                   // Property Type
                   DropdownButtonFormField<String>(
-                    value: _propertyType,
+                    initialValue: _propertyType,
                     decoration: const InputDecoration(
                       labelText: 'Tipo de alojamiento',
                       border: OutlineInputBorder(),

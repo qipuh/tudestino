@@ -39,7 +39,7 @@ class BookingsProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _apiService.get('/bookings/user/me');
+      final response = await _apiService.get('/bookings/my-bookings');
 
       if (response.data['success']) {
         _bookings = (response.data['data'] as List)
@@ -49,7 +49,7 @@ class BookingsProvider with ChangeNotifier {
         _error = response.data['message'];
       }
     } catch (e) {
-      _error = 'Error al cargar reservas';
+      _error = 'Error al cargar reservas: $e';
     }
 
     _isLoading = false;

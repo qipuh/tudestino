@@ -2,7 +2,14 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:3000/api';
+  // Production
+  // static const String baseUrl = 'https://api.tudestino.qipuh.com/api';
+
+  // Development (localhost - para web)
+  // static const String baseUrl = 'http://localhost:3000/api';
+
+  // Development (red local - para dispositivo Android)
+  static const String baseUrl = 'http://192.168.0.15:3000/api';
   final Dio _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
@@ -37,6 +44,10 @@ class ApiService {
 
   Future<Response> put(String path, {dynamic data}) async {
     return await _dio.put(path, data: data);
+  }
+
+  Future<Response> patch(String path, {dynamic data}) async {
+    return await _dio.patch(path, data: data);
   }
 
   Future<Response> delete(String path) async {

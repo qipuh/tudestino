@@ -25,7 +25,8 @@ class PropertiesProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _apiService.get('/properties/featured');
+      // Cambiado de /properties/featured a /properties
+      final response = await _apiService.get('/properties');
 
       if (response.data['success']) {
         _properties = (response.data['data'] as List)
@@ -89,7 +90,8 @@ class PropertiesProvider with ChangeNotifier {
         _error = response.data['message'];
       }
     } catch (e) {
-      _error = 'Error al buscar propiedades';
+      _error = 'Error al buscar propiedades: ${e.toString()}';
+      print('Error en searchProperties: $e');
     }
 
     _isLoading = false;

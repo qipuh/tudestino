@@ -9,6 +9,8 @@ class User {
   final bool phoneVerified;
   final double? hostRating;
   final int? hostReviewCount;
+  final String? username;
+  final String? bio;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -23,6 +25,8 @@ class User {
     required this.phoneVerified,
     this.hostRating,
     this.hostReviewCount,
+    this.username,
+    this.bio,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -37,8 +41,12 @@ class User {
       role: json['role'] ?? 'guest',
       emailVerified: json['emailVerified'] ?? false,
       phoneVerified: json['phoneVerified'] ?? false,
-      hostRating: json['hostRating']?.toDouble(),
+      hostRating: json['hostRating'] != null
+          ? double.tryParse(json['hostRating'].toString())
+          : null,
       hostReviewCount: json['hostReviewCount'],
+      username: json['username'],
+      bio: json['bio'],
       createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
       updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
     );
@@ -56,6 +64,8 @@ class User {
       'phoneVerified': phoneVerified,
       'hostRating': hostRating,
       'hostReviewCount': hostReviewCount,
+      'username': username,
+      'bio': bio,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };

@@ -61,11 +61,11 @@ router.get('/users/:userId/posts', socialController.getUserPosts);
 // Obtener reels de un usuario
 router.get('/users/:userId/reels', socialController.getUserReels);
 
-// Obtener feed de posts
-router.get('/feed', authenticate, socialController.getFeed);
+// Obtener feed de posts (autenticación opcional para feed público)
+router.get('/feed', optionalAuthenticate, socialController.getFeed);
 
-// Obtener feed de reels
-router.get('/reels/feed', authenticate, socialController.getReelsFeed);
+// Obtener feed de reels (autenticación opcional para feed público)
+router.get('/reels/feed', optionalAuthenticate, socialController.getReelsFeed);
 
 // Toggle like
 router.post('/like', authenticate, socialController.toggleLike);

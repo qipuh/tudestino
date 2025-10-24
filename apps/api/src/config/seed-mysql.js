@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import sequelize from './database-mysql.js';
 import User from '../modules/users/user.model-mysql.js';
-import Property from '../modules/properties/property.model-mysql.js';
+import { Property } from '../modules/properties/property.model.sequelize.js';
 import Booking from '../modules/bookings/booking.model.js';
 
 dotenv.config();

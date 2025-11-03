@@ -445,7 +445,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.black26,
               shape: BoxShape.circle,
             ),

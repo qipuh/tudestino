@@ -164,41 +164,35 @@ class PostCard extends StatelessWidget {
             padding: const EdgeInsets.all(12.0),
             child: Row(
               children: [
-                GestureDetector(
-                  onTap: () => _navigateToProfile(context),
-                  child: CircleAvatar(
-                    radius: 18,
-                    backgroundImage: post.user?.profilePicture != null
-                        ? CachedNetworkImageProvider(post.user!.profilePicture!)
-                        : null,
-                    child: post.user?.profilePicture == null
-                        ? const Icon(Icons.person, size: 20)
-                        : null,
-                  ),
+                CircleAvatar(
+                  radius: 18,
+                  backgroundImage: post.user?.profilePicture != null
+                      ? CachedNetworkImageProvider(post.user!.profilePicture!)
+                      : null,
+                  child: post.user?.profilePicture == null
+                      ? const Icon(Icons.person, size: 20)
+                      : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: GestureDetector(
-                    onTap: () => _navigateToProfile(context),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          post.user?.name ?? 'Usuario',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        post.user?.name ?? 'Usuario',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
                         ),
-                        Text(
-                          timeago.format(post.createdAt, locale: 'es'),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                          ),
+                      ),
+                      Text(
+                        timeago.format(post.createdAt, locale: 'es'),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
                 if (currentUserId == post.userId)
@@ -284,7 +278,7 @@ class PostCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: RichText(
                 text: TextSpan(
-                  style: TextStyle(color: Colors.black, fontSize: 14),
+                  style: const TextStyle(color: Colors.black, fontSize: 14),
                   children: [
                     TextSpan(
                       text: post.user?.name ?? 'Usuario',
@@ -319,15 +313,8 @@ class PostCard extends StatelessWidget {
     );
   }
 
-  void _handleLike(BuildContext context) async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-    if (!authProvider.isAuthenticated) {
-      _showLoginPrompt(context, '¿Quieres dar me gusta a esta publicación? Inicia sesión para interactuar.');
-      return;
-    }
-
-    await Provider.of<SocialProvider>(context, listen: false).toggleLikePost(post.id);
+  void _handleLike(BuildContext context) {
+    Provider.of<SocialProvider>(context, listen: false).toggleLikePost(post.id);
   }
 
   void _navigateToComments(BuildContext context) {
@@ -339,19 +326,6 @@ class PostCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  void _navigateToProfile(BuildContext context) {
-    if (post.userId.isEmpty) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Perfil de ${post.user?.name ?? "usuario"}'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
-    // TODO: Navigate to user profile screen when implemented
-    // Navigator.of(context).pushNamed('/user-profile', arguments: post.userId);
   }
 
   void _showPostOptions(BuildContext context) {
@@ -413,29 +387,6 @@ class PostCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showLoginPrompt(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Iniciar sesión'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.of(context).pushNamed('/login');
-            },
-            child: const Text('Iniciar sesión'),
-          ),
-        ],
       ),
     );
   }

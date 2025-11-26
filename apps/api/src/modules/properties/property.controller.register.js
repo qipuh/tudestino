@@ -135,6 +135,7 @@ export const registerProperty = async (req, res) => {
       propertyId: property.id,
       roomType: room.roomType,
       name: room.name,
+      quantity: room.quantity || 1,
       guestCapacity: room.guestCapacity,
       beds: room.beds,
       pricePerNight: room.pricePerNight,

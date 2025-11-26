@@ -23,12 +23,11 @@ export const connectDB = async () => {
     await sequelize.authenticate();
     console.log('✅ MySQL Connected successfully');
 
-    // Sincronizar modelos en desarrollo (desactivado por límite de índices)
-    // Si necesitas sincronizar, usa: npm run seed:mysql
-    // if (process.env.NODE_ENV === 'development') {
-    //   await sequelize.sync({ alter: true });
-    //   console.log('✅ Database models synchronized');
-    // }
+    // Sincronizar modelos en desarrollo
+    if (process.env.NODE_ENV === 'development') {
+      await sequelize.sync({ alter: true });
+      console.log('✅ Database models synchronized');
+    }
   } catch (error) {
     console.error('❌ Unable to connect to MySQL database:', error.message);
     process.exit(1);

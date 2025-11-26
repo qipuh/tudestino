@@ -68,7 +68,14 @@
       "Bash(copy \"apps\\web\\public\\img\\tudestino-logo.png\" \"apps\\mobile\\assets\\images\\tudestino-logo.png\")",
       "Bash(for dir in apps/mobile/android/app/src/main/res/mipmap-*)",
       "Bash(do cp apps/web/public/img/ico.png \"$dir/ic_launcher.png\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(ssh:*)",
+      "Bash(timeout 5 bash:*)",
+      "Bash(timeout 30 bash:*)",
+      "Bash(timeout 60 bash:*)",
+      "Bash(ping:*)",
+      "Bash(nslookup:*)",
+      "Bash(timeout 10 bash -c \"echo QUIT | openssl s_client -connect mail.tudestino.lat:993 2>&1 | head -20\")"
     ],
     "deny": [],
     "ask": []

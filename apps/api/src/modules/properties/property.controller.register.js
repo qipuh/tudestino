@@ -166,10 +166,20 @@ export const registerProperty = async (req, res) => {
   } catch (error) {
     await transaction.rollback();
     console.error('Error al registrar propiedad:', error);
+    if (error.errors) {
+      console.error('Validation errors:', error.errors.map(e => ({
+        message: e.message,
+        type: e.type,
+        path: e.path,
+        value: e.value
+      })));
+    }
+    console.error('Stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Error al registrar la propiedad',
       error: error.message,
+      details: error.errors ? error.errors.map(e => e.message) : null
     });
   }
 };

@@ -24,7 +24,7 @@ const User = sequelize.define('User', {
     allowNull: true,
     unique: true,
     validate: {
-      is: /^[a-z0-9-]{3,30}$/,
+      is: ['^[a-z0-9-]{3,30}$', 'i'],
     },
     comment: 'URL personalizada del perfil (ej: mi-empresa)'
   },

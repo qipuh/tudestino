@@ -12,7 +12,7 @@ const Property = sequelize.define('Property', {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: 'Users',
+      model: 'users',
       key: 'id',
     },
   },
@@ -191,7 +191,7 @@ const Room = sequelize.define('Room', {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: 'Properties',
+      model: 'properties',
       key: 'id',
     },
     onDelete: 'CASCADE',

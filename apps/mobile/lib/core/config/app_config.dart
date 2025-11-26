@@ -1,12 +1,12 @@
 class AppConfig {
   // Configuración del ambiente
-  static const String _environment = String.fromEnvironment('ENVIRONMENT', defaultValue: 'development');
-  
+  static const String _environment = String.fromEnvironment('ENVIRONMENT', defaultValue: 'production');
+
   // URLs base por ambiente
   static const Map<String, String> _apiUrls = {
     'development': 'http://localhost:3000/api',
-    'development_android': 'http://192.168.0.15:3000/api',
-    'production': 'https://api.tudestino.lat/api',
+    'development_android': 'http://192.168.0.16:3000/api',
+    'production': 'https://tudestino.lat/api',
   };
   
   // Getter para obtener la URL base según el ambiente

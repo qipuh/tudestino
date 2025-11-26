@@ -1,4 +1,4 @@
-import '../services/api_service.dart';
+import '../config/app_config.dart';
 
 class UrlHelper {
   static String getFullImageUrl(String? url) {
@@ -10,7 +10,7 @@ class UrlHelper {
     }
 
     // Si es una URL relativa, construir la URL completa
-    final baseUrl = ApiService.baseUrl.replaceAll('/api', '');
+    final baseUrl = AppConfig.baseUrl.replaceAll('/api', '');
     return '$baseUrl$url';
   }
 

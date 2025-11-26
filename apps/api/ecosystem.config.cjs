@@ -1,26 +1,30 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
 module.exports = {
   apps: [{
     name: 'tudestino-api',
     script: 'src/index.js',
-    cwd: '/var/www/vhosts/tudestino.qipuh.com/httpdocs/api',
-    instances: 1,
+    cwd: '/var/www/tudestino/apps/api',
+    instances: 2,
+    exec_mode: 'cluster',
     autorestart: true,
     watch: false,
-    max_memory_restart: '1G',
+    max_memory_restart: '512M',
     env_production: {
       NODE_ENV: 'production',
-      PORT: 3000,
-      DB_HOST: '127.0.0.1',
-      DB_PORT: 3306,
-      DB_NAME: 'admin_tudestino',
-      DB_USER: 'admin_tudestino',
-      DB_PASSWORD: '3@monitoSS',
-      JWT_SECRET: 'tudestino-production-super-secret-jwt-key-2025-qipuh-secure',
-      JWT_EXPIRES_IN: '7d',
-      WEB_URL: 'https://tudestino.qipuh.com',
-      API_URL: 'https://api.tudestino.qipuh.com',
-      CORS_ORIGIN: 'https://tudestino.qipuh.com,https://admin.tudestino.qipuh.com,https://api.tudestino.qipuh.com',
-      CLIENT_URL: 'https://tudestino.qipuh.com'
+      PORT: process.env.PORT || 3001,
+      DB_HOST: process.env.DB_HOST || 'localhost',
+      DB_PORT: process.env.DB_PORT || 3306,
+      DB_NAME: process.env.DB_NAME || 'tudestino_prod',
+      DB_USER: process.env.DB_USER || 'tudestino',
+      DB_PASSWORD: process.env.DB_PASSWORD || 'tudestino123_prod',
+      JWT_SECRET: process.env.JWT_SECRET || 'tudestino-production-super-secret-jwt-key-2025-qipuh-secure',
+      JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
+      WEB_URL: process.env.WEB_URL || 'https://tudestino.lat',
+      API_URL: process.env.API_URL || 'https://api.tudestino.lat',
+      CORS_ORIGIN: process.env.CORS_ORIGIN || 'https://tudestino.lat,https://admin.tudestino.lat,https://api.tudestino.lat',
+      CLIENT_URL: process.env.CLIENT_URL || 'https://tudestino.lat'
     }
   }]
 };

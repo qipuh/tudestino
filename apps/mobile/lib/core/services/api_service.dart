@@ -1,19 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../config/app_config.dart';
 
 class ApiService {
-  // Production
-  // static const String baseUrl = 'https://api.tudestino.qipuh.com/api';
-
-  // Development (localhost - para web)
-  // static const String baseUrl = 'http://localhost:3000/api';
-
-  // Development (red local - para dispositivo Android)
-  static const String baseUrl = 'http://192.168.0.15:3000/api';
   final Dio _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  ApiService() : _dio = Dio(BaseOptions(baseUrl: baseUrl)) {
+  ApiService() : _dio = Dio(BaseOptions(baseUrl: AppConfig.baseUrl)) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {

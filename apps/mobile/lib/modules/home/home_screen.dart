@@ -7,7 +7,6 @@ import '../../providers/social_provider.dart';
 import '../../models/property.dart';
 import '../../models/social_post.dart';
 import 'package:intl/intl.dart';
-import 'package:timeago/timeago.dart' as timeago;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

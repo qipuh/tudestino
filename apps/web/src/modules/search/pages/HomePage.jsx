@@ -253,7 +253,11 @@ function HomePage() {
                       {property.ratingAverage > 0 && (
                         <div className="flex items-center gap-1 mt-1">
                           <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium">{property.ratingAverage.toFixed(1)}</span>
+                          <span className="text-sm font-medium">
+                            {typeof property.ratingAverage === 'number'
+                              ? property.ratingAverage.toFixed(1)
+                              : parseFloat(property.ratingAverage).toFixed(1)}
+                          </span>
                           <span className="text-sm text-gray-600">({property.ratingCount})</span>
                         </div>
                       )}

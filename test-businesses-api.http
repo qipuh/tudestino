@@ -1,0 +1,357 @@
+### ==============================================
+### API de Negocios - TuDestino
+### ==============================================
+
+### Variables
+@baseUrl = http://localhost:3000/api
+@token = TU_TOKEN_AQUI
+@businessId =
+@serviceId =
+@postId =
+
+### ==============================================
+### 1. AUTENTICACIÓN (OPCIONAL - si tienes el endpoint)
+### ==============================================
+
+### Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "tu@email.com",
+  "password": "tupassword"
+}
+
+### ==============================================
+### 2. GESTIÓN DE NEGOCIOS
+### ==============================================
+
+### Crear Negocio
+POST {{baseUrl}}/businesses
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Hotel Cajamarca Paradise",
+  "slug": "hotel-cajamarca-paradise",
+  "description": "Hotel de lujo en el corazón de Cajamarca, Perú. Ofrecemos las mejores habitaciones y servicios de primera clase.",
+  "businessType": "hotel",
+  "logo": "https://example.com/logo.png",
+  "coverImage": "https://example.com/cover.jpg",
+  "taxId": "20123456789",
+  "address": {
+    "street": "Jr. Amazonas 123",
+    "city": "Cajamarca",
+    "state": "Cajamarca",
+    "country": "Perú",
+    "zipCode": "06001",
+    "latitude": -7.1619,
+    "longitude": -78.5128
+  },
+  "contactPhone": "+51 976 123 456",
+  "contactEmail": "info@hotelcajamarca.com",
+  "website": "https://hotelcajamarca.com",
+  "operatingHours": {
+    "monday": { "open": "00:00", "close": "23:59" },
+    "tuesday": { "open": "00:00", "close": "23:59" },
+    "wednesday": { "open": "00:00", "close": "23:59" },
+    "thursday": { "open": "00:00", "close": "23:59" },
+    "friday": { "open": "00:00", "close": "23:59" },
+    "saturday": { "open": "00:00", "close": "23:59" },
+    "sunday": { "open": "00:00", "close": "23:59" }
+  },
+  "socialMediaLinks": {
+    "facebook": "https://facebook.com/hotelcajamarca",
+    "instagram": "https://instagram.com/hotelcajamarca",
+    "twitter": "https://twitter.com/hotelcajamarca"
+  }
+}
+
+### Obtener Mis Negocios
+GET {{baseUrl}}/businesses/my-businesses
+Authorization: Bearer {{token}}
+
+### Obtener Negocio por ID (con relaciones)
+GET {{baseUrl}}/businesses/{{businessId}}?include=true
+
+### Obtener Negocio por Slug
+GET {{baseUrl}}/businesses/slug/hotel-cajamarca-paradise?include=true
+
+### Buscar Negocios (público)
+GET {{baseUrl}}/businesses/search?type=hotel&q=cajamarca&page=1&limit=20
+
+### Buscar Todos los Negocios Activos
+GET {{baseUrl}}/businesses/search?status=active&page=1&limit=20
+
+### Obtener Negocios de un Usuario
+GET {{baseUrl}}/businesses/user/USER_ID_AQUI
+
+### Actualizar Negocio
+PUT {{baseUrl}}/businesses/{{businessId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "description": "Hotel de lujo renovado en 2025 con nuevas amenidades y servicios premium",
+  "contactPhone": "+51 976 987 654",
+  "socialMediaLinks": {
+    "facebook": "https://facebook.com/hotelcajamarca",
+    "instagram": "https://instagram.com/hotelcajamarca",
+    "twitter": "https://twitter.com/hotelcajamarca",
+    "tiktok": "https://tiktok.com/@hotelcajamarca"
+  }
+}
+
+### Eliminar Negocio
+DELETE {{baseUrl}}/businesses/{{businessId}}
+Authorization: Bearer {{token}}
+
+### Verificar Negocio (Solo Admin)
+POST {{baseUrl}}/businesses/{{businessId}}/verify
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "verificationStatus": "verified"
+}
+
+### ==============================================
+### 3. SERVICIOS DE NEGOCIO
+### ==============================================
+
+### Crear Servicio - Tipo Property
+POST {{baseUrl}}/businesses/{{businessId}}/services
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "serviceType": "property",
+  "name": "Habitaciones del Hotel",
+  "description": "Servicio de alojamiento con habitaciones de lujo, suites y habitaciones familiares",
+  "status": "active"
+}
+
+### Crear Servicio - Tipo Restaurant
+POST {{baseUrl}}/businesses/{{businessId}}/services
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "serviceType": "restaurant",
+  "name": "Restaurante Gourmet",
+  "description": "Restaurante con comida peruana e internacional",
+  "status": "active"
+}
+
+### Crear Servicio - Tipo Spa
+POST {{baseUrl}}/businesses/{{businessId}}/services
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "serviceType": "spa",
+  "name": "Spa & Wellness",
+  "description": "Centro de relajación con masajes y tratamientos",
+  "status": "active"
+}
+
+### Obtener Servicios de un Negocio
+GET {{baseUrl}}/businesses/{{businessId}}/services?status=active
+
+### Obtener Servicios de un Negocio (Filtrado por Tipo)
+GET {{baseUrl}}/businesses/{{businessId}}/services?type=property&status=active
+
+### Obtener Servicio Específico
+GET {{baseUrl}}/businesses/services/{{serviceId}}
+
+### Actualizar Servicio
+PUT {{baseUrl}}/businesses/services/{{serviceId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Habitaciones Premium Renovadas",
+  "description": "Servicio de alojamiento con habitaciones completamente renovadas en 2025"
+}
+
+### Reordenar Servicios
+POST {{baseUrl}}/businesses/{{businessId}}/services/reorder
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "servicesOrder": [
+    { "serviceId": "uuid-servicio-1" },
+    { "serviceId": "uuid-servicio-2" },
+    { "serviceId": "uuid-servicio-3" }
+  ]
+}
+
+### Toggle Estado del Servicio (Activar/Desactivar)
+PATCH {{baseUrl}}/businesses/services/{{serviceId}}/toggle
+Authorization: Bearer {{token}}
+
+### Eliminar Servicio
+DELETE {{baseUrl}}/businesses/services/{{serviceId}}
+Authorization: Bearer {{token}}
+
+### ==============================================
+### 4. POSTS DE NEGOCIOS (RED SOCIAL)
+### ==============================================
+
+### Crear Post Normal
+POST {{baseUrl}}/businesses/{{businessId}}/posts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "caption": "¡Descubre nuestras nuevas habitaciones renovadas! 🏨✨\n\nVen y disfruta de una experiencia única en el corazón de Cajamarca. Habitaciones con vista panorámica, jacuzzi privado y todas las comodidades que necesitas.\n\n#HotelCajamarca #Lujo #Turismo #Perú",
+  "media": [
+    {
+      "url": "https://example.com/media/room1.jpg",
+      "type": "image",
+      "thumbnail": "https://example.com/media/room1-thumb.jpg",
+      "alt": "Habitación deluxe con vista panorámica"
+    },
+    {
+      "url": "https://example.com/media/room2.jpg",
+      "type": "image",
+      "thumbnail": "https://example.com/media/room2-thumb.jpg",
+      "alt": "Suite presidencial con jacuzzi"
+    }
+  ],
+  "type": "post",
+  "location": "Cajamarca, Perú",
+  "tags": ["#hotel", "#cajamarca", "#lujo", "#turismo", "#peru"]
+}
+
+### Crear Reel
+POST {{baseUrl}}/businesses/{{businessId}}/posts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "caption": "Tour virtual por nuestro hotel 🎥✨",
+  "media": [
+    {
+      "url": "https://example.com/media/tour-video.mp4",
+      "type": "video",
+      "thumbnail": "https://example.com/media/tour-thumb.jpg",
+      "alt": "Tour del hotel"
+    }
+  ],
+  "type": "reel",
+  "location": "Cajamarca, Perú",
+  "tags": ["#reel", "#hotel", "#tour"]
+}
+
+### Crear Story
+POST {{baseUrl}}/businesses/{{businessId}}/posts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "caption": "¡Oferta especial solo por hoy! 🎉",
+  "media": [
+    {
+      "url": "https://example.com/media/promo.jpg",
+      "type": "image",
+      "thumbnail": "https://example.com/media/promo-thumb.jpg",
+      "alt": "Promoción especial"
+    }
+  ],
+  "type": "story",
+  "location": "Cajamarca, Perú",
+  "tags": ["#oferta", "#promocion"]
+}
+
+### Obtener Posts de un Negocio
+GET {{baseUrl}}/businesses/{{businessId}}/posts?page=1&limit=20
+
+### Obtener Posts de un Negocio (Solo Reels)
+GET {{baseUrl}}/businesses/{{businessId}}/posts?page=1&limit=20&type=reel
+
+### Obtener Post Específico
+GET {{baseUrl}}/businesses/posts/{{postId}}
+
+### Obtener Feed de Posts (Posts de Negocios que Sigo)
+GET {{baseUrl}}/businesses/posts/feed?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Like Post
+POST {{baseUrl}}/businesses/posts/{{postId}}/like
+Authorization: Bearer {{token}}
+
+### Actualizar Post
+PUT {{baseUrl}}/businesses/posts/{{postId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "caption": "¡Descubre nuestras habitaciones renovadas! 🏨✨\n\nAhora con descuento especial del 20% para reservas anticipadas.",
+  "tags": ["#hotel", "#cajamarca", "#oferta", "#descuento"]
+}
+
+### Eliminar Post (Soft Delete)
+DELETE {{baseUrl}}/businesses/posts/{{postId}}
+Authorization: Bearer {{token}}
+
+### ==============================================
+### 5. SEGUIDORES DE NEGOCIOS
+### ==============================================
+
+### Seguir Negocio
+POST {{baseUrl}}/businesses/{{businessId}}/follow
+Authorization: Bearer {{token}}
+
+### Dejar de Seguir Negocio
+DELETE {{baseUrl}}/businesses/{{businessId}}/follow
+Authorization: Bearer {{token}}
+
+### Verificar si Sigo un Negocio
+GET {{baseUrl}}/businesses/{{businessId}}/following
+Authorization: Bearer {{token}}
+
+### Obtener Mis Negocios Seguidos
+GET {{baseUrl}}/businesses/following/my-followed?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Obtener Seguidores de un Negocio
+GET {{baseUrl}}/businesses/{{businessId}}/followers?page=1&limit=20
+
+### Configurar Notificaciones de un Negocio
+PATCH {{baseUrl}}/businesses/{{businessId}}/follow/notifications
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "notificationsEnabled": true
+}
+
+### Desactivar Notificaciones
+PATCH {{baseUrl}}/businesses/{{businessId}}/follow/notifications
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "notificationsEnabled": false
+}
+
+### Bloquear/Desbloquear Negocio
+PATCH {{baseUrl}}/businesses/{{businessId}}/follow/block
+Authorization: Bearer {{token}}
+
+### ==============================================
+### 6. HEALTH CHECK
+### ==============================================
+
+### Verificar que el servidor esté corriendo
+GET http://localhost:3000/health
+
+### ==============================================
+### NOTAS:
+### - Reemplaza {{token}} con tu token JWT real
+### - Reemplaza {{businessId}}, {{serviceId}}, {{postId}} con IDs reales
+### - Los endpoints marcados con "Authorization" requieren autenticación
+### - Los endpoints sin "Authorization" son públicos
+### ==============================================

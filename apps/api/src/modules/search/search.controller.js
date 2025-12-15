@@ -1,6 +1,10 @@
 import { Op } from 'sequelize';
 import { Property, Room } from '../properties/property.model.sequelize.js';
 import User from '../users/user.model-mysql.js';
+import Business from '../businesses/business.model.js';
+import Restaurant from '../restaurants/restaurant.model.js';
+import Event from '../events/event.model.js';
+import Entertainment from '../entertainment/entertainment.model.js';
 
 // Servicio para obtener ubicación por IP
 const getLocationByIP = async (ip) => {
@@ -333,6 +337,331 @@ export const getLocationSuggestions = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error al obtener sugerencias',
+      error: error.message
+    });
+  }
+};
+
+// GET /api/search/all - Búsqueda unificada de todos los tipos de negocios
+export const searchAll = async (req, res) => {
+  try {
+    const {
+      location,
+      latitude,
+      longitude,
+      radius = 50,
+      category,  // hotel, restaurant, event, entertainment, all
+      minRating,
+      sortBy = 'relevance',
+      page = 1,
+      limit = 20
+    } = req.query;
+
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const offset = (pageNum - 1) * limitNum;
+
+    let results = [];
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
+
+    // Construir condiciones de ubicación reutilizables
+    const buildLocationConditions = (cityField = 'addressCity', countryField = 'addressCountry', stateField = 'addressState') => {
+      if (!location) return {};
+
+      const locationParts = location.split(',').map(part => part.trim());
+
+      if (locationParts.length > 1) {
+        return {
+          [Op.and]: [
+            {
+              [Op.or]: [
+                { [cityField]: { [Op.like]: `%${locationParts[0]}%` } },
+                stateField ? { [stateField]: { [Op.like]: `%${locationParts[0]}%` } } : null
+              ].filter(Boolean)
+            },
+            {
+              [Op.or]: [
+                { [countryField]: { [Op.like]: `%${locationParts[1]}%` } },
+                stateField ? { [stateField]: { [Op.like]: `%${locationParts[1]}%` } } : null
+              ].filter(Boolean)
+            }
+          ]
+        };
+      }
+
+      return {
+        [Op.or]: [
+          { [cityField]: { [Op.like]: `%${location}%` } },
+          { [countryField]: { [Op.like]: `%${location}%` } },
+          stateField ? { [stateField]: { [Op.like]: `%${location}%` } } : null
+        ].filter(Boolean)
+      };
+    };
+
+    // Buscar en Properties (Hoteles/Alojamientos) si category es 'hotel', 'property', 'all' o no está definido
+    if (!category || category === 'all' || category === 'hotel' || category === 'property') {
+      const propertyWhere = {
+        status: 'published',
+        isActive: true,
+        ...buildLocationConditions()
+      };
+
+      if (minRating) {
+        propertyWhere.ratingAverage = { [Op.gte]: parseFloat(minRating) };
+      }
+
+      const properties = await Property.findAll({
+        where: propertyWhere,
+        include: [
+          {
+            model: User,
+            as: 'host',
+            attributes: ['id', 'name', 'email']
+          },
+          {
+            model: Room,
+            as: 'rooms',
+            attributes: ['id', 'roomType', 'name', 'pricePerNight', 'images', 'guestCapacity'],
+            limit: 1
+          }
+        ],
+        limit: limitNum,
+        offset
+      });
+
+      results = results.concat(properties.map(p => {
+        const data = p.toJSON();
+        let distance = null;
+
+        if (lat && lng && data.addressLatitude && data.addressLongitude) {
+          distance = calculateDistance(lat, lng, parseFloat(data.addressLatitude), parseFloat(data.addressLongitude));
+        }
+
+        return {
+          id: data.id,
+          type: 'property',
+          name: data.propertyName || data.hotelName || `${data.accommodationType} en ${data.addressCity}`,
+          description: data.description,
+          image: data.rooms?.[0]?.images?.[0] || null,
+          location: {
+            city: data.addressCity,
+            state: data.addressState,
+            country: data.addressCountry,
+            latitude: data.addressLatitude,
+            longitude: data.addressLongitude
+          },
+          rating: data.ratingAverage || 0,
+          reviewCount: data.ratingCount || 0,
+          price: data.rooms?.[0]?.pricePerNight || null,
+          priceLabel: 'noche',
+          distance: distance ? Math.round(distance * 10) / 10 : null,
+          url: `/properties/${data.id}`
+        };
+      }));
+    }
+
+    // Buscar en Restaurants
+    if (!category || category === 'all' || category === 'restaurant') {
+      const restaurantWhere = {
+        status: 'published',
+        isActive: true,
+        ...buildLocationConditions('city', 'country', 'state')
+      };
+
+      if (minRating) {
+        restaurantWhere.averageRating = { [Op.gte]: parseFloat(minRating) };
+      }
+
+      const restaurants = await Restaurant.findAll({
+        where: restaurantWhere,
+        limit: limitNum,
+        offset
+      });
+
+      results = results.concat(restaurants.map(r => {
+        const data = r.toJSON();
+        let distance = null;
+
+        if (lat && lng && data.latitude && data.longitude) {
+          distance = calculateDistance(lat, lng, parseFloat(data.latitude), parseFloat(data.longitude));
+        }
+
+        return {
+          id: data.id,
+          type: 'restaurant',
+          name: data.name,
+          description: data.description,
+          image: data.logo,
+          location: {
+            city: data.city,
+            state: data.state,
+            country: data.country,
+            latitude: data.latitude,
+            longitude: data.longitude
+          },
+          rating: data.averageRating || 0,
+          reviewCount: data.totalReviews || 0,
+          priceRange: data.priceRange,
+          cuisineTypes: data.cuisineTypes || [],
+          distance: distance ? Math.round(distance * 10) / 10 : null,
+          url: `/restaurants/${data.id}`
+        };
+      }));
+    }
+
+    // Buscar en Events
+    if (!category || category === 'all' || category === 'event') {
+      const eventWhere = {
+        status: 'published',
+        isActive: true,
+        ...buildLocationConditions('city', 'country', 'state')
+      };
+
+      // Solo eventos futuros
+      eventWhere.startDate = { [Op.gte]: new Date() };
+
+      const events = await Event.findAll({
+        where: eventWhere,
+        limit: limitNum,
+        offset,
+        order: [['startDate', 'ASC']]
+      });
+
+      results = results.concat(events.map(e => {
+        const data = e.toJSON();
+        let distance = null;
+
+        if (lat && lng && data.latitude && data.longitude) {
+          distance = calculateDistance(lat, lng, parseFloat(data.latitude), parseFloat(data.longitude));
+        }
+
+        return {
+          id: data.id,
+          type: 'event',
+          name: data.title,
+          description: data.shortDescription || data.description,
+          image: data.coverImage,
+          location: {
+            city: data.city,
+            state: data.state,
+            country: data.country,
+            latitude: data.latitude,
+            longitude: data.longitude
+          },
+          category: data.category,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          isFree: data.isFree,
+          distance: distance ? Math.round(distance * 10) / 10 : null,
+          url: `/events/${data.id}`
+        };
+      }));
+    }
+
+    // Buscar en Entertainment
+    if (!category || category === 'all' || category === 'entertainment') {
+      const entertainmentWhere = {
+        status: 'published',
+        isActive: true,
+        ...buildLocationConditions('city', 'country', 'state')
+      };
+
+      if (minRating) {
+        entertainmentWhere.averageRating = { [Op.gte]: parseFloat(minRating) };
+      }
+
+      const entertainment = await Entertainment.findAll({
+        where: entertainmentWhere,
+        limit: limitNum,
+        offset
+      });
+
+      results = results.concat(entertainment.map(e => {
+        const data = e.toJSON();
+        let distance = null;
+
+        if (lat && lng && data.latitude && data.longitude) {
+          distance = calculateDistance(lat, lng, parseFloat(data.latitude), parseFloat(data.longitude));
+        }
+
+        return {
+          id: data.id,
+          type: 'entertainment',
+          subType: data.type,
+          name: data.name,
+          description: data.description,
+          image: data.logo,
+          location: {
+            city: data.city,
+            state: data.state,
+            country: data.country,
+            latitude: data.latitude,
+            longitude: data.longitude
+          },
+          rating: data.averageRating || 0,
+          reviewCount: data.totalReviews || 0,
+          priceRange: data.priceRange,
+          coverCharge: data.hasCoverCharge ? data.coverCharge : null,
+          distance: distance ? Math.round(distance * 10) / 10 : null,
+          url: `/entertainment/${data.id}`
+        };
+      }));
+    }
+
+    // Filtrar por radio si se proporcionaron coordenadas
+    if (lat && lng && radius) {
+      const radiusKm = parseInt(radius);
+      results = results.filter(item => !item.distance || item.distance <= radiusKm);
+    }
+
+    // Ordenar resultados
+    switch (sortBy) {
+      case 'distance':
+        results.sort((a, b) => (a.distance || Infinity) - (b.distance || Infinity));
+        break;
+      case 'rating':
+        results.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        break;
+      case 'relevance':
+      default:
+        // Ordenar por rating y número de reviews
+        results.sort((a, b) => {
+          const scoreA = (a.rating || 0) * (a.reviewCount || 1);
+          const scoreB = (b.rating || 0) * (b.reviewCount || 1);
+          return scoreB - scoreA;
+        });
+    }
+
+    // Aplicar paginación a resultados combinados
+    const totalResults = results.length;
+    const paginatedResults = results.slice(0, limitNum);
+
+    res.json({
+      success: true,
+      data: {
+        results: paginatedResults,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: totalResults,
+          totalPages: Math.ceil(totalResults / limitNum)
+        },
+        filters: {
+          location,
+          coordinates: lat && lng ? { latitude: lat, longitude: lng, radius: parseInt(radius) } : null,
+          category: category || 'all',
+          minRating: minRating || null,
+          sortBy
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in searchAll:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al buscar',
       error: error.message
     });
   }

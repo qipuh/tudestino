@@ -45,7 +45,7 @@ function Header() {
 
           {/* User Menu */}
           <div className="flex items-center gap-4">
-            <Link to="/host" className="hidden md:block text-sm font-medium hover:bg-gray-100 px-3 py-2 rounded-full">
+            <Link to="/business_owner" className="hidden md:block text-sm font-medium hover:bg-gray-100 px-3 py-2 rounded-full">
               Pon tu espacio en TuDestino
             </Link>
 
@@ -84,13 +84,13 @@ function Header() {
                       >
                         Muro Social
                       </Link>
-                      {user.role === 'host' && (
+                      {user.role === 'business_owner' && (
                         <Link
-                          to="/host/properties"
+                          to="/business/dashboard"
                           className="block px-4 py-2 text-sm hover:bg-gray-50"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          Mis propiedades
+                          Mis Negocios
                         </Link>
                       )}
                       <Link
@@ -140,7 +140,7 @@ function Header() {
                       </Link>
                       <hr className="my-2" />
                       <Link
-                        to="/host"
+                        to="/business_owner"
                         className="block px-4 py-2 text-sm hover:bg-gray-50"
                         onClick={() => setIsMenuOpen(false)}
                       >

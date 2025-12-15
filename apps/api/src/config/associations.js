@@ -10,6 +10,12 @@ import Comment from '../modules/social/comment.model.js';
 import PostLike from '../modules/social/postLike.model.js';
 import CommentLike from '../modules/social/commentLike.model.js';
 import { Post as SocialPost, Reel, Like, Comment as SocialComment } from '../modules/social/social.model.sequelize.js';
+import Business from '../modules/businesses/business.model.js';
+import BusinessService from '../modules/businesses/business-service.model.js';
+import BusinessSocialPost from '../modules/businesses/business-social-post.model.js';
+import BusinessFollow from '../modules/businesses/business-follow.model.js';
+import UserSocialPost from '../modules/social/user-social-post.model.js';
+import ServiceReview from '../modules/reviews/service-review.model.js';
 
 export const setupAssociations = () => {
   // User - Property (Host relationship)
@@ -23,6 +29,8 @@ export const setupAssociations = () => {
   // User - Booking (Host relationship)
   User.hasMany(Booking, { foreignKey: 'hostId', as: 'hostBookings' });
   Booking.belongsTo(User, { foreignKey: 'hostId', as: 'host' });
+
+  // Property - Room association is already defined in property.model.sequelize.js
 
   // Property - Booking
   Property.hasMany(Booking, { foreignKey: 'propertyId', as: 'bookings' });
@@ -107,5 +115,39 @@ export const setupAssociations = () => {
   User.hasMany(Like, { foreignKey: 'userId', as: 'socialLikes' });
   Like.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
-  console.log('✅ Model associations configured');
+  // ==================== BUSINESS MODULE ASSOCIATIONS ====================
+
+  // User - Business (Owner relationship)
+  User.hasMany(Business, { foreignKey: 'ownerId', as: 'businesses' });
+  Business.belongsTo(User, { foreignKey: 'ownerId', as: 'owner' });
+
+  // Business - BusinessService
+  Business.hasMany(BusinessService, { foreignKey: 'businessId', as: 'services' });
+  BusinessService.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
+
+  // Business - BusinessSocialPost
+  Business.hasMany(BusinessSocialPost, { foreignKey: 'businessId', as: 'businessPosts' });
+  BusinessSocialPost.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
+
+  // User - BusinessFollow
+  User.hasMany(BusinessFollow, { foreignKey: 'userId', as: 'businessFollows' });
+  BusinessFollow.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+  // Business - BusinessFollow
+  Business.hasMany(BusinessFollow, { foreignKey: 'businessId', as: 'followers' });
+  BusinessFollow.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
+
+  // User - UserSocialPost
+  User.hasMany(UserSocialPost, { foreignKey: 'userId', as: 'userPosts' });
+  UserSocialPost.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+  // User - ServiceReview
+  User.hasMany(ServiceReview, { foreignKey: 'userId', as: 'serviceReviews' });
+  ServiceReview.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+  // Business - ServiceReview
+  Business.hasMany(ServiceReview, { foreignKey: 'businessId', as: 'reviews' });
+  ServiceReview.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
+
+  console.log('✅ Model associations configured (including Business module)');
 };

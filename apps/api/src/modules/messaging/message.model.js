@@ -11,7 +11,7 @@ const Message = sequelize.define('Message', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'Conversations',
+      model: 'conversations',
       key: 'id',
     },
     onDelete: 'CASCADE',
@@ -20,7 +20,7 @@ const Message = sequelize.define('Message', {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: 'Users',
+      model: 'users',
       key: 'id',
     },
   },
@@ -28,7 +28,7 @@ const Message = sequelize.define('Message', {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: 'Users',
+      model: 'users',
       key: 'id',
     },
   },
@@ -45,7 +45,7 @@ const Message = sequelize.define('Message', {
     allowNull: true,
   },
 }, {
-  tableName: 'Messages',
+  tableName: 'messages',
   timestamps: true,
   indexes: [
     {

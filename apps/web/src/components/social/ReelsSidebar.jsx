@@ -124,7 +124,7 @@ function ReelsSidebar({ isOpen, onToggle }) {
         <div className="h-full flex flex-col pl-3 pr-3 py-8">
           {loading ? (
             <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#16BED8]"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : reels.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-6">
@@ -168,7 +168,7 @@ function ReelsSidebar({ isOpen, onToggle }) {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#344B89] to-[#16BED8]">
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-dark to-secondary">
                       <p className="text-white text-center p-6 text-sm">
                         {currentReel?.content}
                       </p>

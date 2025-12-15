@@ -89,7 +89,7 @@ function FeedPage() {
               onClick={() => setFeedMode('explore')}
               className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${
                 feedMode === 'explore'
-                  ? 'bg-gradient-to-r from-[#344B89] to-[#16BED8] text-white shadow-md'
+                  ? 'bg-gradient-to-r from-primary-dark to-secondary text-white shadow-md'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
@@ -100,7 +100,7 @@ function FeedPage() {
               onClick={() => setFeedMode('following')}
               className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${
                 feedMode === 'following'
-                  ? 'bg-gradient-to-r from-[#344B89] to-[#16BED8] text-white shadow-md'
+                  ? 'bg-gradient-to-r from-primary-dark to-secondary text-white shadow-md'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
@@ -111,7 +111,7 @@ function FeedPage() {
               onClick={() => setFeedMode('trending')}
               className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${
                 feedMode === 'trending'
-                  ? 'bg-gradient-to-r from-[#344B89] to-[#16BED8] text-white shadow-md'
+                  ? 'bg-gradient-to-r from-primary-dark to-secondary text-white shadow-md'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
@@ -126,7 +126,7 @@ function FeedPage() {
               onClick={() => setActiveFilter('all')}
               className={`px-4 py-2 rounded-lg font-medium transition ${
                 activeFilter === 'all'
-                  ? 'bg-white text-[#16BED8] shadow-md border-2 border-[#16BED8]'
+                  ? 'bg-white text-primary shadow-md border-2 border-primary'
                   : 'bg-white text-gray-700 hover:bg-gray-50 shadow-sm'
               }`}
             >
@@ -136,7 +136,7 @@ function FeedPage() {
               onClick={() => setActiveFilter('reels')}
               className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${
                 activeFilter === 'reels'
-                  ? 'bg-white text-[#16BED8] shadow-md border-2 border-[#16BED8]'
+                  ? 'bg-white text-primary shadow-md border-2 border-primary'
                   : 'bg-white text-gray-700 hover:bg-gray-50 shadow-sm'
               }`}
             >
@@ -147,7 +147,7 @@ function FeedPage() {
               onClick={() => setActiveFilter('posts')}
               className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${
                 activeFilter === 'posts'
-                  ? 'bg-white text-[#16BED8] shadow-md border-2 border-[#16BED8]'
+                  ? 'bg-white text-primary shadow-md border-2 border-primary'
                   : 'bg-white text-gray-700 hover:bg-gray-50 shadow-sm'
               }`}
             >
@@ -159,7 +159,7 @@ function FeedPage() {
         {/* Posts Grid */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#16BED8]"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-20">
@@ -196,7 +196,7 @@ function FeedPage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#344B89] to-[#16BED8]">
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-dark to-secondary">
                     <p className="text-white text-center p-4 text-sm line-clamp-3">
                       {post.content}
                     </p>
@@ -220,7 +220,7 @@ function FeedPage() {
                 {/* Type badge */}
                 <div className="absolute top-3 right-3 opacity-90 group-hover:opacity-100 transition-opacity">
                   {post.type === 'reel' ? (
-                    <div className="bg-gradient-to-r from-[#16BED8] to-[#344B89] rounded-full p-2 shadow-lg">
+                    <div className="bg-gradient-to-r from-secondary to-primary rounded-full p-2 shadow-lg">
                       <Play size={16} className="text-white" fill="white" />
                     </div>
                   ) : (
@@ -235,7 +235,7 @@ function FeedPage() {
                 {/* User info */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#16BED8] to-[#344B89] flex items-center justify-center text-xs font-bold overflow-hidden ring-2 ring-white/30">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-secondary to-primary flex items-center justify-center text-xs font-bold overflow-hidden ring-2 ring-white/30">
                       {post.user?.avatar ? (
                         <img src={post.user.avatar} alt={post.user.name} className="w-full h-full object-cover" />
                       ) : (

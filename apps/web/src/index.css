@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --primary: #16BED8;
-  --primary-dark: #344B89;
-  --secondary: #16BED8;
+  --primary: #2F509F;
+  --primary-dark: #1e3a7a;
+  --secondary: #FFB547;
   --text-primary: #222222;
   --text-secondary: #717171;
   --border: #DDDDDD;
@@ -30,7 +30,7 @@ body {
   min-height: 100vh;
 }
 h1, h2, h3 {
-  color: #344B89;
+  color: #2F509F;
 }
 
 .logo-td {

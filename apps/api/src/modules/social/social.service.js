@@ -268,7 +268,8 @@ export const checkUsernameAvailability = async (username, currentUserId = null) 
   }
 
   // Si el username pertenece al usuario actual, está disponible para él
-  return existingUser.id === currentUserId;
+  // Normalizar comparación (ambos como strings)
+  return String(existingUser.id) === String(currentUserId);
 };
 
 // Obtener perfil por username

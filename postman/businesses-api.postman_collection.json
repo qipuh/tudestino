@@ -1,0 +1,646 @@
+{
+  "info": {
+    "name": "TuDestino - Módulo de Negocios API",
+    "description": "Colección completa de endpoints del módulo de negocios",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "businessId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "serviceId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "postId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. NEGOCIOS",
+      "item": [
+        {
+          "name": "Crear Negocio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hotel Cajamarca Paradise\",\n  \"slug\": \"hotel-cajamarca-paradise\",\n  \"description\": \"Hotel de lujo en el corazón de Cajamarca, Perú. Ofrecemos las mejores habitaciones y servicios.\",\n  \"businessType\": \"hotel\",\n  \"logo\": \"https://example.com/logo.png\",\n  \"coverImage\": \"https://example.com/cover.jpg\",\n  \"taxId\": \"20123456789\",\n  \"address\": {\n    \"street\": \"Jr. Amazonas 123\",\n    \"city\": \"Cajamarca\",\n    \"state\": \"Cajamarca\",\n    \"country\": \"Perú\",\n    \"zipCode\": \"06001\",\n    \"latitude\": -7.1619,\n    \"longitude\": -78.5128\n  },\n  \"contactPhone\": \"+51 976 123 456\",\n  \"contactEmail\": \"info@hotelcajamarca.com\",\n  \"website\": \"https://hotelcajamarca.com\",\n  \"operatingHours\": {\n    \"monday\": { \"open\": \"00:00\", \"close\": \"23:59\" },\n    \"tuesday\": { \"open\": \"00:00\", \"close\": \"23:59\" },\n    \"wednesday\": { \"open\": \"00:00\", \"close\": \"23:59\" },\n    \"thursday\": { \"open\": \"00:00\", \"close\": \"23:59\" },\n    \"friday\": { \"open\": \"00:00\", \"close\": \"23:59\" },\n    \"saturday\": { \"open\": \"00:00\", \"close\": \"23:59\" },\n    \"sunday\": { \"open\": \"00:00\", \"close\": \"23:59\" }\n  },\n  \"socialMediaLinks\": {\n    \"facebook\": \"https://facebook.com/hotelcajamarca\",\n    \"instagram\": \"https://instagram.com/hotelcajamarca\",\n    \"twitter\": \"https://twitter.com/hotelcajamarca\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/businesses",
+              "host": ["{{base_url}}"],
+              "path": ["businesses"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Mis Negocios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/businesses/my-businesses",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "my-businesses"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Negocio por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/businesses/{{businessId}}?include=true",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "{{businessId}}"],
+              "query": [
+                {
+                  "key": "include",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener Negocio por Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/businesses/slug/hotel-cajamarca-paradise?include=true",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "slug", "hotel-cajamarca-paradise"],
+              "query": [
+                {
+                  "key": "include",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar Negocios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/businesses/search?type=hotel&q=cajamarca&page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "search"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "hotel"
+                },
+                {
+                  "key": "q",
+                  "value": "cajamarca"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Negocio",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Hotel de lujo renovado con nuevas amenidades\",\n  \"contactPhone\": \"+51 976 987 654\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/businesses/{{businessId}}",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "{{businessId}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Negocio",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/businesses/{{businessId}}",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "{{businessId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. SERVICIOS DE NEGOCIO",
+      "item": [
+        {
+          "name": "Crear Servicio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceType\": \"property\",\n  \"name\": \"Habitaciones del Hotel\",\n  \"description\": \"Servicio de alojamiento con habitaciones de lujo\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/businesses/{{businessId}}/services",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "{{businessId}}", "services"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Servicios del Negocio",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/businesses/{{businessId}}/services?status=active",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "{{businessId}}", "services"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener Servicio por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/businesses/services/{{serviceId}}",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "services", "{{serviceId}}"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Servicio",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Habitaciones Premium\",\n  \"description\": \"Servicio actualizado con habitaciones renovadas\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/businesses/services/{{serviceId}}",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "services", "{{serviceId}}"]
+            }
+          }
+        },
+        {
+          "name": "Reordenar Servicios",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"servicesOrder\": [\n    { \"serviceId\": \"service-uuid-1\" },\n    { \"serviceId\": \"service-uuid-2\" },\n    { \"serviceId\": \"service-uuid-3\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/businesses/{{businessId}}/services/reorder",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "{{businessId}}", "services", "reorder"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Estado Servicio",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/businesses/services/{{serviceId}}/toggle",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "services", "{{serviceId}}", "toggle"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. POSTS DE NEGOCIOS",
+      "item": [
+        {
+          "name": "Crear Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"caption\": \"¡Descubre nuestras nuevas habitaciones renovadas! 🏨✨ Ven y disfruta de una experiencia única en Cajamarca.\",\n  \"media\": [\n    {\n      \"url\": \"https://example.com/media/room1.jpg\",\n      \"type\": \"image\",\n      \"thumbnail\": \"https://example.com/media/room1-thumb.jpg\",\n      \"alt\": \"Habitación deluxe renovada\"\n    },\n    {\n      \"url\": \"https://example.com/media/room2.jpg\",\n      \"type\": \"image\",\n      \"thumbnail\": \"https://example.com/media/room2-thumb.jpg\",\n      \"alt\": \"Suite presidencial\"\n    }\n  ],\n  \"type\": \"post\",\n  \"location\": \"Cajamarca, Perú\",\n  \"tags\": [\"#hotel\", \"#cajamarca\", \"#lujo\", \"#habitaciones\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/businesses/{{businessId}}/posts",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "{{businessId}}", "posts"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Posts del Negocio",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/businesses/{{businessId}}/posts?page=1&limit=20&type=post",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "{{businessId}}", "posts"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "type",
+                  "value": "post"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener Post por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/businesses/posts/{{postId}}",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "posts", "{{postId}}"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Feed de Posts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/businesses/posts/feed?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "posts", "feed"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Like Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/businesses/posts/{{postId}}/like",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "posts", "{{postId}}", "like"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Post",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"caption\": \"Caption actualizado con nueva información\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/businesses/posts/{{postId}}",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "posts", "{{postId}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Post",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/businesses/posts/{{postId}}",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "posts", "{{postId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. SEGUIDORES",
+      "item": [
+        {
+          "name": "Seguir Negocio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/businesses/{{businessId}}/follow",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "{{businessId}}", "follow"]
+            }
+          }
+        },
+        {
+          "name": "Dejar de Seguir Negocio",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/businesses/{{businessId}}/follow",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "{{businessId}}", "follow"]
+            }
+          }
+        },
+        {
+          "name": "Verificar si Sigo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/businesses/{{businessId}}/following",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "{{businessId}}", "following"]
+            }
+          }
+        },
+        {
+          "name": "Mis Negocios Seguidos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/businesses/following/my-followed?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "following", "my-followed"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener Seguidores del Negocio",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/businesses/{{businessId}}/followers?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "{{businessId}}", "followers"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Configurar Notificaciones",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notificationsEnabled\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/businesses/{{businessId}}/follow/notifications",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "{{businessId}}", "follow", "notifications"]
+            }
+          }
+        },
+        {
+          "name": "Bloquear/Desbloquear Negocio",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/businesses/{{businessId}}/follow/block",
+              "host": ["{{base_url}}"],
+              "path": ["businesses", "{{businessId}}", "follow", "block"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

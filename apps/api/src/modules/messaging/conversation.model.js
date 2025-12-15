@@ -12,7 +12,7 @@ const Conversation = sequelize.define('Conversation', {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: 'Users',
+      model: 'users',
       key: 'id',
     },
   },
@@ -20,7 +20,7 @@ const Conversation = sequelize.define('Conversation', {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: 'Users',
+      model: 'users',
       key: 'id',
     },
   },
@@ -29,7 +29,7 @@ const Conversation = sequelize.define('Conversation', {
     type: DataTypes.UUID,
     allowNull: true,
     references: {
-      model: 'Bookings',
+      model: 'bookings',
       key: 'id',
     },
   },
@@ -52,7 +52,7 @@ const Conversation = sequelize.define('Conversation', {
     defaultValue: 0,
   },
 }, {
-  tableName: 'Conversations',
+  tableName: 'conversations',
   timestamps: true,
   indexes: [
     {

@@ -4,12 +4,12 @@ import sequelize from '../../config/database-mysql.js';
 // Modelo de Property
 const Property = sequelize.define('Property', {
   id: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
   hostId: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     allowNull: false,
     references: {
       model: 'users',
@@ -183,12 +183,12 @@ const Property = sequelize.define('Property', {
 // Modelo de Room
 const Room = sequelize.define('Room', {
   id: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
   propertyId: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     allowNull: false,
     references: {
       model: 'properties',

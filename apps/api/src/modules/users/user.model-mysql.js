@@ -33,7 +33,7 @@ const User = sequelize.define('User', {
     allowNull: false,
   },
   role: {
-    type: DataTypes.ENUM('guest', 'host', 'admin'),
+    type: DataTypes.ENUM('guest', 'business_owner', 'admin'),
     defaultValue: 'guest',
   },
   phone: {
@@ -102,49 +102,18 @@ const User = sequelize.define('User', {
     type: DataTypes.DATE,
     allowNull: true,
   },
-  // Host Profile
-  hostRating: {
-    type: DataTypes.DECIMAL(2, 1),
-    defaultValue: 0,
-    validate: {
-      min: 0,
-      max: 5,
-    },
-  },
-  hostReviewCount: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0,
-  },
-  responseRate: {
-    type: DataTypes.DECIMAL(5, 2),
-    allowNull: true,
-  },
-  responseTime: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-  },
-  // Social Profile Fields
-  travelBio: {
-    type: DataTypes.TEXT,
-    allowNull: true,
-    comment: 'Biografía como viajero'
-  },
+  // Travel & Social Profile Fields (from DB)
   travelInterests: {
     type: DataTypes.JSON,
     allowNull: true,
-    defaultValue: [],
-    comment: 'Array de intereses: ["aventura", "playa", "cultura", etc.]'
   },
   visitedDestinations: {
     type: DataTypes.JSON,
     allowNull: true,
-    defaultValue: [],
-    comment: 'Array de destinos visitados con detalles'
   },
   travelStyle: {
     type: DataTypes.STRING,
     allowNull: true,
-    comment: 'Estilo de viaje: mochilero, lujo, familiar, etc.'
   },
   // Social Stats
   followersCount: {
@@ -156,6 +125,11 @@ const User = sequelize.define('User', {
     type: DataTypes.INTEGER,
     defaultValue: 0,
     comment: 'Número de usuarios seguidos'
+  },
+  postsCount: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    comment: 'Número de posts publicados'
   },
   reelsCount: {
     type: DataTypes.INTEGER,

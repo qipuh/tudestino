@@ -7,7 +7,7 @@ import { createPost, createReel } from '../services/socialApi';
  * Sidebar para crear publicaciones y reels
  * Similar a Instagram/TikTok
  */
-function CreateContentSidebar({ isOpen, onClose, type = 'post' }) {
+function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
   const { user } = useAuthStore();
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
@@ -144,8 +144,10 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post' }) {
       setTimeout(() => {
         resetForm();
         onClose();
-        // Recargar página para mostrar el nuevo contenido
-        window.location.reload();
+        // Llamar al callback onSuccess si existe
+        if (onSuccess) {
+          onSuccess(response.data);
+        }
       }, 500);
 
     } catch (error) {

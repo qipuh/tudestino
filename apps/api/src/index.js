@@ -20,6 +20,11 @@ import adminRoutes from './modules/admin/admin.routes.js';
 import socialRoutes from './modules/social/social.routes.js';
 import postsRoutes from './modules/social/posts.routes.js';
 import migrationsRoutes from './modules/migrations/migrations.routes.js';
+import restaurantRoutes from './modules/restaurants/restaurants.routes.js';
+import entertainmentRoutes from './modules/entertainment/entertainment.routes.js';
+import eventsRoutes from './modules/events/events.routes.js';
+import businessesRoutes from './modules/businesses/index.js';
+import uploadRoutes from './modules/upload/upload.routes.js';
 
 dotenv.config();
 
@@ -61,6 +66,11 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/social', socialRoutes);
 app.use('/api/social', postsRoutes);
 app.use('/api/migrations', migrationsRoutes);
+app.use('/api/restaurants', restaurantRoutes);
+app.use('/api/entertainment', entertainmentRoutes);
+app.use('/api/events', eventsRoutes);
+app.use('/api/businesses', businessesRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

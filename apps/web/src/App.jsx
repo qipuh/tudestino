@@ -25,6 +25,13 @@ import RoomManagementPage from '@modules/properties/pages/RoomManagementPage';
 import AddRoomPage from '@modules/properties/pages/AddRoomPage';
 import EditRoomPage from '@modules/properties/pages/EditRoomPage';
 import HelpPage from '@modules/help/pages/HelpPage';
+import BusinessDashboard from '@modules/business/pages/BusinessDashboard';
+import CreateBusiness from '@modules/business/pages/CreateBusiness';
+import EditBusiness from '@modules/business/pages/EditBusiness';
+import BusinessDetail from '@modules/business/pages/BusinessDetail';
+import BusinessServices from '@modules/business/pages/BusinessServices';
+import CreatePropertySimplified from '@modules/business/pages/CreatePropertySimplified';
+import CreateRoomsSimplified from '@modules/business/pages/CreateRoomsSimplified';
 import useAuthStore from './store/authStore';
 
 function App() {
@@ -72,6 +79,15 @@ function App() {
 
         {/* Help Route */}
         <Route path="help" element={<HelpPage />} />
+
+        {/* Business Routes */}
+        <Route path="business/dashboard" element={<BusinessDashboard />} />
+        <Route path="business/create" element={<CreateBusiness />} />
+        <Route path="business/:id/edit" element={<EditBusiness />} />
+        <Route path="business/:id" element={<BusinessDetail />} />
+        <Route path="business/:id/services" element={<BusinessServices />} />
+        <Route path="business/:businessId/property/create" element={<CreatePropertySimplified />} />
+        <Route path="business/:businessId/property/create-rooms" element={<CreateRoomsSimplified />} />
 
         {/* Username Route (must be last to avoid conflicts) */}
         <Route path=":username" element={<UsernameProfilePage />} />

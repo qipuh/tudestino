@@ -12,7 +12,7 @@ function RegisterPage() {
     password: '',
     confirmPassword: '',
     phone: '',
-    role: 'guest', // guest o host
+    role: 'guest', // guest o business_owner
     acceptTerms: false,
   });
   const [error, setError] = useState('');
@@ -60,8 +60,8 @@ function RegisterPage() {
 
     if (result.success) {
       // Redirigir según el rol
-      if (formData.role === 'host') {
-        navigate('/host/onboarding');
+      if (formData.role === 'business_owner') {
+        navigate('/business/dashboard');
       } else {
         navigate('/');
       }
@@ -102,13 +102,13 @@ function RegisterPage() {
             </button>
 
             <button
-              onClick={() => handleRoleSelect('host')}
+              onClick={() => handleRoleSelect('business_owner')}
               className="w-full p-6 border-2 border-gray-300 rounded-xl hover:border-primary hover:shadow-lg transition group"
             >
-              <div className="text-4xl mb-3">🏠</div>
-              <h3 className="text-xl font-bold mb-2 group-hover:text-primary">Soy anfitrión</h3>
+              <div className="text-4xl mb-3">🏢</div>
+              <h3 className="text-xl font-bold mb-2 group-hover:text-primary">Soy dueño de negocio</h3>
               <p className="text-gray-600 text-sm">
-                Quiero publicar mi propiedad y recibir huéspedes de todo el mundo
+                Quiero registrar mi negocio (hotel, restaurante, eventos) y ofrecer servicios
               </p>
             </button>
           </div>

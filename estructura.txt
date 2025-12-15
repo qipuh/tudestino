@@ -1,222 +1,723 @@
-Descripción General
+Enum "bookings_status_enum" {
+  "pending"
+  "confirmed"
+  "cancelled"
+  "completed"
+  "rejected"
+}
 
-Desarrollar una plataforma completa que combine:
-- Marketplace de alojamientos (estilo Airbnb)
-- Descubrimiento de experiencias (comida, diversión, eventos)
-- Red social de viajes con contenido en formato Reels
+Enum "bookings_paymentStatus_enum" {
+  "pending"
+  "paid"
+  "refunded"
+  "failed"
+}
 
-🏨 MÓDULO PRINCIPAL: ALOJAMIENTOS (Existente - Expandir)
-Gestión de Propiedades
-- Crear/Editar/Eliminar propiedades
-- Galerías virtuales
-- Sistema de calificaciones y reviews
-- Precios dinámicos por temporada
-- Reglas de convivencia y políticas
+Enum "business_service_types_enum" {
+  "property"
+  "restaurant"
+  "entertainment"
+  "events"
+  "hotel"
+  "bar"
+  "club"
+  "spa"
+  "tour"
+  "transport"
+  "other"
+}
 
-Tipos de Alojamiento
-- Apartamentos completos
-- Casas vacacionales
-- Habitaciones privadas
-- Hostels y albergues
-- Glamping y experiencias únicas
+Enum "business_status_enum" {
+  "draft"
+  "pending_verification"
+  "active"
+  "suspended"
+  "inactive"
+}
 
-🍽️ NUEVO MÓDULO: GASTRONOMÍA Y COMIDA
-Restaurantes y Cafés
-- Perfiles de establecimientos
-- Menús digitales con precios
-- Sistema de reservas de mesas
-- Reviews y calificaciones de platos
-- Fotos de alimentos y ambiente
-- Experiencias Culinarias
-- Clases de cocina local
+Enum "entertainment_reservations_status_enum" {
+  "pending"
+  "confirmed"
+  "cancelled"
+  "completed"
+}
 
-Tours gastronómicos
-- Cenas con anfitriones locales
-- Degustaciones y maridajes
-- Mercados de comida local
+Enum "event_registrations_status_enum" {
+  "pending"
+  "confirmed"
+  "cancelled"
+  "attended"
+}
 
-Características Especiales
-- Filtros por tipo de cocina
-- Precios por rango
-- Horarios y disponibilidad
-- Opciones dietéticas (vegano, sin gluten, etc.)
-- Sistema de delivery/para llevar
+Enum "notifications_type_enum" {
+  "booking_request"
+  "booking_confirmed"
+  "booking_cancelled"
+  "message_received"
+  "payment_received"
+  "review_received"
+  "business_verified"
+  "business_suspended"
+  "new_follower"
+  "post_like"
+  "comment_received"
+}
 
-🎉 NUEVO MÓDULO: DIVERSIÓN Y ENTRETENIMIENTO
-Categorías de Entretenimiento
-- Bares y Vida Nocturna
-- Bares temáticos
-- Discotecas y clubs
-- Lounges y rooftops
-- Eventos especiales nocturnos
-- Actividades Recreativas
-- Parques de atracciones
-- Escape rooms
-- Karting y deportes extremos
-- Tours de aventura
-- Cultura y Ocio
-- Museos y galerías
-- Teatros y espectáculos
-- Cines y festivales
-- Bibliotecas y centros culturales
+Enum "posts_type_enum" {
+  "post"
+  "reel"
+  "story"
+}
 
-🎪 NUEVO MÓDULO: EVENTOS Y ACTIVIDADES
-Tipos de Eventos
-- Conciertos y Música
-- Conciertos en vivo
-- Festivales musicales
-- Eventos de DJ
-- Presentaciones acústicas
-- Eventos Culturales
-- Ferias artesanales
-- Exposiciones de arte
-- Presentaciones de danza
-- Conferencias culturales
-- Fiestas y Festivales
-- Fiestas tradicionales
-- Festivales temáticos
-- Eventos estacionales
-- Celebraciones locales
-- Eventos Deportivos
-- Partidos y competiciones
-- Maratones y carreras
-- Eventos de deportes extremos
-- Exhibiciones deportivas
-- Gestión de Eventos
-- Creación y promoción
-- Venta de entradas online
-- Gestión de aforo
-- Sistema de recomendaciones
-- Recordatorios y notificaciones
+Enum "properties_accommodationType_enum" {
+  "apartment"
+  "hotel"
+  "motel"
+  "hostel"
+  "room"
+  "house"
+  "villa"
+  "cabin"
+  "resort"
+  "bed_and_breakfast"
+  "guesthouse"
+}
 
-📱 NUEVO MÓDULO: RED SOCIAL DE VIAJES
-Perfiles de Usuario
-- Perfil Simple pero Completo
-- Foto de perfil
-- Biografía de viajero
-- Destinos visitados
-- Intereses y preferencias
-- Estadísticas de viajes
-- Sistema de seguidores/seguidos
-- Sistema de Reels de Viajes (Videos Cortos, 1 minuto máximo)
+Enum "properties_cancellationPolicy_enum" {
+  "standard"
+  "flexible"
+  "moderate"
+  "strict"
+  "non_refundable"
+  "long_stay"
+}
 
-Upload y edición básica en app
-- Filtros y efectos de viaje
-- Música de fondo y sonidos
-- Textos y stickers de ubicación
-- Etiquetado de lugares visitados
+Enum "properties_parkingType_enum" {
+  "no"
+  "free"
+  "paid"
+}
 
-Funcionalidades Sociales
-- Feed de Contenido
-- Algoritmo personalizado
-- Contenido de usuarios seguidos
-- Descubrimiento de nuevos creadores
-- Trending de destinos
-- Interacción Social
-- Likes, comentarios y shares
-- Guardar reels en colecciones
-- Mensajes directos entre usuarios
-- Sistema de hashtags de viajes
-- Mapas de reels por ubicación
-/////////////////////////////////////////////////////////
-Sistema de badges por logros
+Enum "properties_petsAllowed_enum" {
+  "no"
+  "yes_free"
+  "yes_paid"
+}
 
-🔄 INTEGRACIONES ENTRE MÓDULOS
-Sistema de Recomendaciones Inteligentes
-- Recomendaciones cruzadas entre módulos
-- "Quienes vieron este alojamiento también fueron a..."
-- Paquetes de experiencias combinadas
-- Itinerarios automáticos basados en intereses
-- Sistema de Reservas Unificado
-- Carrito único para múltiples servicios
-- Calendario integrado de actividades
-- Presupuestos de viaje completos
-- Historial unificado de experiencias
-- Mapa Interactivo Integrado
-- Capas de diferentes servicios
-- Ruta optimizada de experiencias
-- Distancias y tiempos de traslado
+Enum "properties_petFeePer_enum" {
+  "day"
+  "stay"
+}
 
-Agrupación por zonas geográficas
+Enum "properties_status_enum" {
+  "draft"
+  "published"
+  "suspended"
+  "unavailable"
+}
 
-🏗️ ARQUITECTURA TÉCNICA EXPANDIDA
-Backend (Nuevos Módulos)
-apps/api/src/modules/
-├── restaurants/              # Gestión de restaurantes
-├── entertainment/            # Entretenimiento y diversión
-├── events/                   # Gestión de eventos
-├── social/                   # Red social
-│   ├── profiles/            # Perfiles de usuario
-│   ├── reels/               # Sistema de videos
-│   ├── feed/                # Feed de contenido
-│   └── interactions/        # Likes, comentarios
-└── recommendations/         # Sistema de recomendaciones
+Enum "restaurant_reservations_status_enum" {
+  "pending"
+  "confirmed"
+  "cancelled"
+  "completed"
+}
 
-Frontend React (Nuevos Módulos)
-apps/web/src/modules/
-├── restaurants/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-├── entertainment/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-├── events/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-├── social/
-│   ├── profile/
-│   ├── reels/
-│   ├── feed/
-│   └── notifications/
-└── map/                      # Mapa integrado
+Enum "rooms_roomType_enum" {
+  "single"
+  "double"
+  "triple"
+  "quadruple"
+  "suite"
+  "junior_suite"
+  "family"
+  "shared_dormitory"
+  "studio"
+  "deluxe"
+  "executive"
+  "penthouse"
+}
 
-📊 MODELO DE NEGOCIO
-Fuentes de Ingresos
-- Comisiones por reservas (alojamiento, restaurantes, eventos)
-- Publicidad para establecimientos premium
-- Suscripciones para anfitriones/negocios (features avanzados)
-- Promoción de reels patrocinados
-- Venta de entradas a eventos
+Enum "service_status_enum" {
+  "draft"
+  "active"
+  "inactive"
+  "under_maintenance"
+}
 
-Ventajas Competitivas
-✅ Ecosistema completo de viajes
-✅ Contenido user-generated auténtico
-✅ Recomendaciones personalizadas
-✅ Comunidad activa de viajeros
-✅ Experiencias locales verificadas
+Enum "social_comments_content_type_enum" {
+  "user_post"
+  "user_reel"
+  "business_post"
+  "business_reel"
+  "service"
+}
 
-🎯 PÚBLICO OBJETIVO
-- Viajeros Modernos
-- Millennials y Gen Z (18-40 años)
-- Viajeros que buscan experiencias auténticas
-- Usuarios activos en redes sociales
-- Personas que valoran recomendaciones reales
-- Proveedores de Servicios
-- Anfitriones de alojamientos
-- Restaurantes y cafés
-- Organizadores de eventos
-- Guías turísticos y experiencias
+Enum "social_likes_content_type_enum" {
+  "user_post"
+  "user_reel"
+  "business_post"
+  "business_reel"
+  "service"
+}
 
-🚀 ROADMAP DE IMPLEMENTACIÓN
-Fase 1 (MVP)
-- Módulo de alojamientos existente
-- Perfiles sociales básicos
-- Sistema de reels simple
+Enum "userfollows_status_enum" {
+  "active"
+  "blocked"
+}
 
-Fase 2
-- Módulo de restaurantes y comida
-- Sistema de eventos básico
-- Mejoras en la red social
+Enum "user_follows_entity_type_enum" {
+  "user"
+  "business"
+}
 
-Fase 3
-- Módulo completo de entretenimiento
-- Sistema de recomendaciones AI
-- Funcionalidades sociales avanzadas
+Enum "users_role_enum" {
+  "guest"
+  "business_owner"
+  "admin"
+}
 
-Fase 4
-- Integraciones avanzadas
-- App móvil nativa
-- Expansión internacional
+Enum "users_identityStatus_enum" {
+  "pending"
+  "verified"
+  "rejected"
+}
+
+Table "bookings" {
+  "id" char(36) [pk, not null]
+  "serviceId" char(36) [not null]
+  "serviceType" varchar(50) [not null, note: 'property, restaurant, entertainment, event']
+  "userId" char(36) [not null]
+  "businessId" char(36) [not null]
+  "checkIn" date [not null]
+  "checkOut" date [default: NULL, note: 'Para propiedades y hoteles']
+  "reservationDate" date [default: NULL, note: 'Para restaurantes y entretenimiento']
+  "reservationTime" time [default: NULL]
+  "guests" int [not null, default: '1']
+  "basePrice" decimal(10,2) [not null]
+  "serviceFee" decimal(10,2) [default: '0.00']
+  "taxes" decimal(10,2) [default: '0.00']
+  "totalPrice" decimal(10,2) [not null]
+  "currency" varchar(3) [default: 'USD']
+  "status" bookings_status_enum [default: 'pending']
+  "paymentStatus" bookings_paymentStatus_enum [default: 'pending']
+  "paymentIntentId" varchar(255) [default: NULL]
+  "paymentMethod" varchar(255) [default: NULL]
+  "specialRequests" text
+  "cancellationReason" text
+  "cancelledBy" char(36) [default: NULL]
+  "cancelledAt" datetime [default: NULL]
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "businesses" {
+  "id" char(36) [pk, not null]
+  "ownerId" char(36) [not null]
+  "name" varchar(255) [not null]
+  "slug" varchar(255) [not null, unique, note: 'URL amigable para el negocio']
+  "description" text [not null]
+  "logo" varchar(500) [default: NULL]
+  "coverImage" varchar(500) [default: NULL]
+  "businessType" varchar(100) [not null, note: 'Tipo principal de negocio']
+  "taxId" varchar(100) [default: NULL]
+  "verificationStatus" varchar(50) [default: 'pending']
+  "verificationDocuments" json [default: NULL]
+  "address" json [not null, note: '{street, city, state, country, zipCode, latitude, longitude}']
+  "contactPhone" varchar(50) [default: NULL]
+  "contactEmail" varchar(255) [default: NULL]
+  "website" varchar(500) [default: NULL]
+  "operatingHours" json [default: NULL]
+  "socialMediaLinks" json [default: NULL]
+  "ratingAverage" decimal(2,1) [default: '0.0']
+  "reviewCount" int [default: '0']
+  "followersCount" int [default: '0']
+  "status" business_status_enum [default: 'pending_verification']
+  "isActive" tinyint(1) [default: '1']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "business_follows" {
+  "id" char(36) [pk, not null]
+  "userId" char(36) [not null]
+  "businessId" char(36) [not null]
+  "status" userfollows_status_enum [default: 'active']
+  "notificationsEnabled" tinyint(1) [default: '1']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "business_services" {
+  "id" char(36) [pk, not null]
+  "businessId" char(36) [not null]
+  "serviceType" business_service_types_enum [not null]
+  "name" varchar(255) [not null]
+  "description" text
+  "status" service_status_enum [default: 'draft']
+  "isActive" tinyint(1) [default: '1']
+  "orderIndex" int [default: '0', note: 'Para ordenar servicios en el perfil']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "business_social_posts" {
+  "id" char(36) [pk, not null]
+  "businessId" char(36) [not null]
+  "caption" text [not null]
+  "media" json [not null, note: 'Array of media objects: [{url, type: image|video, thumbnail, alt}]']
+  "type" posts_type_enum [default: 'post']
+  "location" varchar(255) [default: NULL]
+  "tags" json [default: NULL]
+  "likesCount" int [default: '0']
+  "commentsCount" int [default: '0']
+  "sharesCount" int [default: '0']
+  "viewsCount" int [default: '0']
+  "isActive" tinyint(1) [default: '1']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "comments" {
+  "id" int [pk, not null]
+  "post_id" int [not null]
+  "user_id" char(36) [not null]
+  "parent_id" int [default: NULL]
+  "text" text [not null]
+  "likes_count" int [default: '0']
+  "created_at" datetime [not null]
+  "updated_at" datetime [not null]
+}
+
+Table "comment_likes" {
+  "id" int [pk, not null]
+  "comment_id" int [not null]
+  "user_id" char(36) [not null]
+  "created_at" datetime [not null]
+  "updated_at" datetime [not null]
+}
+
+Table "conversations" {
+  "id" int [pk, not null]
+  "user1Id" char(36) [not null]
+  "user2Id" char(36) [not null]
+  "businessId" char(36) [default: NULL, note: 'Si la conversación es con un negocio']
+  "bookingId" char(36) [default: NULL]
+  "lastMessage" text
+  "lastMessageAt" datetime [default: NULL]
+  "unreadCountUser1" int [default: '0']
+  "unreadCountUser2" int [default: '0']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "entertainment" {
+  "id" char(36) [pk, not null]
+  "businessServiceId" char(36) [not null]
+  "name" varchar(255) [not null]
+  "description" text
+  "type" varchar(100) [not null, note: 'club, bar, cinema, theater, etc']
+  "category" varchar(100) [default: NULL]
+  "location" varchar(255) [not null]
+  "address" json [default: NULL]
+  "capacity" int [default: NULL]
+  "priceRange" json [default: NULL, note: '{min, max, currency}']
+  "operatingHours" json [default: NULL]
+  "amenities" json [default: NULL]
+  "images" json [default: NULL]
+  "ratingAverage" decimal(2,1) [default: '0.0']
+  "reviewCount" int [default: '0']
+  "status" service_status_enum [default: 'active']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "entertainment_reservations" {
+  "id" char(36) [pk, not null]
+  "entertainmentId" char(36) [not null]
+  "userId" char(36) [not null]
+  "reservationDate" date [not null]
+  "reservationTime" time [not null]
+  "numberOfPeople" int [not null]
+  "totalPrice" decimal(10,2) [default: NULL]
+  "specialRequests" text
+  "status" entertainment_reservations_status_enum [default: 'pending']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "events" {
+  "id" char(36) [pk, not null]
+  "businessServiceId" char(36) [not null]
+  "name" varchar(255) [not null]
+  "description" text
+  "eventDate" date [not null]
+  "startTime" time [not null]
+  "endTime" time [default: NULL]
+  "location" varchar(255) [not null]
+  "address" json [default: NULL]
+  "category" varchar(100) [default: NULL]
+  "organizer" varchar(255) [default: NULL]
+  "capacity" int [default: NULL]
+  "images" json [default: NULL]
+  "status" service_status_enum [default: 'active']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "event_registrations" {
+  "id" char(36) [pk, not null]
+  "eventId" char(36) [not null]
+  "userId" char(36) [not null]
+  "ticketId" char(36) [not null]
+  "quantity" int [not null, default: '1']
+  "totalPrice" decimal(10,2) [not null]
+  "registrationDate" datetime [default: `CURRENT_TIMESTAMP`]
+  "status" event_registrations_status_enum [default: 'pending']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "event_tickets" {
+  "id" char(36) [pk, not null]
+  "eventId" char(36) [not null]
+  "ticketType" varchar(100) [not null]
+  "price" decimal(10,2) [not null]
+  "quantityAvailable" int [not null]
+  "quantitySold" int [default: '0']
+  "isActive" tinyint(1) [default: '1']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "menu_categories" {
+  "id" char(36) [pk, not null]
+  "restaurantId" char(36) [not null]
+  "name" varchar(100) [not null]
+  "description" text
+  "displayOrder" int [default: '0']
+  "isActive" tinyint(1) [default: '1']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "menu_items" {
+  "id" char(36) [pk, not null]
+  "categoryId" char(36) [not null]
+  "name" varchar(255) [not null]
+  "description" text
+  "price" decimal(10,2) [not null]
+  "isAvailable" tinyint(1) [default: '1']
+  "isVegetarian" tinyint(1) [default: '0']
+  "isSpicy" tinyint(1) [default: '0']
+  "displayOrder" int [default: '0']
+  "imageUrl" varchar(500) [default: NULL]
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "messages" {
+  "id" int [pk, not null]
+  "conversationId" int [not null]
+  "senderId" char(36) [not null]
+  "receiverId" char(36) [not null]
+  "businessId" char(36) [default: NULL, note: 'Si el mensaje es de/para un negocio']
+  "content" text [not null]
+  "isRead" tinyint(1) [default: '0']
+  "readAt" datetime [default: NULL]
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "notifications" {
+  "id" char(36) [pk, not null]
+  "userId" char(36) [not null]
+  "type" notifications_type_enum [not null]
+  "title" varchar(255) [not null]
+  "message" text [not null]
+  "relatedId" char(36) [default: NULL]
+  "relatedType" varchar(50) [default: NULL]
+  "isRead" tinyint(1) [default: '0']
+  "readAt" datetime [default: NULL]
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "posts" {
+  "id" int [pk, not null]
+  "user_id" char(36) [not null]
+  "content" text [not null]
+  "images" json [default: NULL]
+  "type" posts_type_enum [default: 'post']
+  "video_url" varchar(500) [default: NULL]
+  "location" varchar(255) [default: NULL]
+  "tags" json [default: NULL]
+  "likes_count" int [default: '0']
+  "comments_count" int [default: '0']
+  "shares_count" int [default: '0']
+  "created_at" datetime [not null]
+  "updated_at" datetime [not null]
+}
+
+Table "post_likes" {
+  "id" int [pk, not null]
+  "post_id" int [not null]
+  "user_id" char(36) [not null]
+  "created_at" datetime [not null]
+  "updated_at" datetime [not null]
+}
+
+Table "properties" {
+  "id" char(36) [pk, not null]
+  "businessServiceId" char(36) [not null]
+  "accommodationType" properties_accommodationType_enum [not null]
+  "multipleUnits" tinyint(1) [default: '0']
+  "propertyName" varchar(255) [not null]
+  "description" text [not null]
+  "cancellationPolicy" properties_cancellationPolicy_enum [default: 'standard']
+  "address" json [not null, note: '{street, city, state, country, zipCode, latitude, longitude}']
+  "propertyAmenities" json [default: NULL]
+  "breakfastIncluded" tinyint(1) [default: '0']
+  "parkingType" properties_parkingType_enum [default: 'no']
+  "parkingDetails" json [default: NULL]
+  "checkInTime" time [default: '14:00:00']
+  "checkOutTime" time [default: '12:00:00']
+  "childrenAllowed" tinyint(1) [default: '1']
+  "petsAllowed" properties_petsAllowed_enum [default: 'no']
+  "petFee" decimal(10,2) [default: NULL]
+  "petFeePer" properties_petFeePer_enum [default: NULL]
+  "additionalRules" text
+  "images" json [default: NULL]
+  "status" properties_status_enum [default: 'published']
+  "ratingAverage" decimal(2,1) [default: '0.0']
+  "ratingCount" int [default: '0']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "restaurants" {
+  "id" char(36) [pk, not null]
+  "businessServiceId" char(36) [not null]
+  "name" varchar(255) [not null]
+  "description" text
+  "cuisineType" varchar(100) [default: NULL]
+  "location" varchar(255) [not null]
+  "address" json [default: NULL]
+  "operatingHours" json [not null]
+  "capacity" int [default: NULL]
+  "priceRange" json [default: NULL]
+  "contactPhone" varchar(20) [default: NULL]
+  "contactEmail" varchar(255) [default: NULL]
+  "amenities" json [default: NULL]
+  "images" json [default: NULL]
+  "ratingAverage" decimal(2,1) [default: '0.0']
+  "reviewCount" int [default: '0']
+  "status" service_status_enum [default: 'active']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "restaurant_reservations" {
+  "id" char(36) [pk, not null]
+  "restaurantId" char(36) [not null]
+  "userId" char(36) [not null]
+  "reservationDate" date [not null]
+  "reservationTime" time [not null]
+  "numberOfPeople" int [not null]
+  "specialRequests" text
+  "status" restaurant_reservations_status_enum [default: 'pending']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "rooms" {
+  "id" char(36) [pk, not null]
+  "propertyId" char(36) [not null]
+  "roomType" rooms_roomType_enum [not null]
+  "name" varchar(255) [not null]
+  "quantity" int [not null, default: '1']
+  "guestCapacity" int [not null]
+  "beds" json [not null]
+  "pricePerNight" decimal(10,2) [not null]
+  "amenities" json [default: NULL]
+  "images" json [default: NULL]
+  "isAvailable" tinyint(1) [default: '1']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "service_reviews" {
+  "id" char(36) [pk, not null]
+  "userId" char(36) [not null]
+  "serviceId" char(36) [not null]
+  "serviceType" varchar(50) [not null]
+  "businessId" char(36) [not null]
+  "rating" int [not null, note: '1-5']
+  "title" varchar(255) [default: NULL]
+  "comment" text
+  "images" json [default: NULL]
+  "isVerified" tinyint(1) [default: '0', note: 'Si la reseña es de una reserva confirmada']
+  "likesCount" int [default: '0']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "social_comments" {
+  "id" char(36) [pk, not null]
+  "userId" char(36) [not null]
+  "contentType" social_comments_content_type_enum [not null]
+  "contentId" char(36) [not null]
+  "text" text [not null]
+  "likesCount" int [default: '0']
+  "createdAt" datetime [default: `CURRENT_TIMESTAMP`]
+  "updatedAt" datetime [default: `CURRENT_TIMESTAMP`]
+}
+
+Table "social_likes" {
+  "id" char(36) [pk, not null]
+  "userId" char(36) [not null]
+  "contentType" social_likes_content_type_enum [not null]
+  "contentId" char(36) [not null]
+  "createdAt" datetime [default: `CURRENT_TIMESTAMP`]
+}
+
+Table "userfollows" {
+  "id" int [pk, not null]
+  "followerId" char(36) [not null]
+  "followingId" char(36) [not null]
+  "entityType" user_follows_entity_type_enum [default: 'user', note: 'user o business']
+  "status" userfollows_status_enum [default: 'active']
+  "notificationsEnabled" tinyint(1) [default: '1']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "users" {
+  "id" char(36) [pk, not null]
+  "name" varchar(255) [not null]
+  "email" varchar(255) [not null, unique]
+  "username" varchar(30) [default: NULL, unique]
+  "password" varchar(255) [not null]
+  "role" users_role_enum [default: 'guest']
+  "phone" varchar(255) [default: NULL]
+  "avatar" varchar(255) [default: NULL]
+  "isVerified" tinyint(1) [default: '0']
+  "isActive" tinyint(1) [default: '1']
+  "bio" text
+  "location" varchar(255) [default: NULL]
+  "languages" json [default: NULL]
+  "dateOfBirth" date [default: NULL]
+  "identityStatus" users_identityStatus_enum [default: 'pending']
+  "identityDocumentType" varchar(255) [default: NULL]
+  "identityDocumentUrl" varchar(255) [default: NULL]
+  "identityVerifiedAt" datetime [default: NULL]
+  "emailVerified" tinyint(1) [default: '0']
+  "emailVerifiedAt" datetime [default: NULL]
+  "phoneVerified" tinyint(1) [default: '0']
+  "phoneVerifiedAt" datetime [default: NULL]
+  "travelInterests" json [default: NULL]
+  "visitedDestinations" json [default: NULL]
+  "travelStyle" varchar(255) [default: NULL]
+  "followersCount" int [default: '0']
+  "followingCount" int [default: '0']
+  "postsCount" int [default: '0']
+  "reelsCount" int [default: '0']
+  "totalLikes" int [default: '0']
+  "isPublicProfile" tinyint(1) [default: '1']
+  "allowMessages" tinyint(1) [default: '1']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+Table "user_social_posts" {
+  "id" char(36) [pk, not null]
+  "userId" char(36) [not null]
+  "caption" text [not null]
+  "media" json [not null]
+  "type" posts_type_enum [default: 'post']
+  "location" varchar(255) [default: NULL]
+  "tags" json [default: NULL]
+  "likesCount" int [default: '0']
+  "commentsCount" int [default: '0']
+  "sharesCount" int [default: '0']
+  "viewsCount" int [default: '0']
+  "isActive" tinyint(1) [default: '1']
+  "createdAt" datetime [not null]
+  "updatedAt" datetime [not null]
+}
+
+// Relaciones principales
+Ref: "businesses"."ownerId" > "users"."id" [update: cascade, delete: cascade]
+
+Ref: "business_services"."businessId" > "businesses"."id" [update: cascade, delete: cascade]
+
+// Servicios relacionados con business_services
+Ref: "properties"."businessServiceId" > "business_services"."id" [update: cascade, delete: cascade]
+Ref: "restaurants"."businessServiceId" > "business_services"."id" [update: cascade, delete: cascade]
+Ref: "entertainment"."businessServiceId" > "business_services"."id" [update: cascade, delete: cascade]
+Ref: "events"."businessServiceId" > "business_services"."id" [update: cascade, delete: cascade]
+
+// Reservas/Registros
+Ref: "bookings"."userId" > "users"."id" [update: cascade, delete: cascade]
+Ref: "bookings"."businessId" > "businesses"."id" [update: cascade, delete: cascade]
+
+Ref: "restaurant_reservations"."userId" > "users"."id" [update: cascade, delete: cascade]
+Ref: "restaurant_reservations"."restaurantId" > "restaurants"."id" [update: cascade, delete: cascade]
+
+Ref: "entertainment_reservations"."userId" > "users"."id" [update: cascade, delete: cascade]
+Ref: "entertainment_reservations"."entertainmentId" > "entertainment"."id" [update: cascade, delete: cascade]
+
+Ref: "event_registrations"."userId" > "users"."id" [update: cascade, delete: cascade]
+Ref: "event_registrations"."eventId" > "events"."id" [update: cascade, delete: cascade]
+Ref: "event_registrations"."ticketId" > "event_tickets"."id" [update: cascade, delete: cascade]
+
+Ref: "event_tickets"."eventId" > "events"."id" [update: cascade, delete: cascade]
+
+Ref: "rooms"."propertyId" > "properties"."id" [update: cascade, delete: cascade]
+
+// Red social de usuarios
+Ref: "user_social_posts"."userId" > "users"."id" [update: cascade, delete: cascade]
+
+// Red social de negocios
+Ref: "business_social_posts"."businessId" > "businesses"."id" [update: cascade, delete: cascade]
+
+// Seguidores
+Ref: "userfollows"."followerId" > "users"."id" [update: cascade, delete: cascade]
+
+Ref: "business_follows"."userId" > "users"."id" [update: cascade, delete: cascade]
+Ref: "business_follows"."businessId" > "businesses"."id" [update: cascade, delete: cascade]
+
+// Reseñas
+Ref: "service_reviews"."userId" > "users"."id" [update: cascade, delete: cascade]
+Ref: "service_reviews"."businessId" > "businesses"."id" [update: cascade, delete: cascade]
+
+// Comentarios y likes sociales
+Ref: "social_comments"."userId" > "users"."id" [update: cascade, delete: cascade]
+Ref: "social_likes"."userId" > "users"."id" [update: cascade, delete: cascade]
+
+// Menús
+Ref: "menu_categories"."restaurantId" > "restaurants"."id" [update: cascade, delete: cascade]
+Ref: "menu_items"."categoryId" > "menu_categories"."id" [update: cascade, delete: cascade]
+
+// Conversaciones y mensajes
+Ref: "conversations"."user1Id" > "users"."id" [update: cascade, delete: cascade]
+Ref: "conversations"."user2Id" > "users"."id" [update: cascade, delete: cascade]
+Ref: "conversations"."businessId" > "businesses"."id" [update: cascade, delete: set null]
+
+Ref: "messages"."senderId" > "users"."id" [update: cascade, delete: cascade]
+Ref: "messages"."receiverId" > "users"."id" [update: cascade, delete: cascade]
+Ref: "messages"."businessId" > "businesses"."id" [update: cascade, delete: set null]
+
+// Notificaciones
+Ref: "notifications"."userId" > "users"."id" [update: cascade, delete: cascade]
+
+// Relaciones sociales existentes (para compatibilidad)
+Ref: "posts"."user_id" > "users"."id" [update: cascade, delete: cascade]
+Ref: "post_likes"."post_id" > "posts"."id" [update: cascade, delete: cascade]
+Ref: "post_likes"."user_id" > "users"."id" [update: cascade, delete: cascade]
+Ref: "comments"."post_id" > "posts"."id" [update: cascade, delete: cascade]
+Ref: "comments"."user_id" > "users"."id" [update: cascade, delete: cascade]
+Ref: "comment_likes"."comment_id" > "comments"."id" [update: cascade, delete: cascade]
+Ref: "comment_likes"."user_id" > "users"."id" [update: cascade, delete: cascade]
+
+

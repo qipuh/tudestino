@@ -30,7 +30,7 @@ const router = express.Router();
 router.get('/', getProperties);
 
 // Rutas protegidas con nombre específico (ANTES de /:id)
-router.get('/my-properties', authenticate, authorize('host', 'admin'), async (req, res) => {
+router.get('/my-properties', authenticate, authorize('host', 'admin', 'business_owner'), async (req, res) => {
   try {
     const { Property, Room } = await import('./property.model.sequelize.js');
     const properties = await Property.findAll({
@@ -57,9 +57,9 @@ router.get('/my-properties', authenticate, authorize('host', 'admin'), async (re
 });
 
 // Nueva ruta para registrar propiedad completa con habitaciones
-router.post('/register', authenticate, authorize('host', 'admin'), registerProperty);
+router.post('/register', authenticate, authorize('host', 'admin', 'business_owner'), registerProperty);
 
-router.post('/', authenticate, authorize('host', 'admin'), createProperty);
+router.post('/', authenticate, authorize('host', 'admin', 'business_owner'), createProperty);
 
 // RUTAS CON PARÁMETROS AL FINAL
 // Rutas para propiedad completa con habitaciones

@@ -125,4 +125,31 @@ router.post('/add-property-name-description', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/migrations/add-business-service-settings
+ * Adds settings JSON column to business_services table
+ */
+router.post('/add-business-service-settings', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('business_services');
+
+    if (tableDescription.settings) {
+      return res.status(200).json({ success: true, message: 'Column settings already exists in business_services', alreadyExists: true });
+    }
+
+    await queryInterface.addColumn('business_services', 'settings', {
+      type: DataTypes.JSON,
+      allowNull: true,
+      comment: 'JSON con configuración específica del servicio (precio, capacidad, amenities, etc)'
+    });
+
+    res.status(200).json({ success: true, message: 'Successfully added settings column to business_services', alreadyExists: false });
+  } catch (error) {
+    console.error('Error adding settings column to business_services:', error);
+    res.status(500).json({ success: false, message: 'Error adding settings column', error: error.message });
+  }
+});
+
 export default router;
+

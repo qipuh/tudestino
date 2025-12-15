@@ -23,16 +23,29 @@ function HomePage() {
 
   const fetchProperties = async () => {
     try {
-      const result = await api.get('/properties');
-
+      // Obtener todas las propiedades
+      const propertiesResult = await api.get('/properties');
       let propertiesData = [];
-      if (Array.isArray(result)) {
-        propertiesData = result;
-      } else if (result.data && Array.isArray(result.data)) {
-        propertiesData = result.data;
+      if (Array.isArray(propertiesResult)) {
+        propertiesData = propertiesResult;
+      } else if (propertiesResult.data && Array.isArray(propertiesResult.data)) {
+        propertiesData = propertiesResult.data;
       }
 
-      setProperties(propertiesData);
+      // Obtener búsqueda unificada para mostrar diversidad de contenido
+      try {
+        const searchResult = await api.get('/search/all?limit=50');
+        if (searchResult.success && searchResult.data?.results) {
+          // Combinar propiedades con otros tipos de negocios
+          const allResults = [...propertiesData, ...searchResult.data.results.filter(r => r.type !== 'property')];
+          setProperties(allResults);
+        } else {
+          setProperties(propertiesData);
+        }
+      } catch (error) {
+        console.error('Error fetching all businesses:', error);
+        setProperties(propertiesData);
+      }
     } catch (error) {
       console.error('Error fetching properties:', error);
     } finally {
@@ -54,28 +67,31 @@ function HomePage() {
     );
   }
 
-  // Obtener propiedades destacadas (mejor valoradas)
-  const featuredProperties = properties
-    .filter(p => p.ratingAverage >= 4.0)
-    .sort((a, b) => (b.ratingAverage || 0) - (a.ratingAverage || 0))
+  // Obtener items destacados (mejor valorados)
+  const featuredItems = properties
+    .filter(p => (p.ratingAverage >= 4.0 || p.rating >= 4.0))
+    .sort((a, b) => {
+      const ratingA = a.rating || a.ratingAverage || 0;
+      const ratingB = b.rating || b.ratingAverage || 0;
+      return ratingB - ratingA;
+    })
     .slice(0, 8);
 
-  // Categorías de alojamiento
+  // Categorías de búsqueda
   const categories = [
-    { name: 'Hoteles', icon: Building2, type: 'hotel' },
-    { name: 'Departamentos', icon: Home, type: 'apartment' },
-    { name: 'Casas', icon: Castle, type: 'house' },
-    { name: 'Cabañas', icon: TreePine, type: 'cabin' },
-    { name: 'Habitaciones', icon: Home, type: 'room' },
+    { name: 'Alojamientos', icon: Building2, type: 'hotel', searchParam: 'category=hotel' },
+    { name: 'Restaurantes', icon: Home, type: 'restaurant', searchParam: 'category=restaurant' },
+    { name: 'Eventos', icon: Castle, type: 'event', searchParam: 'category=event' },
+    { name: 'Entretenimiento', icon: TreePine, type: 'entertainment', searchParam: 'category=entertainment' },
+    { name: 'Todo', icon: Home, type: 'all', searchParam: 'category=all' },
   ];
 
-  // Agrupar propiedades por tipo de alojamiento
-  const propertiesByType = {
-    hotel: properties.filter(p => ['hotel', 'motel', 'hostel', 'resort', 'bed_and_breakfast'].includes(p.accommodationType)),
-    apartment: properties.filter(p => p.accommodationType === 'apartment'),
-    house: properties.filter(p => ['house', 'villa'].includes(p.accommodationType)),
-    cabin: properties.filter(p => p.accommodationType === 'cabin'),
-    room: properties.filter(p => p.accommodationType === 'room'),
+  // Agrupar por tipo
+  const itemsByType = {
+    property: properties.filter(p => !p.type || p.type === 'property' || p.accommodationType),
+    restaurant: properties.filter(p => p.type === 'restaurant'),
+    event: properties.filter(p => p.type === 'event'),
+    entertainment: properties.filter(p => p.type === 'entertainment'),
   };
 
   // Función para obtener el nombre de la propiedad
@@ -127,7 +143,7 @@ function HomePage() {
             {categories.map((category) => (
               <Link
                 key={category.type}
-                to={`/search?propertyType=${category.type}`}
+                to={`/search?${category.searchParam}`}
                 className="flex flex-col items-center p-6 rounded-xl border-2 border-gray-200 hover:border-primary hover:shadow-lg transition group"
               >
                 <category.icon className="text-gray-600 group-hover:text-primary mb-3" size={32} />
@@ -137,25 +153,36 @@ function HomePage() {
           </div>
         </section>
 
-        {/* Propiedades destacadas */}
-        {featuredProperties.length > 0 && (
+        {/* Items destacados */}
+        {featuredItems.length > 0 && (
           <section className="mb-16">
             <div className="flex items-center gap-3 mb-6">
               <TrendingUp className="text-primary" size={28} />
-              <h2 className="text-2xl font-bold mb-6 text-primary-dark">Alojamientos destacados</h2>
+              <h2 className="text-2xl font-bold mb-6 text-primary-dark">Destacados</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredProperties.map((property) => (
+              {featuredItems.map((item) => {
+                // Obtener datos según el tipo
+                const isProperty = !item.type || item.type === 'property' || item.accommodationType;
+                const itemName = item.name || getPropertyName(item);
+                const itemImage = item.image || (item.rooms?.[0]?.images?.[0]);
+                const itemRating = item.rating || item.ratingAverage || 0;
+                const itemReviewCount = item.reviewCount || item.ratingCount || 0;
+                const itemCity = item.location?.city || item.addressCity;
+                const itemCountry = item.location?.country || item.addressCountry;
+                const itemUrl = item.url || `/properties/${item.id}`;
+
+                return (
                 <Link
-                  key={property.id}
-                  to={`/properties/${property.id}`}
+                  key={`${item.type || 'property'}-${item.id}`}
+                  to={itemUrl}
                   className="group border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-primary hover:shadow-2xl transition-all duration-300"
                 >
                   <div className="h-48 bg-gray-200 relative overflow-hidden">
-                    {property.rooms && property.rooms.length > 0 && property.rooms[0].images && property.rooms[0].images.length > 0 ? (
+                    {itemImage ? (
                       <img
-                        src={property.rooms[0].images[0]}
-                        alt={getPropertyName(property)}
+                        src={itemImage}
+                        alt={itemName}
                         className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
                       />
                     ) : (
@@ -163,7 +190,7 @@ function HomePage() {
                         Sin imagen
                       </div>
                     )}
-                    {property.ratingAverage >= 4.5 && (
+                    {itemRating >= 4.5 && (
                       <div className="absolute top-3 right-3 bg-gradient-to-r from-primary to-primary-dark px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
                         <Star size={14} className="fill-white text-white" />
                         <span className="text-sm font-bold text-white">Destacado</span>
@@ -172,39 +199,59 @@ function HomePage() {
                   </div>
                   <div className="p-4">
                     <h3 className="font-semibold text-lg truncate group-hover:text-primary transition">
-                      {getPropertyName(property)}
+                      {itemName}
                     </h3>
                     <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
                       <MapPin size={14} className="text-primary" />
-                      <span className="truncate">{property.addressCity}, {property.addressCountry}</span>
+                      <span className="truncate">{itemCity}, {itemCountry}</span>
                     </div>
-                    {property.ratingAverage > 0 && (
+                    {itemRating > 0 && (
                       <div className="flex items-center gap-1 mt-2">
                         <Star size={14} className="fill-yellow-400 text-yellow-400" />
                         <span className="text-sm font-medium">
-                          {typeof property.ratingAverage === 'number'
-                            ? property.ratingAverage.toFixed(1)
-                            : property.ratingAverage}
+                          {typeof itemRating === 'number' ? itemRating.toFixed(1) : itemRating}
                         </span>
-                        <span className="text-sm text-gray-600">({property.ratingCount})</span>
+                        <span className="text-sm text-gray-600">({itemReviewCount})</span>
                       </div>
                     )}
                     <div className="mt-3">
-                      <span className="text-lg font-bold text-primary-dark">${getPropertyPrice(property)}</span>
-                      <span className="text-gray-600"> / noche</span>
+                      {isProperty && item.price && (
+                        <>
+                          <span className="text-lg font-bold text-primary-dark">${item.price}</span>
+                          <span className="text-gray-600"> / noche</span>
+                        </>
+                      )}
+                      {!isProperty && item.priceRange && (
+                        <span className="text-gray-600">{'$'.repeat(item.priceRange)}</span>
+                      )}
+                      {isProperty && !item.price && (
+                        <>
+                          <span className="text-lg font-bold text-primary-dark">${getPropertyPrice(item)}</span>
+                          <span className="text-gray-600"> / noche</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
 
-        {/* Propiedades por tipo de alojamiento */}
-        {Object.entries(propertiesByType).map(([type, typeProperties]) => {
-          if (typeProperties.length === 0) return null;
+        {/* Items por categoría */}
+        {Object.entries(itemsByType).map(([type, typeItems]) => {
+          if (typeItems.length === 0) return null;
 
-          const categoryInfo = categories.find(c => c.type === type);
+          // Mapear tipo de item a categoría
+          const typeToCategory = {
+            property: 'hotel',
+            restaurant: 'restaurant',
+            event: 'event',
+            entertainment: 'entertainment'
+          };
+          const categoryType = typeToCategory[type];
+          const categoryInfo = categories.find(c => c.type === categoryType);
           if (!categoryInfo) return null;
 
           return (
@@ -213,27 +260,37 @@ function HomePage() {
                 <div className="flex items-center gap-3">
                   <categoryInfo.icon className="text-primary" size={28} />
                   <h2 className="text-2xl font-bold text-primary-dark">{categoryInfo.name}</h2>
-                  <span className="text-sm text-gray-500">({typeProperties.length})</span>
+                  <span className="text-sm text-gray-500">({typeItems.length})</span>
                 </div>
                 <Link
-                  to={`/search?propertyType=${type}`}
+                  to={`/search?${categoryInfo.searchParam}`}
                   className="text-primary hover:text-primary-dark font-medium text-sm"
                 >
                   Ver todos →
                 </Link>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {typeProperties.slice(0, 4).map((property) => (
+                {typeItems.slice(0, 4).map((item) => {
+                  const isProperty = type === 'property';
+                  const itemName = item.name || getPropertyName(item);
+                  const itemImage = item.image || (item.rooms?.[0]?.images?.[0]);
+                  const itemRating = item.rating || item.ratingAverage || 0;
+                  const itemReviewCount = item.reviewCount || item.ratingCount || 0;
+                  const itemCity = item.location?.city || item.addressCity;
+                  const itemCountry = item.location?.country || item.addressCountry;
+                  const itemUrl = item.url || `/properties/${item.id}`;
+
+                  return (
                   <Link
-                    key={property.id}
-                    to={`/properties/${property.id}`}
+                    key={`${type}-${item.id}`}
+                    to={itemUrl}
                     className="group border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-primary hover:shadow-xl transition-all duration-300"
                   >
                     <div className="h-48 bg-gray-200 relative overflow-hidden">
-                      {property.rooms && property.rooms.length > 0 && property.rooms[0].images && property.rooms[0].images.length > 0 ? (
+                      {itemImage ? (
                         <img
-                          src={property.rooms[0].images[0]}
-                          alt={getPropertyName(property)}
+                          src={itemImage}
+                          alt={itemName}
                           className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                         />
                       ) : (
@@ -244,30 +301,35 @@ function HomePage() {
                     </div>
                     <div className="p-4">
                       <h3 className="font-semibold text-lg truncate group-hover:text-primary transition">
-                        {getPropertyName(property)}
+                        {itemName}
                       </h3>
                       <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
                         <MapPin size={14} className="text-primary" />
-                        <span className="truncate">{property.addressCity}, {property.addressCountry}</span>
+                        <span className="truncate">{itemCity}, {itemCountry}</span>
                       </div>
-                      {property.ratingAverage > 0 && (
+                      {itemRating > 0 && (
                         <div className="flex items-center gap-1 mt-1">
                           <Star size={14} className="fill-yellow-400 text-yellow-400" />
                           <span className="text-sm font-medium">
-                            {typeof property.ratingAverage === 'number'
-                              ? property.ratingAverage.toFixed(1)
-                              : parseFloat(property.ratingAverage).toFixed(1)}
+                            {typeof itemRating === 'number' ? itemRating.toFixed(1) : itemRating}
                           </span>
-                          <span className="text-sm text-gray-600">({property.ratingCount})</span>
+                          <span className="text-sm text-gray-600">({itemReviewCount})</span>
                         </div>
                       )}
                       <div className="mt-3">
-                        <span className="text-lg font-bold text-primary-dark">${getPropertyPrice(property)}</span>
-                        <span className="text-gray-600"> / noche</span>
+                        {isProperty ? (
+                          <>
+                            <span className="text-lg font-bold text-primary-dark">${item.price || getPropertyPrice(item)}</span>
+                            <span className="text-gray-600"> / noche</span>
+                          </>
+                        ) : item.priceRange ? (
+                          <span className="text-gray-600">{'$'.repeat(item.priceRange)}</span>
+                        ) : null}
                       </div>
                     </div>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             </section>
           );
@@ -276,7 +338,7 @@ function HomePage() {
         {/* Mensaje si no hay propiedades */}
         {properties.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-600">No hay propiedades disponibles en este momento.</p>
+            <p className="text-gray-600">No hay contenido disponible en este momento.</p>
           </div>
         )}
       </div>

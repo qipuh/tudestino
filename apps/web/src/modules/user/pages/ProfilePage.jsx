@@ -185,6 +185,13 @@ function ProfilePage({ userIdProp }) {
     }
   }, [profile?.id, currentUser?.id]);
 
+  // Reset properties when profile changes
+  useEffect(() => {
+    setProperties([]);
+    setRealPosts([]);
+    setRealReels([]);
+  }, [userId]);
+
   // Guardar likes en localStorage
   useEffect(() => {
     localStorage.setItem('likedPosts', JSON.stringify([...likedPosts]));
@@ -257,7 +264,6 @@ function ProfilePage({ userIdProp }) {
   };
 
   const loadProperties = async () => {
-    if (properties.length > 0) return;
     setLoadingProperties(true);
     try {
       const response = await getHostProperties(profile.id);
@@ -300,12 +306,12 @@ function ProfilePage({ userIdProp }) {
           url: item.url,
           thumbnail: item.thumbnail
         })) : [],
-        likes: post.likes_count || 0,
-        comments: post.comments_count || 0,
-        shares: post.shares_count || 0,
-        createdAt: post.created_at,
-        updatedAt: updated_at,
-        isActive: post.is_active,
+        likes: post.likesCount || post.likes_count || 0,
+        comments: post.commentsCount || post.comments_count || 0,
+        shares: post.sharesCount || post.shares_count || 0,
+        createdAt: post.createdAt || post.created_at,
+        updatedAt: post.updatedAt || post.updated_at,
+        isActive: post.isActive !== undefined ? post.isActive : post.is_active,
         // Información del usuario para el post
         user: post.user || {
           id: post.user_id,
@@ -1170,6 +1176,14 @@ function ProfilePage({ userIdProp }) {
             isOpen={showCreateSidebar}
             onClose={() => setShowCreateSidebar(false)}
             type={contentType}
+            onSuccess={() => {
+              // Recargar posts o reels según el tipo
+              if (contentType === 'post') {
+                loadRealPosts(true);
+              } else if (contentType === 'reel') {
+                loadRealReels(true);
+              }
+            }}
           />
         </>
       )}

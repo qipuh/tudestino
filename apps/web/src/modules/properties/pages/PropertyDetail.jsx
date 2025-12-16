@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MapPin, Users, Bed, Bath, Wifi, Star, ArrowLeft, Calendar, DollarSign, MessageCircle } from 'lucide-react';
 import BookingFlow from '../../bookings/components/BookingFlow';
-import api from '../../../services/api';
+import api, { getImageUrl } from '../../../services/api';
 import useAuthStore from '../../../store/authStore';
 
 const AMENITY_ICONS = {
@@ -146,7 +146,7 @@ function PropertyDetail() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 rounded-xl overflow-hidden">
             <div className="md:col-span-1 h-96 bg-gray-200">
               <img
-                src={images[selectedImage]}
+                src={getImageUrl(images[selectedImage])}
                 alt={title}
                 className="w-full h-full object-cover cursor-pointer"
               />
@@ -154,7 +154,7 @@ function PropertyDetail() {
             <div className="grid grid-cols-2 gap-2">
               {images.slice(1, 5).map((img, index) => (
                 <div key={index} className="h-48 bg-gray-200 cursor-pointer" onClick={() => setSelectedImage(index + 1)}>
-                  <img src={img} alt={`${property.title} ${index + 2}`} className="w-full h-full object-cover" />
+                  <img src={getImageUrl(img)} alt={`${property.title} ${index + 2}`} className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>

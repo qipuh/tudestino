@@ -1,5 +1,5 @@
 import express from 'express';
-import { getLocation, searchProperties, getLocationSuggestions, searchAll } from './search.controller.js';
+import { getLocation, searchBusinesses, getLocationSuggestions, searchAll } from './search.controller.js';
 
 const router = express.Router();
 
@@ -9,8 +9,8 @@ router.get('/location', getLocation);
 // GET /api/search/all - Búsqueda unificada de todos los tipos de negocios
 router.get('/all', searchAll);
 
-// GET /api/search/properties - Búsqueda avanzada de propiedades
-router.get('/properties', searchProperties);
+// GET /api/search/businesses - Búsqueda de negocios
+router.get('/businesses', searchBusinesses);
 
 // GET /api/search/suggestions - Autocompletado de ubicaciones
 router.get('/suggestions', getLocationSuggestions);

@@ -37,9 +37,9 @@ export const getLocation = async (req, res) => {
   try {
     // Obtener IP real del cliente
     const clientIP = req.headers['x-forwarded-for']?.split(',')[0] ||
-                     req.headers['x-real-ip'] ||
-                     req.connection.remoteAddress ||
-                     req.socket.remoteAddress;
+      req.headers['x-real-ip'] ||
+      req.connection.remoteAddress ||
+      req.socket.remoteAddress;
 
     // En desarrollo local, usar IP pública (ejemplo con Perú)
     const ip = clientIP === '::1' || clientIP === '127.0.0.1'
@@ -65,6 +65,91 @@ export const getLocation = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error al obtener ubicación',
+      error: error.message
+    });
+  }
+};
+
+export const searchBusinesses = async (req, res) => {
+  try {
+    const {
+      location,
+      category,
+      minRating,
+      limit = 20,
+      page = 1
+    } = req.query;
+
+    const whereConditions = {
+      status: 'active',
+      isActive: true
+    };
+
+    if (category && category !== 'all') {
+      whereConditions.businessType = category;
+    }
+
+    if (minRating) {
+      whereConditions.ratingAverage = { [Op.gte]: parseFloat(minRating) };
+    }
+
+    // Filtro por ubicación básica (búsqueda en campos JSON podría ser compleja dependiendo del dialecto)
+    // Por simplicidad si se proporciona location intentaremos buscar coincidencias si el dialecto lo permite
+    // o omitimos por ahora si no es crítico para la carga inicial
+
+    // Configurar paginación
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 20;
+    const offset = (pageNum - 1) * limitNum;
+
+    const { count, rows: businesses } = await Business.findAndCountAll({
+      where: whereConditions,
+      limit: limitNum,
+      offset,
+      order: [['ratingAverage', 'DESC'], ['reviewCount', 'DESC']]
+    });
+
+    const results = businesses.map(b => {
+      const data = b.toJSON();
+      // Mapear tipos de negocio a rutas
+      let typeUrl = 'businesses';
+      if (data.businessType === 'hotel') typeUrl = 'properties';
+      else if (data.businessType === 'restaurant') typeUrl = 'restaurants';
+      else if (data.businessType === 'event') typeUrl = 'events';
+      else if (data.businessType === 'entertainment') typeUrl = 'entertainment';
+
+      return {
+        id: data.id,
+        type: data.businessType,
+        name: data.name,
+        description: data.description,
+        image: data.coverImage || data.logo,
+        location: data.address, // Assumes address is { city, country, ... }
+        rating: data.ratingAverage,
+        reviewCount: data.reviewCount,
+        price: null,
+        url: `/${typeUrl}/${data.slug || data.id}`
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        results,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: count,
+          totalPages: Math.ceil(count / limitNum)
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in searchBusinesses:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al buscar negocios',
       error: error.message
     });
   }
@@ -212,7 +297,7 @@ export const searchProperties = async (req, res) => {
         {
           model: User,
           as: 'host',
-          attributes: ['id', 'name', 'email', 'hostRating', 'hostReviewCount']
+          attributes: ['id', 'name', 'email', 'avatar', 'bio', 'phone']
         },
         {
           model: Room,
@@ -461,152 +546,163 @@ export const searchAll = async (req, res) => {
       }));
     }
 
-    // Buscar en Restaurants
+    // Buscar en Restaurants desde businesses table
     if (!category || category === 'all' || category === 'restaurant') {
-      const restaurantWhere = {
-        status: 'published',
-        isActive: true,
-        ...buildLocationConditions('city', 'country', 'state')
-      };
+      try {
+        const restaurantWhere = {
+          status: 'active',
+          isActive: true,
+          businessType: 'restaurant'
+        };
 
-      if (minRating) {
-        restaurantWhere.averageRating = { [Op.gte]: parseFloat(minRating) };
-      }
-
-      const restaurants = await Restaurant.findAll({
-        where: restaurantWhere,
-        limit: limitNum,
-        offset
-      });
-
-      results = results.concat(restaurants.map(r => {
-        const data = r.toJSON();
-        let distance = null;
-
-        if (lat && lng && data.latitude && data.longitude) {
-          distance = calculateDistance(lat, lng, parseFloat(data.latitude), parseFloat(data.longitude));
+        if (minRating) {
+          restaurantWhere.ratingAverage = { [Op.gte]: parseFloat(minRating) };
         }
 
-        return {
-          id: data.id,
-          type: 'restaurant',
-          name: data.name,
-          description: data.description,
-          image: data.logo,
-          location: {
-            city: data.city,
-            state: data.state,
-            country: data.country,
-            latitude: data.latitude,
-            longitude: data.longitude
-          },
-          rating: data.averageRating || 0,
-          reviewCount: data.totalReviews || 0,
-          priceRange: data.priceRange,
-          cuisineTypes: data.cuisineTypes || [],
-          distance: distance ? Math.round(distance * 10) / 10 : null,
-          url: `/restaurants/${data.id}`
-        };
-      }));
+        const restaurants = await Business.findAll({
+          where: restaurantWhere,
+          limit: limitNum,
+          offset
+        });
+
+        results = results.concat(restaurants.map(r => {
+          const data = r.toJSON();
+          const addressData = typeof data.address === 'string' ? JSON.parse(data.address) : data.address;
+          let distance = null;
+
+          if (lat && lng && addressData?.latitude && addressData?.longitude) {
+            distance = calculateDistance(lat, lng, parseFloat(addressData.latitude), parseFloat(addressData.longitude));
+          }
+
+          return {
+            id: data.id,
+            type: 'restaurant',
+            name: data.name,
+            description: data.description,
+            image: data.logo || data.coverImage,
+            location: {
+              city: addressData?.city,
+              state: addressData?.state,
+              country: addressData?.country,
+              latitude: addressData?.latitude,
+              longitude: addressData?.longitude
+            },
+            rating: data.ratingAverage || 0,
+            reviewCount: data.reviewCount || 0,
+            distance: distance ? Math.round(distance * 10) / 10 : null,
+            url: `/businesses/${data.id}`
+          };
+        }));
+      } catch (error) {
+        console.error('Error fetching restaurants:', error.message);
+      }
     }
 
-    // Buscar en Events
+    // Buscar en Events (solo si las tablas existen y están sincronizadas)
     if (!category || category === 'all' || category === 'event') {
-      const eventWhere = {
-        status: 'published',
-        isActive: true,
-        ...buildLocationConditions('city', 'country', 'state')
-      };
-
-      // Solo eventos futuros
-      eventWhere.startDate = { [Op.gte]: new Date() };
-
-      const events = await Event.findAll({
-        where: eventWhere,
-        limit: limitNum,
-        offset,
-        order: [['startDate', 'ASC']]
-      });
-
-      results = results.concat(events.map(e => {
-        const data = e.toJSON();
-        let distance = null;
-
-        if (lat && lng && data.latitude && data.longitude) {
-          distance = calculateDistance(lat, lng, parseFloat(data.latitude), parseFloat(data.longitude));
-        }
-
-        return {
-          id: data.id,
-          type: 'event',
-          name: data.title,
-          description: data.shortDescription || data.description,
-          image: data.coverImage,
-          location: {
-            city: data.city,
-            state: data.state,
-            country: data.country,
-            latitude: data.latitude,
-            longitude: data.longitude
-          },
-          category: data.category,
-          startDate: data.startDate,
-          endDate: data.endDate,
-          isFree: data.isFree,
-          distance: distance ? Math.round(distance * 10) / 10 : null,
-          url: `/events/${data.id}`
+      try {
+        const eventWhere = {
+          status: 'published',
+          isActive: true,
+          ...buildLocationConditions('city', 'country', 'state')
         };
-      }));
+
+        // Solo eventos futuros
+        eventWhere.startDate = { [Op.gte]: new Date() };
+
+        const events = await Event.findAll({
+          where: eventWhere,
+          limit: limitNum,
+          offset,
+          order: [['startDate', 'ASC']]
+        });
+
+        results = results.concat(events.map(e => {
+          const data = e.toJSON();
+          let distance = null;
+
+          if (lat && lng && data.latitude && data.longitude) {
+            distance = calculateDistance(lat, lng, parseFloat(data.latitude), parseFloat(data.longitude));
+          }
+
+          return {
+            id: data.id,
+            type: 'event',
+            name: data.title,
+            description: data.shortDescription || data.description,
+            image: data.coverImage,
+            location: {
+              city: data.city,
+              state: data.state,
+              country: data.country,
+              latitude: data.latitude,
+              longitude: data.longitude
+            },
+            category: data.category,
+            startDate: data.startDate,
+            endDate: data.endDate,
+            isFree: data.isFree,
+            distance: distance ? Math.round(distance * 10) / 10 : null,
+            url: `/events/${data.id}`
+          };
+        }));
+      } catch (error) {
+        console.error('Error fetching events:', error.message);
+      }
     }
 
-    // Buscar en Entertainment
+    // Buscar en Entertainment (solo si las tablas existen y están sincronizadas)
     if (!category || category === 'all' || category === 'entertainment') {
-      const entertainmentWhere = {
-        status: 'published',
-        isActive: true,
-        ...buildLocationConditions('city', 'country', 'state')
-      };
+      try {
+        const entertainmentWhere = {
+          status: 'published',
+          isActive: true,
+          ...buildLocationConditions('city', 'country', 'state')
+        };
 
-      if (minRating) {
-        entertainmentWhere.averageRating = { [Op.gte]: parseFloat(minRating) };
-      }
-
-      const entertainment = await Entertainment.findAll({
-        where: entertainmentWhere,
-        limit: limitNum,
-        offset
-      });
-
-      results = results.concat(entertainment.map(e => {
-        const data = e.toJSON();
-        let distance = null;
-
-        if (lat && lng && data.latitude && data.longitude) {
-          distance = calculateDistance(lat, lng, parseFloat(data.latitude), parseFloat(data.longitude));
+        if (minRating) {
+          entertainmentWhere.averageRating = { [Op.gte]: parseFloat(minRating) };
         }
 
-        return {
-          id: data.id,
-          type: 'entertainment',
-          subType: data.type,
-          name: data.name,
-          description: data.description,
-          image: data.logo,
-          location: {
-            city: data.city,
-            state: data.state,
-            country: data.country,
-            latitude: data.latitude,
-            longitude: data.longitude
-          },
-          rating: data.averageRating || 0,
-          reviewCount: data.totalReviews || 0,
-          priceRange: data.priceRange,
-          coverCharge: data.hasCoverCharge ? data.coverCharge : null,
-          distance: distance ? Math.round(distance * 10) / 10 : null,
-          url: `/entertainment/${data.id}`
-        };
-      }));
+        const entertainment = await Entertainment.findAll({
+          where: entertainmentWhere,
+          limit: limitNum,
+          offset
+        });
+
+        results = results.concat(entertainment.map(e => {
+          const data = e.toJSON();
+          let distance = null;
+
+          if (lat && lng && data.latitude && data.longitude) {
+            distance = calculateDistance(lat, lng, parseFloat(data.latitude), parseFloat(data.longitude));
+          }
+
+          return {
+            id: data.id,
+            type: 'entertainment',
+            subType: data.type,
+            name: data.name,
+            description: data.description,
+            image: data.logo,
+            location: {
+              city: data.city,
+              state: data.state,
+              country: data.country,
+              latitude: data.latitude,
+              longitude: data.longitude
+            },
+            rating: data.averageRating || 0,
+            reviewCount: data.totalReviews || 0,
+            priceRange: data.priceRange,
+            coverCharge: data.hasCoverCharge ? data.coverCharge : null,
+            distance: distance ? Math.round(distance * 10) / 10 : null,
+            url: `/entertainment/${data.id}`
+          };
+        }));
+      } catch (error) {
+        console.error('Error fetching entertainment:', error.message);
+      }
     }
 
     // Filtrar por radio si se proporcionaron coordenadas

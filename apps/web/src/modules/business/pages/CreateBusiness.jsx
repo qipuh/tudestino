@@ -1,6 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import useBusiness from '../hooks/useBusiness';
+
+// Fix para los iconos de Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Componente para manejar clics en el mapa
+function MapClickHandler({ onLocationSelect }) {
+  useMapEvents({
+    click(e) {
+      onLocationSelect(e.latlng);
+    },
+  });
+  return null;
+}
 
 const businessTypes = [
   { value: 'hotel', label: 'Hotel / Alojamiento', icon: '🏨' },
@@ -41,6 +62,30 @@ function CreateBusiness() {
   });
   const [error, setError] = useState('');
   const [step, setStep] = useState(1);
+  const [mapMarker, setMapMarker] = useState(null);
+  const [showMap, setShowMap] = useState(false);
+
+  // Actualizar marcador cuando cambien las coordenadas manualmente
+  useEffect(() => {
+    if (formData.address.latitude && formData.address.longitude) {
+      setMapMarker({
+        lat: parseFloat(formData.address.latitude),
+        lng: parseFloat(formData.address.longitude)
+      });
+    }
+  }, [formData.address.latitude, formData.address.longitude]);
+
+  const handleMapClick = (latlng) => {
+    setMapMarker(latlng);
+    setFormData(prev => ({
+      ...prev,
+      address: {
+        ...prev.address,
+        latitude: latlng.lat.toFixed(6),
+        longitude: latlng.lng.toFixed(6)
+      }
+    }));
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -385,9 +430,37 @@ function CreateBusiness() {
                   </div>
                 </div>
 
+                {/* Mapa interactivo */}
+                <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
+                  <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                    <h3 className="text-sm font-semibold text-gray-700">
+                      📍 Selecciona la ubicación en el mapa
+                    </h3>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Haz clic en el mapa para marcar la ubicación exacta de tu negocio
+                    </p>
+                  </div>
+                  <div className="h-96">
+                    <MapContainer
+                      center={mapMarker || [-7.1619, -78.5128]}
+                      zoom={13}
+                      style={{ height: '100%', width: '100%' }}
+                    >
+                      <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      />
+                      <MapClickHandler onLocationSelect={handleMapClick} />
+                      {mapMarker && (
+                        <Marker position={[mapMarker.lat, mapMarker.lng]} />
+                      )}
+                    </MapContainer>
+                  </div>
+                </div>
+
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-800">
-                    💡 Puedes obtener las coordenadas buscando tu dirección en Google Maps
+                    💡 Las coordenadas se actualizarán automáticamente al hacer clic en el mapa
                   </p>
                 </div>
               </div>

@@ -118,7 +118,9 @@
       "Bash(cmd /c \"dir /b apps\\api\\src\\modules\\businesses\")",
       "Bash(\"C:\\laragon\\bin\\mysql\\mysql-8.4.3-winx64\\bin\\mysql.exe\" -u root -e \"USE tudestino; DESCRIBE restaurants;\")",
       "Bash(\"C:\\laragon\\bin\\mysql\\mysql-8.4.3-winx64\\bin\\mysql.exe\" -u root -e \"USE tudestino; DESCRIBE events;\")",
-      "Bash(\"C:\\laragon\\bin\\mysql\\mysql-8.4.3-winx64\\bin\\mysql.exe\" -u root -e \"USE tudestino; DESCRIBE entertainment;\")"
+      "Bash(\"C:\\laragon\\bin\\mysql\\mysql-8.4.3-winx64\\bin\\mysql.exe\" -u root -e \"USE tudestino; DESCRIBE entertainment;\")",
+      "Bash(cmd /c \"dir /b c:\\laragon\\www\\tudestino\\apps\\api\\uploads\")",
+      "Bash(\"C:\\laragon\\bin\\mysql\\mysql-8.4.3-winx64\\bin\\mysql.exe\" -u root -e \"USE tudestino; SELECT id, images FROM rooms LIMIT 1;\")"
     ],
     "deny": [],
     "ask": []

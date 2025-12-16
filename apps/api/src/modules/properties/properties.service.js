@@ -33,7 +33,7 @@ class PropertiesService {
         {
           model: User,
           as: 'host',
-          attributes: ['id', 'name', 'email', 'avatar', 'hostRating', 'hostReviewCount']
+          attributes: ['id', 'name', 'email', 'avatar', 'bio', 'phone']
         },
         {
           model: Room,
@@ -52,7 +52,7 @@ class PropertiesService {
         {
           model: User,
           as: 'host',
-          attributes: ['id', 'name', 'email', 'avatar', 'hostRating', 'hostReviewCount']
+          attributes: ['id', 'name', 'email', 'avatar', 'bio', 'phone']
         },
         {
           model: Room,

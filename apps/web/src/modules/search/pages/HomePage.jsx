@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom';
 import { MapPin, Star, TrendingUp, Home, Building2, Castle, TreePine } from 'lucide-react';
 import SearchHero from '@components/SearchHero';
 import ReelsSidebar from '../../../components/social/ReelsSidebar';
-import api from '../../../services/api';
+import api, { getImageUrl } from '../../../services/api';
 import { useSidebar } from '../../../contexts/SidebarContext';
 
 function HomePage() {
-  const [properties, setProperties] = useState([]);
+  const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
   const { sidebarOpen, toggleSidebar, setSidebarVisible } = useSidebar();
 
@@ -18,36 +18,32 @@ function HomePage() {
   }, [setSidebarVisible]);
 
   useEffect(() => {
-    fetchProperties();
+    fetchBusinesses();
   }, []);
 
-  const fetchProperties = async () => {
+  const fetchBusinesses = async () => {
     try {
-      // Obtener todas las propiedades
-      const propertiesResult = await api.get('/properties');
-      let propertiesData = [];
-      if (Array.isArray(propertiesResult)) {
-        propertiesData = propertiesResult;
-      } else if (propertiesResult.data && Array.isArray(propertiesResult.data)) {
-        propertiesData = propertiesResult.data;
+      // Obtener todas las propiedades usando el endpoint de search/all
+      // Este endpoint devuelve propiedades, restaurantes, eventos y entretenimiento
+      const searchResult = await api.get('/search/all?limit=100&category=all');
+      let businessesData = [];
+
+      console.log('📊 Search result:', searchResult);
+
+      // Adaptar respuesta según estructura del endpoint
+      if (searchResult.success && searchResult.data && searchResult.data.results) {
+        businessesData = searchResult.data.results;
+      } else if (searchResult.data && Array.isArray(searchResult.data)) {
+        businessesData = searchResult.data;
+      } else if (Array.isArray(searchResult)) {
+        businessesData = searchResult;
       }
 
-      // Obtener búsqueda unificada para mostrar diversidad de contenido
-      try {
-        const searchResult = await api.get('/search/all?limit=50');
-        if (searchResult.success && searchResult.data?.results) {
-          // Combinar propiedades con otros tipos de negocios
-          const allResults = [...propertiesData, ...searchResult.data.results.filter(r => r.type !== 'property')];
-          setProperties(allResults);
-        } else {
-          setProperties(propertiesData);
-        }
-      } catch (error) {
-        console.error('Error fetching all businesses:', error);
-        setProperties(propertiesData);
-      }
+      console.log('📊 Businesses data:', businessesData);
+      setBusinesses(businessesData);
+
     } catch (error) {
-      console.error('Error fetching properties:', error);
+      console.error('Error fetching businesses:', error);
     } finally {
       setLoading(false);
     }
@@ -60,7 +56,7 @@ function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-gray-600">Cargando propiedades...</p>
+            <p className="mt-4 text-gray-600">Cargando experiencias...</p>
           </div>
         </div>
       </>
@@ -68,7 +64,7 @@ function HomePage() {
   }
 
   // Obtener items destacados (mejor valorados)
-  const featuredItems = properties
+  const featuredItems = businesses
     .filter(p => (p.ratingAverage >= 4.0 || p.rating >= 4.0))
     .sort((a, b) => {
       const ratingA = a.rating || a.ratingAverage || 0;
@@ -88,17 +84,18 @@ function HomePage() {
 
   // Agrupar por tipo
   const itemsByType = {
-    property: properties.filter(p => !p.type || p.type === 'property' || p.accommodationType),
-    restaurant: properties.filter(p => p.type === 'restaurant'),
-    event: properties.filter(p => p.type === 'event'),
-    entertainment: properties.filter(p => p.type === 'entertainment'),
+    property: businesses.filter(p => !p.type || p.type === 'property' || p.type === 'hotel' || p.accommodationType),
+    restaurant: businesses.filter(p => p.type === 'restaurant'),
+    event: businesses.filter(p => p.type === 'event'),
+    entertainment: businesses.filter(p => p.type === 'entertainment'),
   };
 
-  // Función para obtener el nombre de la propiedad
-  const getPropertyName = (property) => {
-    // Prioridad: propertyName > hotelName > nombre genérico en español
-    if (property.propertyName) return property.propertyName;
-    if (property.hotelName) return property.hotelName;
+  // Función para obtener el nombre del negocio
+  const getBusinessName = (business) => {
+    // Prioridad: name > propertyName > hotelName > nombre genérico en español
+    if (business.name) return business.name;
+    if (business.propertyName) return business.propertyName;
+    if (business.hotelName) return business.hotelName;
 
     // Traducir tipo de alojamiento al español
     const typeTranslations = {
@@ -115,16 +112,16 @@ function HomePage() {
       'guesthouse': 'Casa de huéspedes',
     };
 
-    const typeName = typeTranslations[property.accommodationType] || property.accommodationType;
-    return `${typeName} en ${property.addressCity}`;
+    const typeName = typeTranslations[business.accommodationType] || business.accommodationType || 'Negocio';
+    return `${typeName} en ${business.addressCity || business.location?.city || ''}`;
   };
 
-  // Función para obtener el precio de la propiedad (de la primera habitación)
-  const getPropertyPrice = (property) => {
-    if (property.rooms && property.rooms.length > 0) {
-      return property.rooms[0].pricePerNight;
+  // Función para obtener el precio del negocio
+  const getBusinessPrice = (business) => {
+    if (business.rooms && business.rooms.length > 0) {
+      return business.rooms[0].pricePerNight;
     }
-    return 0;
+    return business.price || 0;
   };
 
   return (
@@ -164,8 +161,8 @@ function HomePage() {
               {featuredItems.map((item) => {
                 // Obtener datos según el tipo
                 const isProperty = !item.type || item.type === 'property' || item.accommodationType;
-                const itemName = item.name || getPropertyName(item);
-                const itemImage = item.image || (item.rooms?.[0]?.images?.[0]);
+                const itemName = getBusinessName(item);
+                const itemImage = getImageUrl(item.image || (item.rooms?.[0]?.images?.[0]));
                 const itemRating = item.rating || item.ratingAverage || 0;
                 const itemReviewCount = item.reviewCount || item.ratingCount || 0;
                 const itemCity = item.location?.city || item.addressCity;
@@ -173,66 +170,66 @@ function HomePage() {
                 const itemUrl = item.url || `/properties/${item.id}`;
 
                 return (
-                <Link
-                  key={`${item.type || 'property'}-${item.id}`}
-                  to={itemUrl}
-                  className="group border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-primary hover:shadow-2xl transition-all duration-300"
-                >
-                  <div className="h-48 bg-gray-200 relative overflow-hidden">
-                    {itemImage ? (
-                      <img
-                        src={itemImage}
-                        alt={itemName}
-                        className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        Sin imagen
-                      </div>
-                    )}
-                    {itemRating >= 4.5 && (
-                      <div className="absolute top-3 right-3 bg-gradient-to-r from-primary to-primary-dark px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
-                        <Star size={14} className="fill-white text-white" />
-                        <span className="text-sm font-bold text-white">Destacado</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg truncate group-hover:text-primary transition">
-                      {itemName}
-                    </h3>
-                    <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
-                      <MapPin size={14} className="text-primary" />
-                      <span className="truncate">{itemCity}, {itemCountry}</span>
-                    </div>
-                    {itemRating > 0 && (
-                      <div className="flex items-center gap-1 mt-2">
-                        <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium">
-                          {typeof itemRating === 'number' ? itemRating.toFixed(1) : itemRating}
-                        </span>
-                        <span className="text-sm text-gray-600">({itemReviewCount})</span>
-                      </div>
-                    )}
-                    <div className="mt-3">
-                      {isProperty && item.price && (
-                        <>
-                          <span className="text-lg font-bold text-primary-dark">${item.price}</span>
-                          <span className="text-gray-600"> / noche</span>
-                        </>
+                  <Link
+                    key={`${item.type || 'property'}-${item.id}`}
+                    to={itemUrl}
+                    className="group border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-primary hover:shadow-2xl transition-all duration-300"
+                  >
+                    <div className="h-48 bg-gray-200 relative overflow-hidden">
+                      {itemImage ? (
+                        <img
+                          src={itemImage}
+                          alt={itemName}
+                          className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          Sin imagen
+                        </div>
                       )}
-                      {!isProperty && item.priceRange && (
-                        <span className="text-gray-600">{'$'.repeat(item.priceRange)}</span>
-                      )}
-                      {isProperty && !item.price && (
-                        <>
-                          <span className="text-lg font-bold text-primary-dark">${getPropertyPrice(item)}</span>
-                          <span className="text-gray-600"> / noche</span>
-                        </>
+                      {itemRating >= 4.5 && (
+                        <div className="absolute top-3 right-3 bg-gradient-to-r from-primary to-primary-dark px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
+                          <Star size={14} className="fill-white text-white" />
+                          <span className="text-sm font-bold text-white">Destacado</span>
+                        </div>
                       )}
                     </div>
-                  </div>
-                </Link>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-lg truncate group-hover:text-primary transition">
+                        {itemName}
+                      </h3>
+                      <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
+                        <MapPin size={14} className="text-primary" />
+                        <span className="truncate">{itemCity}, {itemCountry}</span>
+                      </div>
+                      {itemRating > 0 && (
+                        <div className="flex items-center gap-1 mt-2">
+                          <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm font-medium">
+                            {typeof itemRating === 'number' ? itemRating.toFixed(1) : itemRating}
+                          </span>
+                          <span className="text-sm text-gray-600">({itemReviewCount})</span>
+                        </div>
+                      )}
+                      <div className="mt-3">
+                        {isProperty && item.price && (
+                          <>
+                            <span className="text-lg font-bold text-primary-dark">${item.price}</span>
+                            <span className="text-gray-600"> / noche</span>
+                          </>
+                        )}
+                        {!isProperty && item.priceRange && (
+                          <span className="text-gray-600">{'$'.repeat(item.priceRange)}</span>
+                        )}
+                        {isProperty && !item.price && (
+                          <>
+                            <span className="text-lg font-bold text-primary-dark">${getBusinessPrice(item)}</span>
+                            <span className="text-gray-600"> / noche</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
                 );
               })}
             </div>
@@ -272,8 +269,8 @@ function HomePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {typeItems.slice(0, 4).map((item) => {
                   const isProperty = type === 'property';
-                  const itemName = item.name || getPropertyName(item);
-                  const itemImage = item.image || (item.rooms?.[0]?.images?.[0]);
+                  const itemName = getBusinessName(item);
+                  const itemImage = getImageUrl(item.image || (item.rooms?.[0]?.images?.[0]));
                   const itemRating = item.rating || item.ratingAverage || 0;
                   const itemReviewCount = item.reviewCount || item.ratingCount || 0;
                   const itemCity = item.location?.city || item.addressCity;
@@ -281,53 +278,53 @@ function HomePage() {
                   const itemUrl = item.url || `/properties/${item.id}`;
 
                   return (
-                  <Link
-                    key={`${type}-${item.id}`}
-                    to={itemUrl}
-                    className="group border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-primary hover:shadow-xl transition-all duration-300"
-                  >
-                    <div className="h-48 bg-gray-200 relative overflow-hidden">
-                      {itemImage ? (
-                        <img
-                          src={itemImage}
-                          alt={itemName}
-                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                          Sin imagen
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-lg truncate group-hover:text-primary transition">
-                        {itemName}
-                      </h3>
-                      <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
-                        <MapPin size={14} className="text-primary" />
-                        <span className="truncate">{itemCity}, {itemCountry}</span>
+                    <Link
+                      key={`${type}-${item.id}`}
+                      to={itemUrl}
+                      className="group border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-primary hover:shadow-xl transition-all duration-300"
+                    >
+                      <div className="h-48 bg-gray-200 relative overflow-hidden">
+                        {itemImage ? (
+                          <img
+                            src={itemImage}
+                            alt={itemName}
+                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            Sin imagen
+                          </div>
+                        )}
                       </div>
-                      {itemRating > 0 && (
-                        <div className="flex items-center gap-1 mt-1">
-                          <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium">
-                            {typeof itemRating === 'number' ? itemRating.toFixed(1) : itemRating}
-                          </span>
-                          <span className="text-sm text-gray-600">({itemReviewCount})</span>
+                      <div className="p-4">
+                        <h3 className="font-semibold text-lg truncate group-hover:text-primary transition">
+                          {itemName}
+                        </h3>
+                        <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
+                          <MapPin size={14} className="text-primary" />
+                          <span className="truncate">{itemCity}, {itemCountry}</span>
                         </div>
-                      )}
-                      <div className="mt-3">
-                        {isProperty ? (
-                          <>
-                            <span className="text-lg font-bold text-primary-dark">${item.price || getPropertyPrice(item)}</span>
-                            <span className="text-gray-600"> / noche</span>
-                          </>
-                        ) : item.priceRange ? (
-                          <span className="text-gray-600">{'$'.repeat(item.priceRange)}</span>
-                        ) : null}
+                        {itemRating > 0 && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                            <span className="text-sm font-medium">
+                              {typeof itemRating === 'number' ? itemRating.toFixed(1) : itemRating}
+                            </span>
+                            <span className="text-sm text-gray-600">({itemReviewCount})</span>
+                          </div>
+                        )}
+                        <div className="mt-3">
+                          {isProperty ? (
+                            <>
+                              <span className="text-lg font-bold text-primary-dark">${item.price || getBusinessPrice(item)}</span>
+                              <span className="text-gray-600"> / noche</span>
+                            </>
+                          ) : item.priceRange ? (
+                            <span className="text-gray-600">{'$'.repeat(item.priceRange)}</span>
+                          ) : null}
+                        </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
                   );
                 })}
               </div>
@@ -335,8 +332,8 @@ function HomePage() {
           );
         })}
 
-        {/* Mensaje si no hay propiedades */}
-        {properties.length === 0 && (
+        {/* Mensaje si no hay negocios */}
+        {businesses.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-600">No hay contenido disponible en este momento.</p>
           </div>

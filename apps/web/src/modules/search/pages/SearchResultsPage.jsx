@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { MapPin, Star, SlidersHorizontal, Grid, List, Loader2, Map as MapIcon, Calendar } from 'lucide-react';
-import api from '@services/api';
+import api, { getImageUrl } from '@services/api';
 import PropertiesMap from '@components/PropertiesMap';
 
 function SearchResultsPage() {
@@ -260,7 +260,7 @@ function SearchResultsPage() {
                   <div className="h-48 bg-gray-200 relative overflow-hidden">
                     {item.image ? (
                       <img
-                        src={item.image}
+                        src={getImageUrl(item.image)}
                         alt={item.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
                       />

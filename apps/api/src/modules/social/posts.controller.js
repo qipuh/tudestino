@@ -1,4 +1,5 @@
-import { Post, Comment, Like } from './social.model.sequelize.js';
+import Post from './post.model.js';
+import { Post as SocialPost, Comment, Like } from './social.model.sequelize.js';
 import User from '../users/user.model-mysql.js';
 
 export const postsController = {

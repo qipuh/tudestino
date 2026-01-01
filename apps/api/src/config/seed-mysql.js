@@ -4,6 +4,7 @@ import { dirname, join } from 'path';
 import bcrypt from 'bcryptjs';
 import sequelize from './database-mysql.js';
 import User from '../modules/users/user.model-mysql.js';
+import Business from '../modules/businesses/business.model.js';
 import { Property } from '../modules/properties/property.model.sequelize.js';
 import Booking from '../modules/bookings/booking.model.js';
 

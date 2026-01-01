@@ -72,6 +72,8 @@ export const getImageUrl = (imagePath, context = 'auto') => {
     subfolder = 'rooms';
   } else if (context === 'social' || context === 'post') {
     subfolder = 'social';
+  } else if (context === 'menu') {
+    subfolder = 'menu';
   }
 
   return `${SERVER_BASE_URL}/uploads/${subfolder}/${cleanPath}`;

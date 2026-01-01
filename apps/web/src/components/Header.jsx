@@ -101,6 +101,13 @@ function Header() {
                         Mis reservas
                       </Link>
                       <Link
+                        to="/events/my-events"
+                        className="block px-4 py-2 text-sm hover:bg-gray-50"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Mis Eventos
+                      </Link>
+                      <Link
                         to="/messages"
                         className="block px-4 py-2 text-sm hover:bg-gray-50"
                         onClick={() => setIsMenuOpen(false)}

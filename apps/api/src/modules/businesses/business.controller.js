@@ -1,5 +1,10 @@
 import businessService from './business.service.js';
 import businessPropertyService from './business-property.service.js';
+import BusinessReservation from './business-reservation.model.js';
+import Business from './business.model.js';
+import User from '../users/user.model-mysql.js';
+import MenuItem from './menu-item.model.js';
+import BusinessPhoto from './business-photo.model.js';
 
 class BusinessController {
   /**
@@ -308,6 +313,542 @@ class BusinessController {
       });
     } catch (error) {
       console.error('Error en getBusinessProperty:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Crear una reservación para un negocio
+   * POST /api/businesses/:businessId/reservations
+   */
+  async createReservation(req, res) {
+    try {
+      const { businessId } = req.params;
+      const userId = req.user.id;
+      const { reservationDate, reservationTime, numberOfPeople, specialRequests } = req.body;
+
+      // Generar código de confirmación
+      const confirmationCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+
+      const reservation = await BusinessReservation.create({
+        businessId,
+        userId,
+        reservationDate,
+        reservationTime,
+        numberOfPeople,
+        specialRequests,
+        confirmationCode,
+        status: 'pending'
+      });
+
+      // Obtener información completa de la reservación
+      const fullReservation = await BusinessReservation.findByPk(reservation.id, {
+        include: [
+          {
+            model: Business,
+            as: 'business',
+            attributes: ['id', 'name', 'businessType', 'contactPhone', 'contactEmail']
+          },
+          {
+            model: User,
+            as: 'user',
+            attributes: ['id', 'name', 'email']
+          }
+        ]
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: 'Reservación creada exitosamente',
+        data: fullReservation
+      });
+    } catch (error) {
+      console.error('Error en createReservation:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Obtener reservaciones de un usuario
+   * GET /api/businesses/reservations/my-reservations
+   */
+  async getMyReservations(req, res) {
+    try {
+      const userId = req.user.id;
+
+      const reservations = await BusinessReservation.findAll({
+        where: { userId },
+        include: [
+          {
+            model: Business,
+            as: 'business',
+            attributes: ['id', 'name', 'businessType', 'logo', 'contactPhone']
+          }
+        ],
+        order: [['reservationDate', 'DESC'], ['reservationTime', 'DESC']]
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: reservations
+      });
+    } catch (error) {
+      console.error('Error en getMyReservations:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Cancelar una reservación
+   * PUT /api/businesses/reservations/:reservationId/cancel
+   */
+  async cancelReservation(req, res) {
+    try {
+      const { reservationId } = req.params;
+      const userId = req.user.id;
+
+      const reservation = await BusinessReservation.findOne({
+        where: { id: reservationId, userId }
+      });
+
+      if (!reservation) {
+        return res.status(404).json({
+          success: false,
+          message: 'Reservación no encontrada'
+        });
+      }
+
+      if (reservation.status === 'cancelled') {
+        return res.status(400).json({
+          success: false,
+          message: 'La reservación ya está cancelada'
+        });
+      }
+
+      await reservation.update({ status: 'cancelled' });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Reservación cancelada exitosamente',
+        data: reservation
+      });
+    } catch (error) {
+      console.error('Error en cancelReservation:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Obtener reservaciones de un negocio (para el dueño)
+   * GET /api/businesses/:businessId/reservations
+   */
+  async getBusinessReservations(req, res) {
+    try {
+      const { businessId } = req.params;
+      const ownerId = req.user.id;
+
+      // Verificar que el usuario sea dueño del negocio
+      const business = await Business.findOne({
+        where: { id: businessId, ownerId }
+      });
+
+      if (!business) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para ver estas reservaciones'
+        });
+      }
+
+      const reservations = await BusinessReservation.findAll({
+        where: { businessId },
+        include: [
+          {
+            model: User,
+            as: 'user',
+            attributes: ['id', 'name', 'email', 'phone']
+          }
+        ],
+        order: [['reservationDate', 'ASC'], ['reservationTime', 'ASC']]
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: reservations
+      });
+    } catch (error) {
+      console.error('Error en getBusinessReservations:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Actualizar el estado de una reservación (para el dueño)
+   * PUT /api/businesses/:businessId/reservations/:reservationId/status
+   */
+  async updateReservationStatus(req, res) {
+    try {
+      const { businessId, reservationId } = req.params;
+      const { status } = req.body;
+      const ownerId = req.user.id;
+
+      // Verificar que el usuario sea dueño del negocio
+      const business = await Business.findOne({
+        where: { id: businessId, ownerId }
+      });
+
+      if (!business) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para modificar esta reservación'
+        });
+      }
+
+      const reservation = await BusinessReservation.findOne({
+        where: { id: reservationId, businessId }
+      });
+
+      if (!reservation) {
+        return res.status(404).json({
+          success: false,
+          message: 'Reservación no encontrada'
+        });
+      }
+
+      await reservation.update({ status });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Estado de reservación actualizado',
+        data: reservation
+      });
+    } catch (error) {
+      console.error('Error en updateReservationStatus:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Obtener menú de un restaurante
+   * GET /api/businesses/:businessId/menu
+   */
+  async getMenu(req, res) {
+    try {
+      const { businessId } = req.params;
+
+      const menuItems = await MenuItem.findAll({
+        where: { businessId },
+        order: [['category', 'ASC'], ['displayOrder', 'ASC'], ['name', 'ASC']]
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: menuItems
+      });
+    } catch (error) {
+      console.error('Error en getMenu:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Crear un item del menú
+   * POST /api/businesses/:businessId/menu
+   */
+  async createMenuItem(req, res) {
+    try {
+      const { businessId } = req.params;
+      const ownerId = req.user.id;
+      const { name, description, category, price, isAvailable, isSpecial } = req.body;
+
+      // Verificar que el usuario sea dueño del negocio
+      const business = await Business.findOne({
+        where: { id: businessId, ownerId }
+      });
+
+      if (!business) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para modificar este negocio'
+        });
+      }
+
+      const menuItemData = {
+        businessId,
+        name,
+        description: description || '',
+        category,
+        price: parseFloat(price),
+        isAvailable: isAvailable === '1' || isAvailable === true || isAvailable === 'true',
+        isSpecial: isSpecial === '1' || isSpecial === true || isSpecial === 'true'
+      };
+
+      // Procesar imagen si existe
+      if (req.file) {
+        menuItemData.image = req.file.filename;
+      }
+
+      const menuItem = await MenuItem.create(menuItemData);
+
+      return res.status(201).json({
+        success: true,
+        message: 'Plato agregado al menú',
+        data: menuItem
+      });
+    } catch (error) {
+      console.error('Error en createMenuItem:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Actualizar un item del menú
+   * PUT /api/businesses/:businessId/menu/:itemId
+   */
+  async updateMenuItem(req, res) {
+    try {
+      const { businessId, itemId } = req.params;
+      const ownerId = req.user.id;
+      const { name, description, category, price, isAvailable, isSpecial } = req.body;
+
+      // Verificar que el usuario sea dueño del negocio
+      const business = await Business.findOne({
+        where: { id: businessId, ownerId }
+      });
+
+      if (!business) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para modificar este negocio'
+        });
+      }
+
+      const menuItem = await MenuItem.findOne({
+        where: { id: itemId, businessId }
+      });
+
+      if (!menuItem) {
+        return res.status(404).json({
+          success: false,
+          message: 'Plato no encontrado'
+        });
+      }
+
+      const updateData = {
+        name,
+        description: description || '',
+        category,
+        price: parseFloat(price),
+        isAvailable: isAvailable === '1' || isAvailable === true || isAvailable === 'true',
+        isSpecial: isSpecial === '1' || isSpecial === true || isSpecial === 'true'
+      };
+
+      // Procesar imagen si existe
+      if (req.file) {
+        updateData.image = req.file.filename;
+      }
+
+      await menuItem.update(updateData);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Plato actualizado',
+        data: menuItem
+      });
+    } catch (error) {
+      console.error('Error en updateMenuItem:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Eliminar un item del menú
+   * DELETE /api/businesses/:businessId/menu/:itemId
+   */
+  async deleteMenuItem(req, res) {
+    try {
+      const { businessId, itemId } = req.params;
+      const ownerId = req.user.id;
+
+      // Verificar que el usuario sea dueño del negocio
+      const business = await Business.findOne({
+        where: { id: businessId, ownerId }
+      });
+
+      if (!business) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para modificar este negocio'
+        });
+      }
+
+      const menuItem = await MenuItem.findOne({
+        where: { id: itemId, businessId }
+      });
+
+      if (!menuItem) {
+        return res.status(404).json({
+          success: false,
+          message: 'Plato no encontrado'
+        });
+      }
+
+      await menuItem.destroy();
+
+      return res.status(200).json({
+        success: true,
+        message: 'Plato eliminado del menú'
+      });
+    } catch (error) {
+      console.error('Error en deleteMenuItem:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Obtener fotos de un negocio
+   * GET /api/businesses/:businessId/photos
+   */
+  async getPhotos(req, res) {
+    try {
+      const { businessId } = req.params;
+
+      const photos = await BusinessPhoto.findAll({
+        where: { businessId },
+        order: [['displayOrder', 'ASC'], ['createdAt', 'DESC']]
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: photos
+      });
+    } catch (error) {
+      console.error('Error en getPhotos:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Subir foto de un negocio
+   * POST /api/businesses/:businessId/photos
+   */
+  async uploadPhoto(req, res) {
+    try {
+      const { businessId } = req.params;
+      const ownerId = req.user.id;
+      const { caption } = req.body;
+
+      // Verificar que el usuario sea dueño del negocio
+      const business = await Business.findOne({
+        where: { id: businessId, ownerId }
+      });
+
+      if (!business) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para modificar este negocio'
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: 'No se ha subido ninguna foto'
+        });
+      }
+
+      const photo = await BusinessPhoto.create({
+        businessId,
+        url: req.file.filename,
+        caption
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: 'Foto subida exitosamente',
+        data: photo
+      });
+    } catch (error) {
+      console.error('Error en uploadPhoto:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Eliminar foto de un negocio
+   * DELETE /api/businesses/:businessId/photos/:photoId
+   */
+  async deletePhoto(req, res) {
+    try {
+      const { businessId, photoId } = req.params;
+      const ownerId = req.user.id;
+
+      // Verificar que el usuario sea dueño del negocio
+      const business = await Business.findOne({
+        where: { id: businessId, ownerId }
+      });
+
+      if (!business) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para modificar este negocio'
+        });
+      }
+
+      const photo = await BusinessPhoto.findOne({
+        where: { id: photoId, businessId }
+      });
+
+      if (!photo) {
+        return res.status(404).json({
+          success: false,
+          message: 'Foto no encontrada'
+        });
+      }
+
+      await photo.destroy();
+
+      return res.status(200).json({
+        success: true,
+        message: 'Foto eliminada'
+      });
+    } catch (error) {
+      console.error('Error en deletePhoto:', error);
       return res.status(400).json({
         success: false,
         message: error.message

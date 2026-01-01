@@ -7,12 +7,12 @@ import sequelize from '../../config/database-mysql.js';
  */
 export const Post = sequelize.define('Post', {
   id: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
   userId: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     allowNull: false,
     field: 'user_id',
   },
@@ -71,12 +71,12 @@ export const Post = sequelize.define('Post', {
  */
 export const Reel = sequelize.define('Reel', {
   id: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
   userId: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     allowNull: false,
     field: 'user_id',
   },
@@ -149,12 +149,12 @@ export const Reel = sequelize.define('Reel', {
  */
 export const Like = sequelize.define('Like', {
   id: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
   userId: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     allowNull: false,
     field: 'user_id',
   },
@@ -164,7 +164,7 @@ export const Like = sequelize.define('Like', {
     field: 'content_type',
   },
   contentId: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     allowNull: false,
     field: 'content_id',
   },
@@ -190,12 +190,12 @@ export const Like = sequelize.define('Like', {
  */
 export const Comment = sequelize.define('Comment', {
   id: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
   userId: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     allowNull: false,
     field: 'user_id',
   },
@@ -205,7 +205,7 @@ export const Comment = sequelize.define('Comment', {
     field: 'content_type',
   },
   contentId: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     allowNull: false,
     field: 'content_id',
   },

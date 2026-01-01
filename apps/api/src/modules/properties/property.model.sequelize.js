@@ -16,6 +16,15 @@ const Property = sequelize.define('Property', {
       key: 'id',
     },
   },
+  businessId: {
+    type: DataTypes.CHAR(36),
+    allowNull: true,
+    references: {
+      model: 'businesses',
+      key: 'id',
+    },
+    comment: 'ID del negocio al que pertenece esta propiedad',
+  },
 
   // Tipo de alojamiento
   accommodationType: {
@@ -269,5 +278,12 @@ Room.belongsTo(Property, {
   foreignKey: 'propertyId',
   as: 'property',
 });
+
+// Relación con Business
+// NOTA: Descomentar después de ejecutar la migración add-business-id-to-properties.sql
+// Property.belongsTo(sequelize.model('Business'), {
+//   foreignKey: 'businessId',
+//   as: 'business',
+// });
 
 export { Property, Room };

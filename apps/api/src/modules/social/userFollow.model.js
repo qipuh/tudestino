@@ -36,7 +36,7 @@ const UserFollow = sequelize.define('UserFollow', {
     comment: 'Si recibe notificaciones del usuario seguido'
   },
 }, {
-  tableName: 'UserFollows',
+  tableName: 'userfollows',
   timestamps: true,
   indexes: [
     {

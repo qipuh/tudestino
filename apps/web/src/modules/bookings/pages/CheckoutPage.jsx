@@ -426,10 +426,10 @@ function CheckoutPage() {
 
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">
-                    ${bookingData.priceBreakdown.basePrice} × {bookingData.priceBreakdown.nights} noche{bookingData.priceBreakdown.nights > 1 ? 's' : ''}
+                    S/{bookingData.priceBreakdown.basePrice} × {bookingData.priceBreakdown.nights} noche{bookingData.priceBreakdown.nights > 1 ? 's' : ''}
                   </span>
                   <span className="font-medium text-gray-900">
-                    ${bookingData.priceBreakdown.subtotal.toFixed(2)}
+                    S/{bookingData.priceBreakdown.subtotal.toFixed(2)}
                   </span>
                 </div>
 
@@ -437,7 +437,7 @@ function CheckoutPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Tarifa de limpieza</span>
                     <span className="font-medium text-gray-900">
-                      ${bookingData.priceBreakdown.cleaningFee.toFixed(2)}
+                      S/{bookingData.priceBreakdown.cleaningFee.toFixed(2)}
                     </span>
                   </div>
                 )}
@@ -445,7 +445,7 @@ function CheckoutPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Tarifa de servicio</span>
                   <span className="font-medium text-gray-900">
-                    ${bookingData.priceBreakdown.serviceFee.toFixed(2)}
+                    S/{bookingData.priceBreakdown.serviceFee.toFixed(2)}
                   </span>
                 </div>
               </div>

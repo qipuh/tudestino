@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Heart, MessageCircle, Send, MoreHorizontal, MapPin, Volume2, VolumeX, Play, Pause } from 'lucide-react';
 import { toggleLike, addComment, deleteReel } from '../services/socialApi';
+import { getImageUrl } from '@services/api';
 import { Link } from 'react-router-dom';
 
 /**
@@ -148,7 +149,7 @@ function ReelCard({ reel, onDelete, currentUserId, isActive }) {
               className="flex items-center gap-3 mb-3 hover:opacity-80"
             >
               <img
-                src={reel.user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(reel.user?.name || 'User')}&background=random`}
+                src={reel.user?.avatar ? getImageUrl(reel.user.avatar, 'social') : `https://ui-avatars.com/api/?name=${encodeURIComponent(reel.user?.name || 'User')}&background=random`}
                 alt={reel.user?.name}
                 className="w-12 h-12 rounded-full object-cover border-2 border-white"
               />

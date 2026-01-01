@@ -144,7 +144,7 @@ function ReviewStep({ formData }) {
             {formData.parkingType === 'no' && 'No disponible'}
             {formData.parkingType === 'free' && 'Gratis'}
             {formData.parkingType === 'paid' &&
-              `De pago - $${formData.parkingDetails.price}/${formData.parkingDetails.pricePer === 'day' ? 'día' : 'estancia'}`}
+              `De pago - S/{formData.parkingDetails.price}/${formData.parkingDetails.pricePer === 'day' ? 'día' : 'estancia'}`}
           </p>
         </div>
       </div>
@@ -171,7 +171,7 @@ function ReviewStep({ formData }) {
             {formData.petsAllowed === 'no' && 'No permitidas'}
             {formData.petsAllowed === 'yes_free' && 'Permitidas sin cargo'}
             {formData.petsAllowed === 'yes_paid' &&
-              `Permitidas con cargo de $${formData.petFee}/${formData.petFeePer === 'day' ? 'día' : 'estancia'}`}
+              `Permitidas con cargo de S/{formData.petFee}/${formData.petFeePer === 'day' ? 'día' : 'estancia'}`}
           </p>
           {formData.additionalRules && (
             <div className="mt-3 pt-3 border-t">

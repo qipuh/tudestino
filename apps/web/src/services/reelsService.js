@@ -11,12 +11,13 @@ export const getUserPosts = async (userId) => {
   }
 };
 
-// Create a new reel (post with type='reel')
-export const createReel = async (reelData) => {
+// Create a new reel
+export const createReel = async (formData) => {
   try {
-    const response = await api.post('/social/posts', {
-      ...reelData,
-      type: 'reel',
+    const response = await api.post('/social/reels', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
     return response.data;
   } catch (error) {
@@ -26,9 +27,12 @@ export const createReel = async (reelData) => {
 };
 
 // Toggle like on a reel/post
-export const togglePostLike = async (postId) => {
+export const togglePostLike = async (contentId, contentType = 'reel') => {
   try {
-    const response = await api.post(`/social/posts/${postId}/like`);
+    const response = await api.post('/social/like', {
+      contentType,
+      contentId
+    });
     return response.data;
   } catch (error) {
     console.error('Error toggling like:', error);
@@ -37,9 +41,9 @@ export const togglePostLike = async (postId) => {
 };
 
 // Get comments for a reel/post
-export const getPostComments = async (postId) => {
+export const getPostComments = async (contentId, contentType = 'reel') => {
   try {
-    const response = await api.get(`/social/posts/${postId}/comments`);
+    const response = await api.get(`/social/comments/${contentType}/${contentId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching comments:', error);
@@ -48,9 +52,13 @@ export const getPostComments = async (postId) => {
 };
 
 // Add a comment to a reel/post
-export const addComment = async (postId, commentData) => {
+export const addComment = async (contentId, commentText, contentType = 'reel') => {
   try {
-    const response = await api.post(`/social/posts/${postId}/comments`, commentData);
+    const response = await api.post('/social/comments', {
+      contentType,
+      contentId,
+      text: commentText
+    });
     return response.data;
   } catch (error) {
     console.error('Error adding comment:', error);
@@ -72,7 +80,7 @@ export const toggleCommentLike = async (commentId) => {
 // Get all reels (feed)
 export const getReelsFeed = async () => {
   try {
-    const response = await api.get('/social/posts?type=reel');
+    const response = await api.get('/social/reels/feed');
     return response.data;
   } catch (error) {
     console.error('Error fetching reels feed:', error);

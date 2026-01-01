@@ -53,10 +53,10 @@ function HomePage() {
     return (
       <>
         <SearchHero />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-8 sm:py-12">
+          <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-gray-600">Cargando experiencias...</p>
+            <p className="mt-4 text-sm sm:text-base text-gray-600">Cargando experiencias...</p>
           </div>
         </div>
       </>
@@ -75,11 +75,11 @@ function HomePage() {
 
   // Categorías de búsqueda
   const categories = [
-    { name: 'Alojamientos', icon: Building2, type: 'hotel', searchParam: 'category=hotel' },
-    { name: 'Restaurantes', icon: Home, type: 'restaurant', searchParam: 'category=restaurant' },
-    { name: 'Eventos', icon: Castle, type: 'event', searchParam: 'category=event' },
-    { name: 'Entretenimiento', icon: TreePine, type: 'entertainment', searchParam: 'category=entertainment' },
-    { name: 'Todo', icon: Home, type: 'all', searchParam: 'category=all' },
+    { name: 'Alojamientos', icon: Building2, type: 'hotel', link: '/search?category=hotel' },
+    { name: 'Restaurantes', icon: Home, type: 'restaurant', link: '/search?category=restaurant' },
+    { name: 'Eventos', icon: Castle, type: 'event', link: '/events' }, // Fixed: apunta a la página de eventos
+    { name: 'Entretenimiento', icon: TreePine, type: 'entertainment', link: '/search?category=entertainment' },
+    { name: 'Todo', icon: Home, type: 'all', link: '/search?category=all' },
   ];
 
   // Agrupar por tipo
@@ -88,6 +88,22 @@ function HomePage() {
     restaurant: businesses.filter(p => p.type === 'restaurant'),
     event: businesses.filter(p => p.type === 'event'),
     entertainment: businesses.filter(p => p.type === 'entertainment'),
+  };
+
+  // Función para obtener la URL del negocio (usando slug cuando sea posible)
+  const getBusinessUrl = (business) => {
+    // Si tiene slug, usar la URL amigable
+    if (business.slug) {
+      return `/${business.slug}`;
+    }
+
+    // Fallback a URL con ID según el tipo
+    if (business.type === 'property' || business.accommodationType || !business.type) {
+      return `/properties/${business.id}`;
+    }
+
+    // Para otros tipos, usar la URL con ID
+    return business.url || `/properties/${business.id}`;
   };
 
   // Función para obtener el nombre del negocio
@@ -132,19 +148,19 @@ function HomePage() {
       {/* Reels Sidebar */}
       <ReelsSidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pr-4 lg:pr-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-8 sm:py-12 pr-3 sm:pr-4 lg:pr-8">
         {/* Categorías */}
         <section className="mb-16">
-          <h2 className="text-2xl font-bold mb-6 text-primary-dark">Explora por tipo de alojamiento</h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-5 gap-4">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-primary-dark">Explora por tipo de alojamiento</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
             {categories.map((category) => (
               <Link
                 key={category.type}
-                to={`/search?${category.searchParam}`}
-                className="flex flex-col items-center p-6 rounded-xl border-2 border-gray-200 hover:border-primary hover:shadow-lg transition group"
+                to={category.link}
+                className="flex flex-col items-center p-4 sm:p-6 rounded-xl bg-white border border-gray-100 hover:border-primary shadow-sm hover:shadow-md transition-all duration-300 group"
               >
-                <category.icon className="text-gray-600 group-hover:text-primary mb-3" size={32} />
-                <span className="text-sm font-medium text-gray-900">{category.name}</span>
+                <category.icon className="text-gray-600 group-hover:text-primary mb-2 sm:mb-3 transition-colors" size={28} />
+                <span className="text-xs sm:text-sm font-medium text-gray-900 text-center">{category.name}</span>
               </Link>
             ))}
           </div>
@@ -153,34 +169,46 @@ function HomePage() {
         {/* Items destacados */}
         {featuredItems.length > 0 && (
           <section className="mb-16">
-            <div className="flex items-center gap-3 mb-6">
-              <TrendingUp className="text-primary" size={28} />
-              <h2 className="text-2xl font-bold mb-6 text-primary-dark">Destacados</h2>
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <TrendingUp className="text-primary" size={24} />
+              <h2 className="text-xl sm:text-2xl font-bold text-primary-dark">Destacados</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {featuredItems.map((item) => {
                 // Obtener datos según el tipo
                 const isProperty = !item.type || item.type === 'property' || item.accommodationType;
                 const itemName = getBusinessName(item);
-                const itemImage = getImageUrl(item.image || (item.rooms?.[0]?.images?.[0]));
+
+                // Obtener imagen según tipo
+                let itemImage;
+                if (item.type === 'event') {
+                  // Para eventos: usar eventImages o images
+                  const eventImages = item.eventImages || item.images || [];
+                  const firstImage = Array.isArray(eventImages) ? eventImages[0] : null;
+                  itemImage = getImageUrl(typeof firstImage === 'string' ? firstImage : firstImage?.url, 'events');
+                } else {
+                  // Para propiedades y otros
+                  itemImage = getImageUrl(item.image || (item.rooms?.[0]?.images?.[0]));
+                }
+
                 const itemRating = item.rating || item.ratingAverage || 0;
                 const itemReviewCount = item.reviewCount || item.ratingCount || 0;
                 const itemCity = item.location?.city || item.addressCity;
                 const itemCountry = item.location?.country || item.addressCountry;
-                const itemUrl = item.url || `/properties/${item.id}`;
+                const itemUrl = getBusinessUrl(item);
 
                 return (
                   <Link
                     key={`${item.type || 'property'}-${item.id}`}
                     to={itemUrl}
-                    className="group border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-primary hover:shadow-2xl transition-all duration-300"
+                    className="group bg-white border border-gray-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
                   >
-                    <div className="h-48 bg-gray-200 relative overflow-hidden">
+                    <div className="h-40 sm:h-48 bg-gray-200 relative overflow-hidden">
                       {itemImage ? (
                         <img
                           src={itemImage}
                           alt={itemName}
-                          className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -188,43 +216,43 @@ function HomePage() {
                         </div>
                       )}
                       {itemRating >= 4.5 && (
-                        <div className="absolute top-3 right-3 bg-gradient-to-r from-primary to-primary-dark px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
-                          <Star size={14} className="fill-white text-white" />
-                          <span className="text-sm font-bold text-white">Destacado</span>
+                        <div className="absolute top-2 sm:top-3 right-2 sm:right-3 bg-gradient-to-r from-primary to-primary-dark px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1 sm:gap-1.5">
+                          <Star size={12} className="fill-white text-white sm:w-3.5 sm:h-3.5" />
+                          <span className="text-xs sm:text-sm font-bold text-white">Destacado</span>
                         </div>
                       )}
                     </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-lg truncate group-hover:text-primary transition">
+                    <div className="p-3 sm:p-4">
+                      <h3 className="font-semibold text-base sm:text-lg truncate group-hover:text-primary transition-colors">
                         {itemName}
                       </h3>
-                      <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
-                        <MapPin size={14} className="text-primary" />
+                      <div className="flex items-center gap-1 text-xs sm:text-sm text-gray-600 mt-1">
+                        <MapPin size={12} className="text-primary flex-shrink-0 sm:w-3.5 sm:h-3.5" />
                         <span className="truncate">{itemCity}, {itemCountry}</span>
                       </div>
                       {itemRating > 0 && (
                         <div className="flex items-center gap-1 mt-2">
-                          <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium">
+                          <Star size={12} className="fill-yellow-400 text-yellow-400 sm:w-3.5 sm:h-3.5" />
+                          <span className="text-xs sm:text-sm font-medium">
                             {typeof itemRating === 'number' ? itemRating.toFixed(1) : itemRating}
                           </span>
-                          <span className="text-sm text-gray-600">({itemReviewCount})</span>
+                          <span className="text-xs sm:text-sm text-gray-600">({itemReviewCount})</span>
                         </div>
                       )}
-                      <div className="mt-3">
+                      <div className="mt-3 pt-2 border-t border-gray-100">
                         {isProperty && item.price && (
                           <>
-                            <span className="text-lg font-bold text-primary-dark">${item.price}</span>
-                            <span className="text-gray-600"> / noche</span>
+                            <span className="text-base sm:text-lg font-bold text-primary-dark">S/ {item.price}</span>
+                            <span className="text-xs sm:text-sm text-gray-600"> / noche</span>
                           </>
                         )}
                         {!isProperty && item.priceRange && (
-                          <span className="text-gray-600">{'$'.repeat(item.priceRange)}</span>
+                          <span className="text-sm text-gray-600">{'S/'.repeat(item.priceRange)}</span>
                         )}
                         {isProperty && !item.price && (
                           <>
-                            <span className="text-lg font-bold text-primary-dark">${getBusinessPrice(item)}</span>
-                            <span className="text-gray-600"> / noche</span>
+                            <span className="text-base sm:text-lg font-bold text-primary-dark">S/ {getBusinessPrice(item)}</span>
+                            <span className="text-xs sm:text-sm text-gray-600"> / noche</span>
                           </>
                         )}
                       </div>
@@ -253,74 +281,86 @@ function HomePage() {
 
           return (
             <section key={type} className="mb-16">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <categoryInfo.icon className="text-primary" size={28} />
-                  <h2 className="text-2xl font-bold text-primary-dark">{categoryInfo.name}</h2>
-                  <span className="text-sm text-gray-500">({typeItems.length})</span>
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <categoryInfo.icon className="text-primary" size={24} />
+                  <h2 className="text-xl sm:text-2xl font-bold text-primary-dark">{categoryInfo.name}</h2>
+                  <span className="text-xs sm:text-sm text-gray-500">({typeItems.length})</span>
                 </div>
                 <Link
                   to={`/search?${categoryInfo.searchParam}`}
-                  className="text-primary hover:text-primary-dark font-medium text-sm"
+                  className="text-primary hover:text-primary-dark font-medium text-xs sm:text-sm transition-colors"
                 >
                   Ver todos →
                 </Link>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {typeItems.slice(0, 4).map((item) => {
                   const isProperty = type === 'property';
                   const itemName = getBusinessName(item);
-                  const itemImage = getImageUrl(item.image || (item.rooms?.[0]?.images?.[0]));
+
+                  // Obtener imagen según tipo
+                  let itemImage;
+                  if (item.type === 'event') {
+                    // Para eventos: usar eventImages o images
+                    const eventImages = item.eventImages || item.images || [];
+                    const firstImage = Array.isArray(eventImages) ? eventImages[0] : null;
+                    itemImage = getImageUrl(typeof firstImage === 'string' ? firstImage : firstImage?.url, 'events');
+                  } else {
+                    // Para propiedades y otros
+                    itemImage = getImageUrl(item.image || (item.rooms?.[0]?.images?.[0]));
+                  }
+
                   const itemRating = item.rating || item.ratingAverage || 0;
                   const itemReviewCount = item.reviewCount || item.ratingCount || 0;
                   const itemCity = item.location?.city || item.addressCity;
                   const itemCountry = item.location?.country || item.addressCountry;
-                  const itemUrl = item.url || `/properties/${item.id}`;
+                  const itemUrl = getBusinessUrl(item);
 
                   return (
                     <Link
                       key={`${type}-${item.id}`}
                       to={itemUrl}
-                      className="group border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-primary hover:shadow-xl transition-all duration-300"
+                      className="group bg-white border border-gray-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
                     >
-                      <div className="h-48 bg-gray-200 relative overflow-hidden">
+                      <div className="h-40 sm:h-48 bg-gray-200 relative overflow-hidden">
                         {itemImage ? (
                           <img
                             src={itemImage}
                             alt={itemName}
-                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs sm:text-sm">
                             Sin imagen
                           </div>
                         )}
                       </div>
-                      <div className="p-4">
-                        <h3 className="font-semibold text-lg truncate group-hover:text-primary transition">
+                      <div className="p-3 sm:p-4">
+                        <h3 className="font-semibold text-base sm:text-lg truncate group-hover:text-primary transition-colors">
                           {itemName}
                         </h3>
-                        <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
-                          <MapPin size={14} className="text-primary" />
+                        <div className="flex items-center gap-1 text-xs sm:text-sm text-gray-600 mt-1">
+                          <MapPin size={12} className="text-primary flex-shrink-0 sm:w-3.5 sm:h-3.5" />
                           <span className="truncate">{itemCity}, {itemCountry}</span>
                         </div>
                         {itemRating > 0 && (
-                          <div className="flex items-center gap-1 mt-1">
-                            <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm font-medium">
+                          <div className="flex items-center gap-1 mt-2">
+                            <Star size={12} className="fill-yellow-400 text-yellow-400 sm:w-3.5 sm:h-3.5" />
+                            <span className="text-xs sm:text-sm font-medium">
                               {typeof itemRating === 'number' ? itemRating.toFixed(1) : itemRating}
                             </span>
-                            <span className="text-sm text-gray-600">({itemReviewCount})</span>
+                            <span className="text-xs sm:text-sm text-gray-600">({itemReviewCount})</span>
                           </div>
                         )}
-                        <div className="mt-3">
+                        <div className="mt-3 pt-2 border-t border-gray-100">
                           {isProperty ? (
                             <>
-                              <span className="text-lg font-bold text-primary-dark">${item.price || getBusinessPrice(item)}</span>
-                              <span className="text-gray-600"> / noche</span>
+                              <span className="text-base sm:text-lg font-bold text-primary-dark">S/ {item.price || getBusinessPrice(item)}</span>
+                              <span className="text-xs sm:text-sm text-gray-600"> / noche</span>
                             </>
                           ) : item.priceRange ? (
-                            <span className="text-gray-600">{'$'.repeat(item.priceRange)}</span>
+                            <span className="text-xs sm:text-sm text-gray-600">{'S/'.repeat(item.priceRange)}</span>
                           ) : null}
                         </div>
                       </div>
@@ -335,7 +375,7 @@ function HomePage() {
         {/* Mensaje si no hay negocios */}
         {businesses.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-600">No hay contenido disponible en este momento.</p>
+            <p className="text-sm sm:text-base text-gray-600">No hay contenido disponible en este momento.</p>
           </div>
         )}
       </div>

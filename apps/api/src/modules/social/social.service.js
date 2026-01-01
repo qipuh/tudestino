@@ -9,7 +9,7 @@ import sequelize from '../../config/database-mysql.js';
 export const getUserProfile = async (userId, currentUserId = null) => {
   const user = await User.findByPk(userId, {
     attributes: [
-      'id', 'name', 'avatar', 'username', 'bio', 'travelBio', 'travelInterests',
+      'id', 'name', 'avatar', 'username', 'bio', 'travelInterests',
       'visitedDestinations', 'travelStyle', 'followersCount',
       'followingCount', 'reelsCount', 'totalLikes', 'isPublicProfile',
       'location', 'createdAt', 'role'
@@ -165,7 +165,7 @@ export const getFollowers = async (userId, limit = 20, offset = 0) => {
     include: [{
       model: User,
       as: 'follower',
-      attributes: ['id', 'name', 'avatar', 'travelBio', 'followersCount']
+      attributes: ['id', 'name', 'avatar', 'bio', 'followersCount']
     }],
     limit,
     offset,
@@ -193,7 +193,7 @@ export const getFollowing = async (userId, limit = 20, offset = 0) => {
     include: [{
       model: User,
       as: 'following',
-      attributes: ['id', 'name', 'avatar', 'travelBio', 'followersCount']
+      attributes: ['id', 'name', 'avatar', 'bio', 'followersCount']
     }],
     limit,
     offset,
@@ -238,7 +238,7 @@ export const searchUsers = async (query, currentUserId, limit = 20) => {
       ],
       isActive: true
     },
-    attributes: ['id', 'name', 'avatar', 'travelBio', 'location', 'followersCount'],
+    attributes: ['id', 'name', 'avatar', 'bio', 'location', 'followersCount'],
     limit
   });
 
@@ -259,8 +259,15 @@ export const searchUsers = async (query, currentUserId, limit = 20) => {
 
 // Verificar disponibilidad de username
 export const checkUsernameAvailability = async (username, currentUserId = null) => {
+  // No permitir usernames vacíos o null
+  if (!username || username.trim() === '') {
+    return false;
+  }
+
   const existingUser = await User.findOne({
-    where: { username }
+    where: {
+      username: username.toLowerCase().trim()
+    }
   });
 
   if (!existingUser) {
@@ -277,7 +284,7 @@ export const getProfileByUsername = async (username, currentUserId = null) => {
   const user = await User.findOne({
     where: { username },
     attributes: [
-      'id', 'name', 'avatar', 'username', 'bio', 'travelBio', 'travelInterests',
+      'id', 'name', 'avatar', 'username', 'bio', 'travelInterests',
       'visitedDestinations', 'travelStyle', 'followersCount',
       'followingCount', 'reelsCount', 'totalLikes', 'isPublicProfile',
       'location', 'createdAt', 'role'

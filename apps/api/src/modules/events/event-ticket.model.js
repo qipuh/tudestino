@@ -3,12 +3,12 @@ import sequelize from '../../config/database-mysql.js';
 
 const EventTicket = sequelize.define('EventTicket', {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.CHAR(36),
     primaryKey: true,
-    autoIncrement: true
+    defaultValue: DataTypes.UUIDV4
   },
   eventId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.CHAR(36),
     allowNull: false,
     field: 'event_id',
     references: {
@@ -48,7 +48,7 @@ const EventTicket = sequelize.define('EventTicket', {
   totalQuantity: {
     type: DataTypes.INTEGER,
     allowNull: true,
-    field: 'total_quantity',
+    field: 'quantity_available', // Mapea a quantity_available en DB
     comment: 'Cantidad total disponible (null = ilimitado)'
   },
   soldQuantity: {
@@ -118,6 +118,13 @@ const EventTicket = sequelize.define('EventTicket', {
     allowNull: false,
     field: 'is_visible',
     defaultValue: true
+  },
+  usesPhases: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    field: 'uses_phases',
+    defaultValue: false,
+    comment: 'Si este ticket usa sistema de fases de precio'
   },
   displayOrder: {
     type: DataTypes.INTEGER,

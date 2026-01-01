@@ -1,5 +1,6 @@
 import { Property, Room } from './property.model.sequelize.js';
 import User from '../users/user.model-mysql.js';
+import Business from '../businesses/business.model.js';
 import { AppError } from '../../middleware/errorHandler.js';
 
 class PropertiesService {
@@ -59,11 +60,31 @@ class PropertiesService {
           as: 'rooms',
           attributes: ['id', 'roomType', 'name', 'quantity', 'guestCapacity', 'beds', 'pricePerNight', 'amenities', 'images', 'isAvailable']
         }
+        // NOTA: Descomentar después de ejecutar la migración SQL y activar la relación en el modelo
+        // ,{
+        //   model: Business,
+        //   as: 'business',
+        //   attributes: ['id', 'name', 'logo', 'slug', 'ownerId', 'followersCount', 'address']
+        // }
       ]
     });
 
     if (!property) {
       throw new AppError('Property not found', 404);
+    }
+
+    // TEMPORAL: Buscar el business manualmente si existe businessId
+    if (property.businessId) {
+      try {
+        const business = await Business.findByPk(property.businessId, {
+          attributes: ['id', 'name', 'logo', 'slug', 'ownerId', 'followersCount', 'address']
+        });
+        if (business) {
+          property.dataValues.business = business;
+        }
+      } catch (error) {
+        console.log('Business not found for property:', propertyId);
+      }
     }
 
     return property;

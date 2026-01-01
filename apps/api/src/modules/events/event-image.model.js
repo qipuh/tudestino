@@ -8,7 +8,7 @@ const EventImage = sequelize.define('EventImage', {
     autoIncrement: true
   },
   eventId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.CHAR(36),
     allowNull: false,
     field: 'event_id',
     references: {

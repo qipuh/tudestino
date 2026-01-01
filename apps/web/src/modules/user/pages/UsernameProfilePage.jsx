@@ -1,19 +1,40 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getProfileByUsername } from '../../../services/socialService';
+import api from '../../../services/api';
 import ProfilePage from './ProfilePage';
+import BusinessDetail from '../../business/pages/BusinessDetail';
 
 function UsernameProfilePage() {
   const { username } = useParams();
   const navigate = useNavigate();
   const [userId, setUserId] = useState(null);
+  const [businessId, setBusinessId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isBusiness, setIsBusiness] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
       try {
         setLoading(true);
+
+        // Primero verificar si es un slug de negocio
+        try {
+          const businessResponse = await api.get(`/businesses/slug/${username}`);
+          if (businessResponse.data && businessResponse.data.id) {
+            // Es un negocio, mostrar BusinessDetail sin cambiar la URL
+            setBusinessId(businessResponse.data.id);
+            setIsBusiness(true);
+            setLoading(false);
+            return;
+          }
+        } catch (businessError) {
+          // No es un negocio, continuar con la búsqueda de usuario
+          console.log('Not a business slug, checking for user profile');
+        }
+
+        // Si no es un negocio, buscar por nombre de usuario
         const response = await getProfileByUsername(username);
 
         // Handle nested response format: {success: true, data: {...}}
@@ -24,6 +45,7 @@ function UsernameProfilePage() {
         if (profile && profile.id) {
           // Set the userId to render ProfilePage directly
           setUserId(profile.id);
+          setIsBusiness(false);
         } else {
           setError('Perfil no encontrado');
         }
@@ -38,7 +60,7 @@ function UsernameProfilePage() {
     if (username) {
       loadProfile();
     }
-  }, [username]);
+  }, [username, navigate]);
 
   if (loading) {
     return (
@@ -63,6 +85,12 @@ function UsernameProfilePage() {
         </div>
       </div>
     );
+  }
+
+  // Si es un negocio, renderizar BusinessDetail sin cambiar la URL
+  // Esto mantiene la URL bonita (/slug) en el navegador
+  if (isBusiness && businessId) {
+    return <BusinessDetail businessIdProp={businessId} />;
   }
 
   // Render ProfilePage directly with the userId, WITHOUT changing the URL

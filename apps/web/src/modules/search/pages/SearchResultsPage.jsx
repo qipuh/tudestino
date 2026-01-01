@@ -50,7 +50,21 @@ function SearchResultsPage() {
       const response = await api.get(`/search/all?${params.toString()}`);
 
       if (response.success && response.data) {
-        setResults(response.data.results || []);
+        const results = response.data.results || [];
+
+        // Debug: Log resultados de búsqueda
+        console.log('🔍 Search Results Debug:', {
+          totalResults: results.length,
+          firstResult: results[0],
+          pricesInResults: results.map(r => ({
+            id: r.id,
+            name: r.name,
+            type: r.type,
+            price: r.price
+          }))
+        });
+
+        setResults(results);
       }
     } catch (error) {
       console.error('Error fetching search results:', error);
@@ -62,6 +76,22 @@ function SearchResultsPage() {
 
   const handleFilterChange = (name, value) => {
     setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Función para obtener la URL del negocio (usando slug cuando sea posible)
+  const getBusinessUrl = (business) => {
+    // Si tiene slug, usar la URL amigable
+    if (business.slug) {
+      return `/${business.slug}`;
+    }
+
+    // Fallback a URL con ID según el tipo
+    if (business.type === 'property' || business.accommodationType || !business.type) {
+      return `/properties/${business.id}`;
+    }
+
+    // Para otros tipos, usar la URL con ID o fallback
+    return business.url || `/properties/${business.id}`;
   };
 
   const totalGuests = parseInt(adults) + parseInt(children);
@@ -250,7 +280,7 @@ function SearchResultsPage() {
                 return (
                 <Link
                   key={`${item.type}-${item.id}`}
-                  to={item.url}
+                  to={getBusinessUrl(item)}
                   onMouseEnter={() => setHoveredItemId(`${item.type}-${item.id}`)}
                   onMouseLeave={() => setHoveredItemId(null)}
                   className={`group border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-primary hover:shadow-2xl transition-all duration-300 ${
@@ -322,7 +352,7 @@ function SearchResultsPage() {
                     <div className="mt-3">
                       {item.type === 'property' && item.price && (
                         <>
-                          <span className="text-lg font-bold text-primary-dark">${item.price}</span>
+                          <span className="text-lg font-bold text-primary-dark">S/{item.price}</span>
                           <span className="text-gray-600"> / {item.priceLabel}</span>
                         </>
                       )}
@@ -352,7 +382,7 @@ function SearchResultsPage() {
                       {item.type === 'entertainment' && (
                         <div className="flex items-center gap-2">
                           {item.coverCharge && (
-                            <span className="text-sm text-gray-600">Cover: ${item.coverCharge}</span>
+                            <span className="text-sm text-gray-600">Cover: S/{item.coverCharge}</span>
                           )}
                           {item.priceRange && (
                             <span className="text-xs text-gray-600">
@@ -375,11 +405,12 @@ function SearchResultsPage() {
               <div className="w-1/2 h-full relative">
                 <PropertiesMap
                   properties={results.filter(item => item.location?.latitude && item.location?.longitude).map(item => ({
-                    id: item.id,
+                    id: `${item.type}-${item.id}`, // ID único por tipo
                     addressLatitude: item.location.latitude,
                     addressLongitude: item.location.longitude,
                     addressCity: item.location.city,
                     addressCountry: item.location.country,
+                    price: item.price || 0, // Asegurar que price esté presente
                     ...item
                   }))}
                   hoveredPropertyId={hoveredItemId}

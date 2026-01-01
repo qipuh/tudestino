@@ -17,11 +17,11 @@ function EventsListPage() {
 
   const [filters, setFilters] = useState({
     city: searchParams.get('city') || '',
-    category: [],
-    locationType: null,
-    startDate: null,
-    endDate: null,
-    isFree: false
+    category: searchParams.get('category') ? searchParams.get('category').split(',') : [],
+    locationType: searchParams.get('locationType') || null,
+    startDate: searchParams.get('startDate') || null,
+    endDate: searchParams.get('endDate') || null,
+    isFree: searchParams.get('isFree') === 'true'
   });
 
   useEffect(() => {
@@ -52,7 +52,7 @@ function EventsListPage() {
       );
 
       if (!response.ok) {
-        throw new Error('Error al cargar eventos');
+        throw new Error(`Error al cargar eventos: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -63,7 +63,11 @@ function EventsListPage() {
         total: data.total
       });
     } catch (err) {
-      setError(err.message);
+      console.error('Error fetching events:', err);
+      setError(err.message === 'Failed to fetch'
+        ? '⚠️ No se puede conectar con el servidor API. Asegúrate de que esté corriendo en http://localhost:3001'
+        : err.message
+      );
     } finally {
       setLoading(false);
     }

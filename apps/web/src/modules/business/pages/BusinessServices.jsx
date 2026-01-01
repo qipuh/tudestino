@@ -44,6 +44,13 @@ function BusinessServices() {
     console.log('[BusinessServices] Rooms state changed:', rooms);
   }, [rooms]);
 
+  // Redirigir a página de menú si es restaurante
+  useEffect(() => {
+    if (business && business.businessType === 'restaurant') {
+      navigate(`/business/${id}/menu`);
+    }
+  }, [business, id, navigate]);
+
   const loadData = async () => {
     console.log('[BusinessServices] Loading data for business:', id);
     const businessResult = await fetchBusiness(id);

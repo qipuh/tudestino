@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import {
   Edit, MapPin, Calendar, Home, Video, Share2, Briefcase,
-  Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Play, Users, UserCheck, Plus, Star, PlusCircle, Image as ImageIcon
+  Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Play, Users, UserCheck, Plus, Star, PlusCircle, Image as ImageIcon, Camera, X
 } from 'lucide-react';
 import useAuthStore from '../../../store/authStore';
-import { getUserProfile, getMyProfile, getFollowers, getFollowing } from '../../../services/socialService';
+import { getUserProfile, getMyProfile, getFollowers, getFollowing, uploadAvatar } from '../../../services/socialService';
 import { getHostProperties } from '../../../services/propertyService';
 import { getUserPosts, getUserReels } from '../../../services/socialService';
+import { getImageUrl } from '../../../services/api';
 import FollowButton from '../../../components/social/FollowButton';
 import EditSocialProfileModal from '../../../components/social/EditSocialProfileModal';
 import ReelViewer from '../../../components/social/ReelViewer';
@@ -136,6 +137,9 @@ function ProfilePage({ userIdProp }) {
   const [realReels, setRealReels] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [loadingReels, setLoadingReels] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const avatarInputRef = useRef(null);
 
   const isOwnProfile = !userId || (currentUser && userId === currentUser.id);
   const isHost = profile?.role === 'host';
@@ -295,29 +299,18 @@ function ProfilePage({ userIdProp }) {
       const response = await getUserPosts(targetUserId, 1, 20);
       console.log('✅ Full response:', response);
       
-      // Mapear los datos de la API al formato que PostCard espera
-      const posts = (response.posts || response.data?.posts || []).map(post => ({
-        id: post.id,
-        userId: post.user_id,
-        content: post.caption,
+      // La respuesta contiene { posts: [...], pagination: {...} }
+      const posts = (response.posts || []).map(post => ({
+        ...post,
+        // Asegurar que tenga los campos correctos
+        userId: post.userId,
+        caption: post.caption,
         location: post.location,
-        images: post.media ? post.media.filter(item => item.type === 'image').map(item => item.url) : [],
-        videos: post.media ? post.media.filter(item => item.type === 'video').map(item => ({
-          url: item.url,
-          thumbnail: item.thumbnail
-        })) : [],
-        likes: post.likesCount || post.likes_count || 0,
-        comments: post.commentsCount || post.comments_count || 0,
-        shares: post.sharesCount || post.shares_count || 0,
-        createdAt: post.createdAt || post.created_at,
-        updatedAt: post.updatedAt || post.updated_at,
-        isActive: post.isActive !== undefined ? post.isActive : post.is_active,
-        // Información del usuario para el post
-        user: post.user || {
-          id: post.user_id,
-          name: profile?.name || 'Usuario',
-          avatar: profile?.avatar
-        }
+        media: post.media || [],
+        likesCount: post.likesCount || 0,
+        commentsCount: post.commentsCount || 0,
+        isLiked: post.isLiked || false,
+        user: post.user
       }));
       
       console.log('📝 Mapped posts:', posts.length, posts);
@@ -339,24 +332,19 @@ function ProfilePage({ userIdProp }) {
   try {
     const response = await getUserReels(targetUserId, 1, 20);
     
-    // Mapear los reels de forma similar
-    const reels = (response.reels || response.data?.reels || []).map(reel => ({
-      id: reel.id,
-      userId: reel.user_id,
-      videoUrl: reel.media?.[0]?.url || '',
-      thumbnailUrl: reel.media?.[0]?.thumbnail || '',
-      content: reel.caption,
-      viewsCount: reel.views_count || 0,
-      likesCount: reel.likes_count || 0,
-      commentsCount: reel.comments_count || 0,
-      sharesCount: reel.shares_count || 0,
-      duration: reel.duration,
-      createdAt: reel.created_at,
-      user: reel.user || {
-        id: reel.user_id,
-        name: profile?.name || 'Usuario',
-        avatar: profile?.avatar
-      }
+    // La respuesta contiene { reels: [...], pagination: {...} }
+    const reels = (response.reels || []).map(reel => ({
+      ...reel,
+      // Asegurar que tenga los campos correctos
+      userId: reel.userId,
+      caption: reel.caption,
+      videoUrl: reel.videoUrl,
+      thumbnailUrl: reel.thumbnailUrl,
+      likesCount: reel.likesCount || 0,
+      commentsCount: reel.commentsCount || 0,
+      viewsCount: reel.viewsCount || 0,
+      isLiked: reel.isLiked || false,
+      user: reel.user
     }));
     
     setRealReels(reels);
@@ -510,6 +498,59 @@ function ProfilePage({ userIdProp }) {
     setSavedReels(newSavedReels);
   };
 
+  const handleAvatarClick = () => {
+    if (isOwnProfile && avatarInputRef.current) {
+      avatarInputRef.current.click();
+    }
+  };
+
+  const handleAvatarChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de archivo
+    if (!file.type.startsWith('image/')) {
+      alert('Por favor selecciona una imagen válida');
+      return;
+    }
+
+    // Validar tamaño (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen no puede superar los 5MB');
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const response = await uploadAvatar(file);
+      console.log('Upload response:', response);
+
+      // El interceptor de axios desenvuelve response.data, así que response ya es el objeto de datos
+      // Estructura esperada: { success: true, avatarUrl: "/uploads/social/...", message: "..." }
+      const avatarUrl = response.avatarUrl;
+
+      if (avatarUrl) {
+        // Actualizar el perfil con la nueva imagen inmediatamente
+        setProfile({
+          ...profile,
+          avatar: avatarUrl
+        });
+      }
+
+      // Recargar el perfil completo para asegurar sincronización
+      await loadProfile();
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      alert('Error al subir la imagen. Por favor intenta de nuevo.');
+    } finally {
+      setUploadingAvatar(false);
+      // Limpiar el input
+      if (event.target) {
+        event.target.value = '';
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -539,40 +580,86 @@ function ProfilePage({ userIdProp }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header Compact */}
-      <div className="bg-white border-b">
-        <div className="max-w-5xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            {/* Avatar */}
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary-dark p-0.5">
-              <div className="w-full h-full rounded-full bg-white overflow-hidden">
-                {profile.avatar ? (
-                  <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-2xl font-bold bg-gray-200 text-gray-600">
-                    {profile.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
+      {/* Header Enhanced */}
+      <div className="bg-white border-b shadow-sm">
+        <div className="max-w-5xl mx-auto px-4 py-6">
+          <div className="flex items-start gap-6">
+            {/* Avatar with enhanced styling */}
+            <div className="relative">
+              <div
+                onClick={handleAvatarClick}
+                className={`w-28 h-28 rounded-full bg-gradient-to-br from-primary via-primary-dark to-purple-600 p-1 shadow-lg ${
+                  isOwnProfile ? 'cursor-pointer group' : ''
+                }`}
+              >
+                <div className="w-full h-full rounded-full bg-white overflow-hidden ring-4 ring-white relative">
+                  {profile.avatar ? (
+                    <img
+                      src={getImageUrl(profile.avatar, 'social')}
+                      alt={profile.name}
+                      className={`w-full h-full object-cover ${isOwnProfile ? 'group-hover:opacity-75 transition-opacity' : ''}`}
+                    />
+                  ) : (
+                    <div className={`w-full h-full flex items-center justify-center text-3xl font-bold bg-gradient-to-br from-primary/10 to-primary/20 text-primary ${
+                      isOwnProfile ? 'group-hover:opacity-75 transition-opacity' : ''
+                    }`}>
+                      {profile.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+
+                  {/* Camera overlay on hover (only for own profile) */}
+                  {isOwnProfile && (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-full">
+                      {uploadingAvatar ? (
+                        <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent"></div>
+                      ) : (
+                        <Camera size={32} className="text-white drop-shadow-lg" />
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Hidden file input */}
+              {isOwnProfile && (
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+              )}
+
+              {/* Online indicator */}
+              {isOwnProfile && !uploadingAvatar && (
+                <div className="absolute bottom-2 right-2 w-5 h-5 bg-green-500 rounded-full border-4 border-white shadow-md"></div>
+              )}
             </div>
 
             {/* Info & Actions */}
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-xl font-bold text-gray-900">{profile.name}</h1>
+            <div className="flex-1 pt-1">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 mb-1">{profile.name}</h1>
+                  {profile.username && (
+                    <p className="text-sm text-gray-500">@{profile.username}</p>
+                  )}
+                </div>
                 {isOwnProfile ? (
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowEditModal(true)}
-                      className="px-4 py-1 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50"
+                      className="px-5 py-2 text-sm font-medium border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all flex items-center gap-2 shadow-sm"
                     >
+                      <Edit size={16} />
                       Editar perfil
                     </button>
                     <Link
                       to="/feed"
-                      className="px-4 py-1 text-sm font-medium bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:opacity-90 flex items-center gap-1.5 transition"
+                      className="px-5 py-2 text-sm font-medium bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg hover:scale-105 flex items-center gap-2 transition-all shadow-md"
                     >
-                      <Plus size={16} />
+                      <PlusCircle size={16} />
                       Crear
                     </Link>
                   </div>
@@ -585,61 +672,92 @@ function ProfilePage({ userIdProp }) {
                     />
                     <button
                       onClick={() => setShowChatBubble(true)}
-                      className="px-4 py-1 text-sm font-medium bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:opacity-90 flex items-center gap-1.5 transition"
+                      className="px-5 py-2 text-sm font-medium bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg hover:scale-105 flex items-center gap-2 transition-all shadow-md"
                       title="Enviar mensaje"
                     >
-                      <MessageCircle size={16} fill="currentColor" />
+                      <MessageCircle size={16} />
                       Mensaje
                     </button>
                   </div>
                 )}
               </div>
 
-              {/* Stats Inline */}
-              <div className="flex gap-4 text-sm">
-                <button onClick={() => setShowFollowersModal(true)} className="hover:text-gray-600">
-                  <span className="font-bold">{profile.followersCount}</span> seguidores
+              {/* Stats Enhanced */}
+              <div className="flex gap-6 mb-4">
+                <button
+                  onClick={() => setShowFollowersModal(true)}
+                  className="group hover:scale-105 transition-transform"
+                >
+                  <div className="flex items-center gap-2">
+                    <Users size={16} className="text-primary group-hover:scale-110 transition-transform" />
+                    <div className="text-left">
+                      <div className="font-bold text-gray-900 text-lg">{profile.followersCount}</div>
+                      <div className="text-xs text-gray-500 -mt-1">seguidores</div>
+                    </div>
+                  </div>
                 </button>
-                <button className="hover:text-gray-600">
-                  <span className="font-bold">{profile.followingCount}</span> siguiendo
+                <button className="group hover:scale-105 transition-transform">
+                  <div className="flex items-center gap-2">
+                    <UserCheck size={16} className="text-primary group-hover:scale-110 transition-transform" />
+                    <div className="text-left">
+                      <div className="font-bold text-gray-900 text-lg">{profile.followingCount}</div>
+                      <div className="text-xs text-gray-500 -mt-1">siguiendo</div>
+                    </div>
+                  </div>
                 </button>
-                <div className="text-gray-600">
-                  <Heart size={14} className="inline mr-1" />
-                  <span className="font-bold">{profile.totalLikes}</span>
+                <div className="flex items-center gap-2">
+                  <Heart size={16} className="text-red-500" fill="currentColor" />
+                  <div className="text-left">
+                    <div className="font-bold text-gray-900 text-lg">{profile.totalLikes}</div>
+                    <div className="text-xs text-gray-500 -mt-1">me gusta</div>
+                  </div>
                 </div>
               </div>
+
+              {/* Biography Section Enhanced */}
+              {(profile.bio || profile.travelBio) && (
+                <div className="bg-gradient-to-r from-gray-50 to-transparent rounded-lg p-4 border-l-4 border-primary">
+                  {profile.bio && (
+                    <p className="text-sm text-gray-800 leading-relaxed mb-2">{profile.bio}</p>
+                  )}
+                  {profile.travelBio && (
+                    <p className="text-sm text-gray-600 italic leading-relaxed flex items-start gap-2">
+                      <MapPin size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                      <span>{profile.travelBio}</span>
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Biography Section */}
-          {(profile.bio || profile.travelBio) && (
-            <div className="mt-3">
-              {profile.bio && (
-                <p className="text-sm text-gray-700 mb-1">{profile.bio}</p>
-              )}
-              {profile.travelBio && (
-                <p className="text-sm text-gray-600 italic">{profile.travelBio}</p>
-              )}
-            </div>
-          )}
-
-          {/* Tabs */}
-          <div className="flex justify-between items-center mt-4 border-b -mb-px px-4">
+          {/* Tabs Enhanced */}
+          <div className="flex justify-around items-center mt-6 border-b -mb-px">
             {tabs.map((tab) => {
               const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
-                  className={`flex flex-col items-center gap-1 px-6 py-3 transition border-b-2 ${
-                    activeTab === tab.id
+                  className={`flex flex-col items-center gap-2 px-8 py-3 transition-all border-b-3 relative group ${
+                    isActive
                       ? 'border-primary text-primary'
-                      : 'border-transparent text-gray-600 hover:text-gray-900'
+                      : 'border-transparent text-gray-500 hover:text-gray-900'
                   }`}
                   title={tab.label}
                 >
-                  <Icon size={24} />
-                  <span className="text-xs font-medium">{tab.label}</span>
+                  <Icon
+                    size={22}
+                    className={`transition-all ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}
+                  />
+                  <span className={`text-xs font-semibold transition-all ${isActive ? 'text-primary' : ''}`}>
+                    {tab.label}
+                  </span>
+                  {/* Active indicator bar */}
+                  {isActive && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary-dark rounded-t-full shadow-lg shadow-primary/50"></div>
+                  )}
                 </button>
               );
             })}
@@ -649,225 +767,98 @@ function ProfilePage({ userIdProp }) {
 
       {/* Content */}
       <div className="max-w-5xl mx-auto px-4 py-6">
-        {/* Muro Tab */}
+        {/* Muro Tab - Grid View */}
         {activeTab === 'muro' && (() => {
           console.log('🎨 Rendering Muro tab:', { loadingPosts, postsCount: realPosts.length, realPosts });
           return (
-          <div className="space-y-6">
-            {/* Real posts from API */}
+          <div>
             {loadingPosts ? (
-              <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                <p className="mt-2 text-gray-600">Cargando publicaciones...</p>
+              <div className="bg-white rounded-xl shadow-sm border p-12 text-center">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary/20 border-t-primary"></div>
+                <p className="mt-4 text-gray-600 font-medium">Cargando publicaciones...</p>
               </div>
             ) : realPosts.length > 0 ? (
-              realPosts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  currentUserId={currentUser?.id}
-                  onDelete={(postId) => setRealPosts(prev => prev.filter(p => p.id !== postId))}
-                />
-              ))
+              <div className="grid grid-cols-3 gap-1 md:gap-2">
+                {realPosts.map((post) => {
+                  const firstMedia = post.media && post.media.length > 0 ? post.media[0] : null;
+                  const hasMultipleMedia = post.media && post.media.length > 1;
+
+                  return (
+                    <div
+                      key={post.id}
+                      className="relative aspect-square bg-gray-100 group cursor-pointer overflow-hidden"
+                      onClick={() => setSelectedPost(post)}
+                    >
+                      {/* Thumbnail */}
+                      {firstMedia ? (
+                        firstMedia.type === 'video' ? (
+                          <video
+                            src={getImageUrl(firstMedia.url)}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <img
+                            src={getImageUrl(firstMedia.url)}
+                            alt={post.caption || 'Post'}
+                            className="w-full h-full object-cover"
+                          />
+                        )
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                          <ImageIcon size={48} className="text-gray-400" />
+                        </div>
+                      )}
+
+                      {/* Multiple media indicator */}
+                      {hasMultipleMedia && (
+                        <div className="absolute top-2 right-2">
+                          <ImageIcon size={20} className="text-white drop-shadow-lg" />
+                        </div>
+                      )}
+
+                      {/* Video indicator */}
+                      {firstMedia?.type === 'video' && (
+                        <div className="absolute top-2 right-2">
+                          <Video size={20} className="text-white drop-shadow-lg" />
+                        </div>
+                      )}
+
+                      {/* Hover overlay with stats */}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-6">
+                        <div className="flex items-center gap-2 text-white font-semibold">
+                          <Heart size={24} fill="white" />
+                          <span>{post.likesCount || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-white font-semibold">
+                          <MessageCircle size={24} fill="white" />
+                          <span>{post.commentsCount || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
-              <div className="text-center py-20">
-                <ImageIcon size={64} className="mx-auto mb-4 text-gray-300" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+              <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-sm border-2 border-dashed border-gray-300 p-16 text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/20 rounded-full mb-4">
+                  <ImageIcon size={40} className="text-primary" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
                   No hay publicaciones aún
                 </h3>
-                <p className="text-gray-500">
-                  {isOwnProfile ? 'Comparte tus experiencias de viaje' : 'Este usuario no ha compartido publicaciones aún'}
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  {isOwnProfile ? 'Comparte tus experiencias de viaje y conecta con otros viajeros' : 'Este usuario no ha compartido publicaciones aún'}
                 </p>
+                {isOwnProfile && (
+                  <Link
+                    to="/feed"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all shadow-md font-medium"
+                  >
+                    <PlusCircle size={18} />
+                    Crear primera publicación
+                  </Link>
+                )}
               </div>
-            )}
-            {/* Demo posts for Host Demo only */}
-            {profile.name === 'Host Demo' && realPosts.length === 0 && (
-              postsData.map((post) => {
-                const isLiked = likedPosts.has(post.id);
-                const isSaved = savedPosts.has(post.id);
-                return (
-                  <div key={post.id} className="bg-white rounded-xl shadow-sm border">
-                    {/* Post Header */}
-                    <div className="flex items-center justify-between p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-600">
-                          {profile.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm">{profile.name}</p>
-                          <p className="text-xs text-gray-500">{post.createdAt}</p>
-                        </div>
-                      </div>
-                      <button className="text-gray-600 hover:text-gray-900">
-                        <MoreHorizontal size={20} />
-                      </button>
-                    </div>
-
-                    {/* Post Image */}
-                    {post.images.length > 0 && (
-                      <img src={post.images[0]} alt="Post" className="w-full h-96 object-cover" />
-                    )}
-
-                    {/* Post Actions */}
-                    <div className="p-4">
-                      <div className="flex items-center gap-4 mb-3">
-                        <button
-                          onClick={() => handleLike(post.id)}
-                          className={`transition-all ${isLiked ? 'text-red-500 scale-110' : 'hover:text-red-500'}`}
-                        >
-                          <Heart size={24} fill={isLiked ? 'currentColor' : 'none'} />
-                        </button>
-                        <button
-                          onClick={() => setShowComments(showComments === post.id ? null : post.id)}
-                          className="hover:text-blue-500 transition"
-                        >
-                          <MessageCircle size={24} />
-                        </button>
-                        <button className="hover:text-green-500 transition">
-                          <Send size={24} />
-                        </button>
-                        <button
-                          onClick={() => handleSavePost(post.id)}
-                          className={`ml-auto transition-all ${isSaved ? 'text-yellow-500 scale-110' : 'hover:text-yellow-500'}`}
-                        >
-                          <Bookmark size={24} fill={isSaved ? 'currentColor' : 'none'} />
-                        </button>
-                      </div>
-
-                      <p className="font-semibold text-sm mb-2">{post.likes} Me gusta</p>
-                      <p className="text-sm">
-                        <span className="font-semibold">{profile.name}</span> {post.content}
-                      </p>
-
-                      {post.comments > 0 && (
-                        <button
-                          onClick={() => setShowComments(showComments === post.id ? null : post.id)}
-                          className="text-sm text-gray-500 mt-2 hover:text-gray-700"
-                        >
-                          Ver los {post.comments} comentarios
-                        </button>
-                      )}
-
-                      {/* Comments Section */}
-                      {showComments === post.id && (
-                        <div className="mt-4 pt-4 border-t">
-                          {/* Existing comments */}
-                          {comments[post.id]?.map((comment) => {
-                            const commentLikesCount = commentLikes[comment.id] || 0;
-                            const hasLikedComment = commentLikes[`${comment.id}_liked`];
-                            return (
-                              <div key={comment.id} className="mb-4">
-                                <div className="flex gap-2">
-                                  <Link to={`/profile/${comment.userId || userId}`}>
-                                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-primary">
-                                      {comment.user.charAt(0).toUpperCase()}
-                                    </div>
-                                  </Link>
-                                  <div className="flex-1">
-                                    <p className="text-sm">
-                                      <Link to={`/profile/${comment.userId || userId}`} className="font-semibold mr-2 hover:underline">
-                                        {comment.user}
-                                      </Link>
-                                      {comment.text}
-                                    </p>
-                                    <div className="flex items-center gap-3 mt-1">
-                                      <p className="text-xs text-gray-500">Justo ahora</p>
-                                      <button
-                                        onClick={() => handleLikeComment(comment.id)}
-                                        className={`text-xs font-medium ${hasLikedComment ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}`}
-                                      >
-                                        {commentLikesCount > 0 ? `${commentLikesCount} Me gusta` : 'Me gusta'}
-                                      </button>
-                                      <button
-                                        onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                                        className="text-xs text-gray-600 hover:text-primary font-medium"
-                                      >
-                                        Responder
-                                      </button>
-                                    </div>
-
-                                    {/* Respuestas */}
-                                    {comment.replies?.length > 0 && (
-                                      <div className="mt-3 space-y-3 pl-4 border-l-2 border-gray-200">
-                                        {comment.replies.map((reply) => (
-                                          <div key={reply.id} className="flex gap-2">
-                                            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                                              {reply.user.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div className="flex-1">
-                                              <p className="text-sm">
-                                                <span className="font-semibold mr-2">{reply.user}</span>
-                                                {reply.text}
-                                              </p>
-                                              <p className="text-xs text-gray-500 mt-1">Justo ahora</p>
-                                            </div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-
-                                    {/* Reply input */}
-                                    {replyingTo === comment.id && (
-                                      <div className="flex gap-2 mt-3">
-                                        <input
-                                          type="text"
-                                          value={newComment}
-                                          onChange={(e) => setNewComment(e.target.value)}
-                                          onKeyPress={(e) => e.key === 'Enter' && handleAddComment(post.id, comment.id)}
-                                          placeholder={`Responder a ${comment.user}...`}
-                                          className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                          autoFocus
-                                        />
-                                        <button
-                                          onClick={() => handleAddComment(post.id, comment.id)}
-                                          disabled={!newComment.trim()}
-                                          className="px-3 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark disabled:opacity-50"
-                                        >
-                                          Enviar
-                                        </button>
-                                        <button
-                                          onClick={() => {
-                                            setReplyingTo(null);
-                                            setNewComment('');
-                                          }}
-                                          className="px-3 py-2 text-gray-600 hover:text-gray-900 text-sm"
-                                        >
-                                          Cancelar
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-
-                          {/* Add comment */}
-                          {!replyingTo && (
-                            <div className="flex gap-2 mt-3">
-                              <input
-                                type="text"
-                                value={newComment}
-                                onChange={(e) => setNewComment(e.target.value)}
-                                onKeyPress={(e) => e.key === 'Enter' && handleAddComment(post.id)}
-                                placeholder="Agrega un comentario..."
-                                className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                              />
-                              <button
-                                onClick={() => handleAddComment(post.id)}
-                                disabled={!newComment.trim()}
-                                className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                Publicar
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
             )}
           </div>
           );
@@ -875,11 +866,11 @@ function ProfilePage({ userIdProp }) {
 
         {/* Reels Tab */}
         {activeTab === 'reels' && (
-          <div className="grid grid-cols-3 gap-1">
+          <div className="grid grid-cols-3 gap-2">
             {loadingReels ? (
-              <div className="col-span-3 text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                <p className="mt-2 text-gray-600">Cargando reels...</p>
+              <div className="col-span-3 bg-white rounded-xl shadow-sm border p-12 text-center">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary/20 border-t-primary"></div>
+                <p className="mt-4 text-gray-600 font-medium">Cargando reels...</p>
               </div>
             ) : realReels.length > 0 ? (
               realReels.map((reel, index) => (
@@ -894,13 +885,13 @@ function ProfilePage({ userIdProp }) {
                   {/* Thumbnail */}
                   {reel.thumbnailUrl ? (
                     <img
-                      src={`http://localhost:3000${reel.thumbnailUrl}`}
+                      src={getImageUrl(reel.thumbnailUrl)}
                       alt="Reel"
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <video
-                      src={`http://localhost:3000${reel.videoUrl}`}
+                      src={getImageUrl(reel.videoUrl)}
                       className="w-full h-full object-cover"
                       preload="metadata"
                     />
@@ -956,9 +947,28 @@ function ProfilePage({ userIdProp }) {
                 </div>
               ))
             ) : (
-              <div className="col-span-3 text-center py-16">
-                <Video size={48} className="mx-auto mb-4 text-gray-300" />
-                <p className="text-gray-500">No hay reels aún</p>
+              <div className="col-span-3 bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-sm border-2 border-dashed border-gray-300 p-16 text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/20 rounded-full mb-4">
+                  <Video size={40} className="text-primary" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  No hay reels aún
+                </h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  {isOwnProfile ? 'Comparte videos cortos de tus aventuras' : 'Este usuario no ha compartido reels aún'}
+                </p>
+                {isOwnProfile && (
+                  <button
+                    onClick={() => {
+                      setContentType('reel');
+                      setShowCreateSidebar(true);
+                    }}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all shadow-md font-medium"
+                  >
+                    <Video size={18} />
+                    Crear primer reel
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -966,30 +976,45 @@ function ProfilePage({ userIdProp }) {
 
         {/* Compartidos Tab */}
         {activeTab === 'compartidos' && (
-          <div className="text-center py-16 bg-white rounded-xl">
-            <Share2 size={48} className="mx-auto mb-4 text-gray-300" />
-            <p className="text-gray-500">No hay publicaciones compartidas aún</p>
+          <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-sm border-2 border-dashed border-gray-300 p-16 text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/20 rounded-full mb-4">
+              <Share2 size={40} className="text-primary" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              No hay publicaciones compartidas aún
+            </h3>
+            <p className="text-gray-600 max-w-md mx-auto">
+              {isOwnProfile ? 'Las publicaciones que compartas aparecerán aquí' : 'Este usuario no ha compartido publicaciones aún'}
+            </p>
           </div>
         )}
 
         {/* Servicios Tab (solo para hosts) */}
         {activeTab === 'servicios' && isHost && (
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">Propiedades ({properties.length})</h2>
+            <div className="flex items-center justify-between mb-6 bg-gradient-to-r from-primary/5 to-transparent rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <Briefcase size={24} className="text-primary" />
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Propiedades</h2>
+                  <p className="text-sm text-gray-600">{properties.length} {properties.length === 1 ? 'propiedad' : 'propiedades'}</p>
+                </div>
+              </div>
               {isOwnProfile && (
                 <Link
                   to="/host/properties"
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition"
+                  className="px-5 py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all shadow-md font-medium flex items-center gap-2"
                 >
+                  <Briefcase size={16} />
                   Gestionar Propiedades
                 </Link>
               )}
             </div>
 
             {loadingProperties ? (
-              <div className="flex items-center justify-center py-16">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              <div className="bg-white rounded-xl shadow-sm border p-16 text-center">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary/20 border-t-primary"></div>
+                <p className="mt-4 text-gray-600 font-medium">Cargando propiedades...</p>
               </div>
             ) : properties.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1046,13 +1071,20 @@ function ProfilePage({ userIdProp }) {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16 bg-white rounded-xl">
-                <Home size={48} className="mx-auto mb-4 text-gray-300" />
-                <p className="text-gray-500 mb-4">No hay propiedades publicadas aún</p>
+              <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-sm border-2 border-dashed border-gray-300 p-16 text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/20 rounded-full mb-4">
+                  <Home size={40} className="text-primary" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  No hay propiedades publicadas aún
+                </h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  {isOwnProfile ? 'Comienza a publicar tus propiedades y genera ingresos' : 'Este usuario no ha publicado propiedades aún'}
+                </p>
                 {isOwnProfile && (
                   <Link
                     to="/host/properties"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all shadow-md font-medium"
                   >
                     <Briefcase size={18} />
                     Publicar mi primera propiedad
@@ -1064,19 +1096,38 @@ function ProfilePage({ userIdProp }) {
         )}
       </div>
 
-      {/* Followers Modal */}
+      {/* Followers Modal Enhanced */}
       {showFollowersModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowFollowersModal(false)}>
-          <div className="bg-white rounded-xl max-w-md w-full max-h-96 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
-              <h3 className="font-bold">Seguidores</h3>
-              <button onClick={() => setShowFollowersModal(false)}>✕</button>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={() => setShowFollowersModal(false)}>
+          <div className="bg-white rounded-2xl max-w-md w-full max-h-[32rem] overflow-hidden shadow-2xl transform transition-all animate-slideUp" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-gradient-to-r from-primary/5 to-transparent border-b p-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Users size={20} className="text-primary" />
+                <h3 className="font-bold text-lg text-gray-900">Seguidores</h3>
+              </div>
+              <button
+                onClick={() => setShowFollowersModal(false)}
+                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors text-gray-600 hover:text-gray-900"
+              >
+                ✕
+              </button>
             </div>
-            <div className="p-4">
+            <div className="p-5 overflow-y-auto max-h-[26rem]">
               {profile.followersCount === 0 ? (
-                <p className="text-center text-gray-500 py-8">No hay seguidores aún</p>
+                <div className="text-center py-12">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
+                    <Users size={32} className="text-gray-400" />
+                  </div>
+                  <p className="text-gray-600 font-medium">No hay seguidores aún</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {isOwnProfile ? 'Comparte contenido para conseguir seguidores' : 'Este usuario aún no tiene seguidores'}
+                  </p>
+                </div>
               ) : (
-                <p className="text-center text-gray-500 py-8">Cargando seguidores...</p>
+                <div className="text-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-primary/20 border-t-primary mb-3"></div>
+                  <p className="text-gray-600 font-medium">Cargando seguidores...</p>
+                </div>
               )}
             </div>
           </div>
@@ -1186,6 +1237,44 @@ function ProfilePage({ userIdProp }) {
             }}
           />
         </>
+      )}
+
+      {/* Post Detail Modal */}
+      {selectedPost && (
+        <div
+          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center"
+          onClick={() => setSelectedPost(null)}
+        >
+          <div
+            className="w-full h-full max-w-7xl max-h-[95vh] flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative w-full h-full flex items-center justify-center">
+              <button
+                onClick={() => setSelectedPost(null)}
+                className="absolute top-4 right-4 text-white hover:text-gray-300 p-2 z-10"
+              >
+                <X size={32} />
+              </button>
+              <PostCard
+                post={selectedPost}
+                currentUserId={currentUser?.id}
+                onDelete={(postId) => {
+                  setRealPosts(prev => prev.filter(p => p.id !== postId));
+                  setSelectedPost(null);
+                }}
+                onUpdate={(updatedPost) => {
+                  // Actualizar el post en la lista
+                  setRealPosts(prev => prev.map(p =>
+                    p.id === updatedPost.id ? updatedPost : p
+                  ));
+                  // Actualizar el post seleccionado
+                  setSelectedPost(updatedPost);
+                }}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

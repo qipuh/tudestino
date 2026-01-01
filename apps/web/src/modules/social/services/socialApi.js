@@ -114,7 +114,7 @@ export const toggleLike = async (contentType, contentId) => {
     contentType,
     contentId,
   });
-  return response.data;
+  return response; // El interceptor ya desenvuelve response.data
 };
 
 // ==================== COMMENTS ====================
@@ -131,7 +131,7 @@ export const addComment = async (contentType, contentId, text) => {
     contentId,
     text,
   });
-  return response.data;
+  return response; // El interceptor ya desenvuelve response.data
 };
 
 /**
@@ -148,6 +148,15 @@ export const getComments = async (contentType, contentId, page = 1, limit = 20) 
   return response.data;
 };
 
+/**
+ * Toggle like en un comentario
+ * @param {string} commentId - ID del comentario
+ */
+export const toggleCommentLike = async (commentId) => {
+  const response = await api.post(`/social/comments/${commentId}/like`);
+  return response; // El interceptor ya desenvuelve response.data
+};
+
 export default {
   createPost,
   getUserPosts,
@@ -160,4 +169,5 @@ export default {
   toggleLike,
   addComment,
   getComments,
+  toggleCommentLike,
 };

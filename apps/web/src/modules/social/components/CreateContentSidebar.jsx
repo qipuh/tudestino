@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
 import { X, Image as ImageIcon, Video, MapPin, Users, Smile, Send, Upload, Play, Pause, Loader } from 'lucide-react';
 import useAuthStore from '../../../store/authStore';
-import { createPost, createReel } from '../services/socialApi';
+import { getImageUrl } from '../../../services/api';
+import { createPost, createReel } from '../../../services/socialService';
 
 /**
  * Sidebar para crear publicaciones y reels
@@ -138,7 +139,7 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      console.log('Content created:', response.data);
+      console.log('Content created:', response);
 
       // Limpiar formulario
       setTimeout(() => {
@@ -146,6 +147,7 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
         onClose();
         // Llamar al callback onSuccess si existe
         if (onSuccess) {
+          // response contiene { success: true, data: postWithUser }
           onSuccess(response.data);
         }
       }, 500);
@@ -247,11 +249,11 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
           <div className="p-4 space-y-4">
             {/* User Info */}
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-primary-dark flex items-center justify-center text-white font-bold text-xl">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-primary-dark flex items-center justify-center text-white font-bold text-xl overflow-hidden">
                 {user?.avatar ? (
-                  <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                  <img src={getImageUrl(user.avatar, 'social')} alt={user.name} className="w-full h-full rounded-full object-cover" />
                 ) : (
-                  user?.name?.charAt(0).toUpperCase()
+                  <span>{user?.name?.charAt(0).toUpperCase()}</span>
                 )}
               </div>
               <div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, ChevronLeft, Play, Heart, MessageCircle, ChevronUp, ChevronDown } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
-import api from '../../services/api';
+import api, { getImageUrl } from '../../services/api';
 import ReelViewer from './ReelViewer';
 
 function ReelsSidebar({ isOpen, onToggle }) {
@@ -194,7 +194,7 @@ function ReelsSidebar({ isOpen, onToggle }) {
                         <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden border-2 border-white/30">
                           {currentReel?.user?.avatar ? (
                             <img
-                              src={currentReel.user.avatar}
+                              src={getImageUrl(currentReel.user.avatar, 'social')}
                               alt={currentReel.user.name}
                               className="w-full h-full object-cover"
                             />

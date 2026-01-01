@@ -81,8 +81,7 @@ export const searchBusinesses = async (req, res) => {
     } = req.query;
 
     const whereConditions = {
-      status: 'active',
-      isActive: true
+      status: 'active'
     };
 
     if (category && category !== 'all') {
@@ -179,8 +178,7 @@ export const searchProperties = async (req, res) => {
 
     // Construir condiciones WHERE
     const whereConditions = {
-      status: 'published',
-      isActive: true
+      status: 'published'
     };
 
     // Filtro por ubicación (ciudad o país)
@@ -488,7 +486,6 @@ export const searchAll = async (req, res) => {
     if (!category || category === 'all' || category === 'hotel' || category === 'property') {
       const propertyWhere = {
         status: 'published',
-        isActive: true,
         ...buildLocationConditions()
       };
 
@@ -602,19 +599,18 @@ export const searchAll = async (req, res) => {
     if (!category || category === 'all' || category === 'event') {
       try {
         const eventWhere = {
-          status: 'published',
-          isActive: true,
+          status: 'active',
           ...buildLocationConditions('city', 'country', 'state')
         };
 
         // Solo eventos futuros
-        eventWhere.startDate = { [Op.gte]: new Date() };
+        eventWhere.eventDate = { [Op.gte]: new Date() };
 
         const events = await Event.findAll({
           where: eventWhere,
           limit: limitNum,
           offset,
-          order: [['startDate', 'ASC']]
+          order: [['eventDate', 'ASC']]
         });
 
         results = results.concat(events.map(e => {
@@ -628,19 +624,20 @@ export const searchAll = async (req, res) => {
           return {
             id: data.id,
             type: 'event',
-            name: data.title,
-            description: data.shortDescription || data.description,
-            image: data.coverImage,
+            name: data.name,
+            description: data.description,
+            image: data.images && data.images.length > 0 ? data.images[0] : null,
             location: {
               city: data.city,
-              state: data.state,
-              country: data.country,
-              latitude: data.latitude,
-              longitude: data.longitude
+              state: data.address?.state,
+              country: data.address?.country,
+              latitude: data.address?.latitude,
+              longitude: data.address?.longitude
             },
             category: data.category,
-            startDate: data.startDate,
-            endDate: data.endDate,
+            eventDate: data.eventDate,
+            startTime: data.startTime,
+            endTime: data.endTime,
             isFree: data.isFree,
             distance: distance ? Math.round(distance * 10) / 10 : null,
             url: `/events/${data.id}`
@@ -655,13 +652,11 @@ export const searchAll = async (req, res) => {
     if (!category || category === 'all' || category === 'entertainment') {
       try {
         const entertainmentWhere = {
-          status: 'published',
-          isActive: true,
-          ...buildLocationConditions('city', 'country', 'state')
+          status: 'active'
         };
 
         if (minRating) {
-          entertainmentWhere.averageRating = { [Op.gte]: parseFloat(minRating) };
+          entertainmentWhere.ratingAverage = { [Op.gte]: parseFloat(minRating) };
         }
 
         const entertainment = await Entertainment.findAll({
@@ -674,8 +669,8 @@ export const searchAll = async (req, res) => {
           const data = e.toJSON();
           let distance = null;
 
-          if (lat && lng && data.latitude && data.longitude) {
-            distance = calculateDistance(lat, lng, parseFloat(data.latitude), parseFloat(data.longitude));
+          if (lat && lng && data.address?.latitude && data.address?.longitude) {
+            distance = calculateDistance(lat, lng, parseFloat(data.address.latitude), parseFloat(data.address.longitude));
           }
 
           return {
@@ -684,18 +679,13 @@ export const searchAll = async (req, res) => {
             subType: data.type,
             name: data.name,
             description: data.description,
-            image: data.logo,
-            location: {
-              city: data.city,
-              state: data.state,
-              country: data.country,
-              latitude: data.latitude,
-              longitude: data.longitude
-            },
-            rating: data.averageRating || 0,
-            reviewCount: data.totalReviews || 0,
+            image: data.images && data.images.length > 0 ? data.images[0] : null,
+            location: data.location,
+            address: data.address,
+            rating: data.ratingAverage || 0,
+            reviewCount: data.reviewCount || 0,
             priceRange: data.priceRange,
-            coverCharge: data.hasCoverCharge ? data.coverCharge : null,
+            category: data.category,
             distance: distance ? Math.round(distance * 10) / 10 : null,
             url: `/entertainment/${data.id}`
           };

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Heart, MessageCircle, Send, Bookmark, Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import FollowButton from './FollowButton';
 import { togglePostLike, getPostComments, addComment, toggleCommentLike } from '../../services/reelsService';
+import { getImageUrl } from '../../services/api';
 import useAuthStore from '../../store/authStore';
 
 function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], currentIndex = 0, onNavigate }) {
@@ -26,8 +27,10 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
   const loadComments = async () => {
     setLoadingComments(true);
     try {
-      const fetchedComments = await getPostComments(reel.id);
-      setComments(fetchedComments || []);
+      const response = await getPostComments(reel.id);
+      // API returns { success, data: { comments, pagination } }
+      const commentsArray = response?.data?.comments || [];
+      setComments(commentsArray);
     } catch (error) {
       console.error('Error loading comments:', error);
       setComments([]); // Ensure comments is always an array
@@ -54,16 +57,15 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
     }
 
     try {
-      const response = await togglePostLike(reel.id);
-      // Handle both response formats
-      const liked = response?.liked ?? response?.data?.liked;
-      const count = response?.likesCount ?? response?.data?.likesCount;
+      // API signature: togglePostLike(contentId, contentType)
+      const response = await togglePostLike(reel.id, 'reel');
+      // API returns { success, message, data: { liked: true/false } }
+      const liked = response?.data?.liked;
 
       if (liked !== undefined) {
         setIsLiked(liked);
-      }
-      if (count !== undefined) {
-        setLikesCount(count);
+        // Update count manually
+        setLikesCount(liked ? likesCount + 1 : likesCount - 1);
       }
     } catch (error) {
       console.error('Error toggling like:', error);
@@ -85,28 +87,17 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
     }
 
     try {
-      const comment = await addComment(reel.id, {
-        text: newComment,
-        parentId,
-      });
+      // API signature: addComment(contentId, commentText, contentType)
+      const response = await addComment(reel.id, newComment.trim(), 'reel');
+      // API returns { success, data: commentWithUser }
+      const comment = response?.data;
 
-      if (parentId) {
-        // Add reply to parent comment
-        setComments(comments.map(c => {
-          if (c.id === parentId) {
-            return {
-              ...c,
-              replies: [...(c.replies || []), comment],
-            };
-          }
-          return c;
-        }));
-      } else {
-        // Add new top-level comment
-        setComments([...comments, comment]);
+      if (comment) {
+        // Add new top-level comment (replies not supported yet in API)
+        setComments([comment, ...comments]); // Add at the beginning
+        setCommentsCount(commentsCount + 1);
       }
 
-      setCommentsCount(commentsCount + 1);
       setNewComment('');
       setReplyingTo(null);
     } catch (error) {
@@ -167,7 +158,7 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
           <Link to={`/profile/${comment.user.id}`} onClick={onClose}>
             <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-white">
               {comment.user.avatar ? (
-                <img src={comment.user.avatar} alt={comment.user.name} className="w-full h-full rounded-full object-cover" />
+                <img src={getImageUrl(comment.user.avatar, 'social')} alt={comment.user.name} className="w-full h-full rounded-full object-cover" />
               ) : (
                 comment.user.name?.charAt(0)?.toUpperCase() || '?'
               )}
@@ -331,7 +322,7 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
                     <Link to={`/profile/${reel.user.id}`} onClick={onClose}>
                       <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-600 cursor-pointer hover:ring-2 hover:ring-white">
                         {reel.user.avatar ? (
-                          <img src={reel.user.avatar} alt={reel.user.name} className="w-full h-full rounded-full object-cover" />
+                          <img src={getImageUrl(reel.user.avatar, 'social')} alt={reel.user.name} className="w-full h-full rounded-full object-cover" />
                         ) : (
                           reel.user.name?.charAt(0) || '?'
                         )}

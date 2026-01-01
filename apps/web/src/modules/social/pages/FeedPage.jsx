@@ -3,7 +3,7 @@ import { Play, Heart, MessageCircle, Image as ImageIcon, Plus, Users, TrendingUp
 import ReelViewer from '../../../components/social/ReelViewer';
 import CreatePostModal from '../../../components/social/CreatePostModal';
 import useAuthStore from '../../../store/authStore';
-import api from '../../../services/api';
+import api, { getImageUrl } from '../../../services/api';
 
 function FeedPage() {
   const { user: currentUser } = useAuthStore();
@@ -237,7 +237,7 @@ function FeedPage() {
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-secondary to-primary flex items-center justify-center text-xs font-bold overflow-hidden ring-2 ring-white/30">
                       {post.user?.avatar ? (
-                        <img src={post.user.avatar} alt={post.user.name} className="w-full h-full object-cover" />
+                        <img src={getImageUrl(post.user.avatar, 'social')} alt={post.user.name} className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-white">{post.user?.name?.charAt(0) || '?'}</span>
                       )}

@@ -7,7 +7,7 @@ import { Op } from 'sequelize';
 Entertainment.hasMany(EntertainmentReservation, { foreignKey: 'entertainment_id', as: 'reservations' });
 EntertainmentReservation.belongsTo(Entertainment, { foreignKey: 'entertainment_id', as: 'entertainment' });
 
-Entertainment.hasMany(EntertainmentImage, { foreignKey: 'entertainment_id', as: 'images' });
+Entertainment.hasMany(EntertainmentImage, { foreignKey: 'entertainment_id', as: 'entertainmentImages' });
 EntertainmentImage.belongsTo(Entertainment, { foreignKey: 'entertainment_id', as: 'entertainment' });
 
 class EntertainmentService {
@@ -30,7 +30,7 @@ class EntertainmentService {
         include: [
           {
             model: EntertainmentImage,
-            as: 'images',
+            as: 'entertainmentImages',
             order: [['displayOrder', 'ASC']]
           }
         ]
@@ -152,7 +152,7 @@ class EntertainmentService {
         include: [
           {
             model: EntertainmentImage,
-            as: 'images',
+            as: 'entertainmentImages',
             where: { isMain: true },
             required: false
           }
@@ -180,7 +180,7 @@ class EntertainmentService {
         include: [
           {
             model: EntertainmentImage,
-            as: 'images',
+            as: 'entertainmentImages',
             where: { isMain: true },
             required: false
           }
@@ -284,7 +284,7 @@ class EntertainmentService {
             include: [
               {
                 model: EntertainmentImage,
-                as: 'images',
+                as: 'entertainmentImages',
                 where: { isMain: true },
                 required: false
               }

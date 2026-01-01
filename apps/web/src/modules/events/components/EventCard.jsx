@@ -2,6 +2,7 @@ import { Calendar, MapPin, Users, Clock, Tag, Video } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { getImageUrl } from '../../../services/api';
 
 const CATEGORY_LABELS = {
   concert: 'Concierto',
@@ -50,18 +51,26 @@ const CATEGORY_COLORS = {
 };
 
 function EventCard({ event }) {
-  const coverImage = event.images?.find(img => img.isCover) || event.images?.[0];
+  // Usar eventImages si existe, sino images
+  const coverImage = event.eventImages?.find(img => img.isCover) || event.eventImages?.[0] || event.images?.find(img => img.isCover) || event.images?.[0];
   const categoryColor = CATEGORY_COLORS[event.category] || CATEGORY_COLORS.default;
 
-  const formatEventDate = (startDate, endDate) => {
-    const start = new Date(startDate);
-    const end = endDate ? new Date(endDate) : null;
+  const formatEventDate = (eventDate, startTime) => {
+    // Manejar el caso donde eventDate puede ser string o Date
+    if (!eventDate) return 'Fecha por confirmar';
 
-    if (!end || start.toDateString() === end.toDateString()) {
-      return format(start, "d 'de' MMMM, yyyy", { locale: es });
+    try {
+      const date = new Date(eventDate);
+      // Verificar si la fecha es válida
+      if (isNaN(date.getTime())) {
+        return 'Fecha inválida';
+      }
+
+      return format(date, "d 'de' MMMM, yyyy", { locale: es });
+    } catch (error) {
+      console.error('Error formatting date:', error, eventDate);
+      return 'Fecha inválida';
     }
-
-    return `${format(start, "d MMM", { locale: es })} - ${format(end, "d MMM, yyyy", { locale: es })}`;
   };
 
   const getMinPrice = () => {
@@ -91,8 +100,8 @@ function EventCard({ event }) {
         <div className="relative h-48 overflow-hidden">
           {coverImage || event.coverImage ? (
             <img
-              src={coverImage?.url || event.coverImage}
-              alt={event.title}
+              src={getImageUrl(coverImage?.url || event.coverImage, 'events')}
+              alt={event.name || event.title}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
             />
           ) : (
@@ -134,18 +143,18 @@ function EventCard({ event }) {
           {/* Fecha */}
           <div className="flex items-center gap-2 text-sm text-primary font-semibold mb-2">
             <Calendar size={16} />
-            <span>{formatEventDate(event.startDate, event.endDate)}</span>
+            <span>{formatEventDate(event.eventDate, event.startTime)}</span>
           </div>
 
           {/* Título */}
           <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-            {event.title}
+            {event.name || event.title}
           </h3>
 
           {/* Descripción corta */}
-          {event.shortDescription && (
+          {event.description && (
             <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-              {event.shortDescription}
+              {event.description}
             </p>
           )}
 
@@ -155,7 +164,7 @@ function EventCard({ event }) {
             <span className="line-clamp-1">
               {event.locationType === 'virtual'
                 ? `Virtual - ${event.virtualPlatform || 'Online'}`
-                : event.venueName || event.city
+                : event.location || event.address?.city || 'Ubicación por confirmar'
               }
             </span>
           </div>

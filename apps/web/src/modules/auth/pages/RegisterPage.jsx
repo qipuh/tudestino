@@ -1,27 +1,90 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../../store/authStore';
+import countriesService from '../../../services/countriesService';
 
 function RegisterPage() {
   const navigate = useNavigate();
   const { register, loading } = useAuthStore();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    name: '',
+    first_name: '',
+    last_name: '',
+    middle_name: '',
     email: '',
     password: '',
     confirmPassword: '',
     phone: '',
+    country_code: '+51',
     role: 'guest', // guest o business_owner
     acceptTerms: false,
   });
   const [error, setError] = useState('');
+  const [countries, setCountries] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [loadingCountries, setLoadingCountries] = useState(true);
+
+  useEffect(() => {
+    console.log('🚀 RegisterPage mounted, loading countries...');
+    loadCountries();
+  }, []);
+
+  useEffect(() => {
+    console.log('📊 State update:', {
+      step,
+      loadingCountries,
+      countriesCount: countries.length,
+      selectedCountry: selectedCountry?.name,
+    });
+  }, [step, loadingCountries, countries, selectedCountry]);
+
+  const loadCountries = async () => {
+    try {
+      setLoadingCountries(true);
+      const response = await countriesService.getAll();
+      console.log('Countries response:', response);
+
+      if (response.success && response.data) {
+        setCountries(response.data);
+
+        // Detectar país por IP
+        const detectedCountry = await countriesService.detectByIP();
+        console.log('Detected country:', detectedCountry);
+
+        if (detectedCountry.success && detectedCountry.data) {
+          const country = response.data.find(c => c.code === detectedCountry.data.code);
+          console.log('Found country:', country);
+
+          if (country) {
+            setSelectedCountry(country);
+            setFormData(prev => ({ ...prev, country_code: country.phone_code }));
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading countries:', error);
+      // Set default Peru country on error
+      setFormData(prev => ({ ...prev, country_code: '+51' }));
+    } finally {
+      setLoadingCountries(false);
+    }
+  };
 
   const handleChange = (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
     setFormData({
       ...formData,
       [e.target.name]: value,
+    });
+  };
+
+  const handleCountryChange = (e) => {
+    const countryCode = e.target.value;
+    const country = countries.find(c => c.code === countryCode);
+    setSelectedCountry(country);
+    setFormData({
+      ...formData,
+      country_code: country ? country.phone_code : '+51',
     });
   };
 
@@ -50,21 +113,26 @@ function RegisterPage() {
       return;
     }
 
+    // Construir nombre completo
+    const fullName = `${formData.first_name} ${formData.middle_name ? formData.middle_name + ' ' : ''}${formData.last_name}`.trim();
+
     const result = await register({
-      name: formData.name,
+      name: fullName,
       email: formData.email,
       password: formData.password,
       phone: formData.phone,
+      country_code: formData.country_code,
       role: formData.role,
     });
 
     if (result.success) {
-      // Redirigir según el rol
-      if (formData.role === 'business_owner') {
-        navigate('/business/dashboard');
-      } else {
-        navigate('/');
-      }
+      // Redirigir a verificación de email
+      navigate('/verify-email', {
+        state: {
+          email: formData.email,
+          message: result.message || 'Usuario creado. Por favor verifica tu email.'
+        }
+      });
     } else {
       setError(result.error);
     }
@@ -94,10 +162,10 @@ function RegisterPage() {
               onClick={() => handleRoleSelect('guest')}
               className="w-full p-6 border-2 border-gray-300 rounded-xl hover:border-primary hover:shadow-lg transition group"
             >
-              <div className="text-4xl mb-3">🧳</div>
-              <h3 className="text-xl font-bold mb-2 group-hover:text-primary">Soy huésped</h3>
+              <div className="text-4xl mb-3">👤</div>
+              <h3 className="text-xl font-bold mb-2 group-hover:text-primary">Soy usuario</h3>
               <p className="text-gray-600 text-sm">
-                Quiero buscar y reservar alojamientos increíbles para mis viajes
+                Quiero buscar y reservar alojamientos, restaurantes, eventos y más
               </p>
             </button>
 
@@ -121,25 +189,43 @@ function RegisterPage() {
             )}
 
             <div className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre completo
-                </label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
-                  placeholder="Juan Pérez"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Nombre(s) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="first_name"
+                    name="first_name"
+                    type="text"
+                    required
+                    value={formData.first_name}
+                    onChange={handleChange}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
+                    placeholder="Juan"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Apellido(s) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="last_name"
+                    name="last_name"
+                    type="text"
+                    required
+                    value={formData.last_name}
+                    onChange={handleChange}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
+                    placeholder="Pérez García"
+                  />
+                </div>
               </div>
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Correo electrónico
+                  Correo electrónico <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="email"
@@ -155,18 +241,53 @@ function RegisterPage() {
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                  Teléfono
+                <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
+                  País <span className="text-red-500">*</span>
                 </label>
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
-                  placeholder="+52 123 456 7890"
-                />
+                <select
+                  id="country"
+                  value={selectedCountry?.code || ''}
+                  onChange={handleCountryChange}
+                  disabled={loadingCountries}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary disabled:bg-gray-100"
+                >
+                  {loadingCountries ? (
+                    <option value="">Cargando países...</option>
+                  ) : (
+                    <>
+                      {!selectedCountry && <option value="">Selecciona un país</option>}
+                      {countries.map((country) => (
+                        <option key={country.code} value={country.code}>
+                          {country.flag_emoji} {country.name} ({country.phone_code})
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                  Teléfono <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={formData.country_code}
+                    readOnly
+                    className="w-20 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 font-medium"
+                  />
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    required
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="flex-1 appearance-none block px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
+                    placeholder="987654321"
+                  />
+                </div>
               </div>
 
               <div>

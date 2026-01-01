@@ -3,31 +3,31 @@ import sequelize from '../../config/database-mysql.js';
 
 const Booking = sequelize.define('Booking', {
   id: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
   propertyId: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     allowNull: false,
     references: {
-      model: 'Properties',
+      model: 'properties',
       key: 'id',
     },
   },
   guestId: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     allowNull: false,
     references: {
-      model: 'Users',
+      model: 'users',
       key: 'id',
     },
   },
   hostId: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     allowNull: false,
     references: {
-      model: 'Users',
+      model: 'users',
       key: 'id',
     },
   },
@@ -93,7 +93,7 @@ const Booking = sequelize.define('Booking', {
     allowNull: true,
   },
   cancelledBy: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     allowNull: true,
   },
   cancelledAt: {
@@ -101,7 +101,7 @@ const Booking = sequelize.define('Booking', {
     allowNull: true,
   },
 }, {
-  tableName: 'Bookings',
+  tableName: 'bookings',
   timestamps: true,
 });
 

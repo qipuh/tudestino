@@ -8,6 +8,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { initializeSocket } from './config/socket.js';
 
 // Routes
+
 import authRoutes from './modules/auth/auth.routes.js';
 import userRoutes from './modules/users/users.routes.js';
 import propertyRoutes from './modules/properties/properties.routes.js';
@@ -25,6 +26,7 @@ import entertainmentRoutes from './modules/entertainment/entertainment.routes.js
 import eventsRoutes from './modules/events/events.routes.js';
 import businessesRoutes from './modules/businesses/index.js';
 import uploadRoutes from './modules/upload/upload.routes.js';
+import countriesRoutes from './modules/countries/countries.routes.js';
 
 dotenv.config();
 
@@ -71,6 +73,7 @@ app.use('/api/entertainment', entertainmentRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/businesses', businessesRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/countries', countriesRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

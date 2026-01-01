@@ -3,12 +3,12 @@ import sequelize from '../../config/database-mysql.js';
 
 const EventRegistration = sequelize.define('EventRegistration', {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.CHAR(36),
     primaryKey: true,
-    autoIncrement: true
+    defaultValue: DataTypes.UUIDV4
   },
   eventId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.CHAR(36),
     allowNull: false,
     field: 'event_id',
     references: {
@@ -19,7 +19,7 @@ const EventRegistration = sequelize.define('EventRegistration', {
   },
   userId: {
     type: DataTypes.CHAR(36),
-    allowNull: false,
+    allowNull: true, // Changed to true to match DB
     field: 'user_id',
     references: {
       model: 'users',
@@ -27,7 +27,7 @@ const EventRegistration = sequelize.define('EventRegistration', {
     }
   },
   ticketId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.CHAR(36),
     allowNull: true,
     field: 'ticket_id',
     references: {
@@ -118,10 +118,14 @@ const EventRegistration = sequelize.define('EventRegistration', {
     field: 'checked_in_at'
   },
   checkedInBy: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.CHAR(36),
     allowNull: true,
     field: 'checked_in_by',
-    comment: 'ID del usuario que hizo el check-in'
+    comment: 'ID del usuario que hizo el check-in',
+    references: {
+      model: 'users',
+      key: 'id'
+    }
   },
   // Información adicional
   customFields: {
@@ -142,9 +146,9 @@ const EventRegistration = sequelize.define('EventRegistration', {
   },
   // Estado
   status: {
-    type: DataTypes.ENUM('registered', 'confirmed', 'cancelled', 'waitlist', 'attended', 'no_show'),
+    type: DataTypes.ENUM('pending', 'confirmed', 'cancelled', 'attended'),
     allowNull: false,
-    defaultValue: 'registered'
+    defaultValue: 'pending' // Match DB default
   },
   cancellationReason: {
     type: DataTypes.TEXT,

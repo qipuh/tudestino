@@ -1,7 +1,6 @@
 import express from 'express';
 import businessFollowController from './business-follow.controller.js';
-// TODO: Importar middleware de autenticación cuando esté disponible
-// import { authenticate } from '../../middlewares/auth.js';
+import { authenticate } from '../../middleware/auth.middleware.js';
 
 const router = express.Router();
 
@@ -9,8 +8,8 @@ const router = express.Router();
  * Todas las rutas de seguimiento requieren autenticación
  */
 
-// TODO: Descomentar cuando el middleware de autenticación esté disponible
-// router.use(authenticate);
+// Aplicar autenticación a todas las rutas
+router.use(authenticate);
 
 // Obtener mis negocios seguidos
 router.get('/following/my-followed', businessFollowController.getMyFollowedBusinesses);

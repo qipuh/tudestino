@@ -112,7 +112,7 @@ function RoomSelector({ rooms, selectedRoomId, onSelectRoom, multiSelect = false
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-baseline gap-1">
                         <span className="text-xl font-bold text-gray-900">
-                          ${price.toFixed(2)}
+                          S/{price.toFixed(2)}
                         </span>
                         <span className="text-sm text-gray-600">/noche</span>
                       </div>
@@ -231,7 +231,7 @@ function RoomSelector({ rooms, selectedRoomId, onSelectRoom, multiSelect = false
                 <div className="text-center p-4 bg-primary/10 rounded-lg">
                   <p className="text-sm text-gray-600">Precio</p>
                   <p className="text-2xl font-bold text-primary">
-                    ${parseFloat(modalRoom.pricePerNight).toFixed(2)}
+                    S/{parseFloat(modalRoom.pricePerNight).toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-600">por noche</p>
                 </div>

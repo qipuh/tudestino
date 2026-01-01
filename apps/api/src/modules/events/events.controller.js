@@ -60,9 +60,9 @@ class EventsController {
       const filters = {
         category: req.query.category ? (req.query.category.includes(',') ? req.query.category.split(',') : req.query.category) : undefined,
         city: req.query.city,
-        startDate: req.query.startDate,
+        eventDate: req.query.startDate,
         endDate: req.query.endDate,
-        isFree: req.query.isFree === 'true',
+        isFree: req.query.isFree === 'true' ? true : (req.query.isFree === 'false' ? false : undefined),
         locationType: req.query.locationType,
         tags: req.query.tags ? JSON.parse(req.query.tags) : undefined,
         minCapacity: req.query.minCapacity ? parseInt(req.query.minCapacity) : undefined,
@@ -156,6 +156,62 @@ class EventsController {
     }
   }
 
+  // FASES DE TICKETS
+  async createTicketPhase(req, res) {
+    try {
+      const phase = await eventsService.createTicketPhase({
+        ...req.body,
+        ticketId: req.params.ticketId
+      });
+      res.status(201).json(phase);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async updateTicketPhase(req, res) {
+    try {
+      const phase = await eventsService.updateTicketPhase(
+        req.params.phaseId,
+        req.params.ticketId,
+        req.body
+      );
+      res.json(phase);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async deleteTicketPhase(req, res) {
+    try {
+      const result = await eventsService.deleteTicketPhase(
+        req.params.phaseId,
+        req.params.ticketId
+      );
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async getTicketPhases(req, res) {
+    try {
+      const phases = await eventsService.getTicketPhases(req.params.ticketId);
+      res.json(phases);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async getActivePhase(req, res) {
+    try {
+      const phase = await eventsService.getActivePhase(req.params.ticketId);
+      res.json(phase);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
   // REGISTRACIONES
   async createRegistration(req, res) {
     try {
@@ -232,11 +288,29 @@ class EventsController {
   // IMÁGENES
   async addImage(req, res) {
     try {
-      const image = await eventsService.addImage({
-        ...req.body,
-        eventId: req.params.eventId
+      // Verificar que se subieron archivos
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: 'No se recibieron imágenes' });
+      }
+
+      // Procesar cada archivo y crear registros de imagen
+      const images = [];
+      for (const file of req.files) {
+        const imageUrl = `/uploads/events/${file.filename}`;
+        const image = await eventsService.addImage({
+          eventId: req.params.eventId,
+          url: imageUrl,
+          caption: req.body.caption || null,
+          type: req.body.type || 'gallery',
+          isCover: images.length === 0 && req.body.isCover === 'true', // Primera imagen es cover si se especifica
+        });
+        images.push(image);
+      }
+
+      res.status(201).json({
+        message: `${images.length} imagen(es) agregada(s) exitosamente`,
+        images
       });
-      res.status(201).json(image);
     } catch (error) {
       res.status(400).json({ error: error.message });
     }

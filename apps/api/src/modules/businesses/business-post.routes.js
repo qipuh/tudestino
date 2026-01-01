@@ -1,7 +1,6 @@
 import express from 'express';
 import businessPostController from './business-post.controller.js';
-// TODO: Importar middleware de autenticación cuando esté disponible
-// import { authenticate } from '../../middlewares/auth.js';
+import { authenticate } from '../../middleware/auth.middleware.js';
 
 const router = express.Router();
 
@@ -19,8 +18,8 @@ router.get('/:businessId/posts', businessPostController.getPostsByBusiness);
  * Rutas protegidas (requieren autenticación)
  */
 
-// TODO: Descomentar cuando el middleware de autenticación esté disponible
-// router.use(authenticate);
+// Aplicar autenticación a todas las rutas siguientes
+router.use(authenticate);
 
 // Obtener feed de posts de negocios seguidos
 router.get('/posts/feed', businessPostController.getFeedPosts);

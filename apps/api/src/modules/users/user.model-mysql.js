@@ -89,18 +89,105 @@ const User = sequelize.define('User', {
   emailVerified: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
+    field: 'email_verified',
   },
   emailVerifiedAt: {
     type: DataTypes.DATE,
     allowNull: true,
   },
+  emailVerificationCode: {
+    type: DataTypes.STRING(6),
+    allowNull: true,
+    field: 'email_verification_code',
+  },
+  emailVerificationExpires: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'email_verification_expires',
+  },
   phoneVerified: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
+    field: 'phone_verified',
   },
   phoneVerifiedAt: {
     type: DataTypes.DATE,
     allowNull: true,
+  },
+  phoneVerificationCode: {
+    type: DataTypes.STRING(6),
+    allowNull: true,
+    field: 'phone_verification_code',
+  },
+  phoneVerificationExpires: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'phone_verification_expires',
+  },
+  verificationStatus: {
+    type: DataTypes.ENUM('pending', 'email_verified', 'phone_verified', 'fully_verified'),
+    defaultValue: 'pending',
+    field: 'verification_status',
+  },
+  identityVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    field: 'identity_verified',
+  },
+  firstName: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    field: 'first_name',
+  },
+  lastName: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    field: 'last_name',
+  },
+  middleName: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    field: 'middle_name',
+  },
+  birthDate: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'birth_date',
+  },
+  nationalityCode: {
+    type: DataTypes.CHAR(2),
+    allowNull: true,
+    field: 'nationality_code',
+  },
+  documentType: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    field: 'document_type',
+  },
+  documentNumber: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    field: 'document_number',
+  },
+  documentFrontPhoto: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    field: 'document_front_photo',
+  },
+  selfiePhoto: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    field: 'selfie_photo',
+  },
+  countryCode: {
+    type: DataTypes.VARCHAR(10),
+    allowNull: true,
+    field: 'country_code',
+  },
+  trustScore: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    field: 'trust_score',
   },
   // Travel & Social Profile Fields (from DB)
   travelInterests: {

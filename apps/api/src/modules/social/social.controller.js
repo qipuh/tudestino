@@ -1,6 +1,7 @@
 import * as socialService from './social.service.js';
 import { Post, Reel, Like, Comment } from './social.model.sequelize.js';
 import User from '../users/user.model-mysql.js';
+import CommentLike from './commentLike.model.js';
 
 // ==================== PROFILE CONTROLLERS ====================
 
@@ -61,6 +62,45 @@ export const updateProfile = async (req, res) => {
     res.status(400).json({
       success: false,
       message: error.message
+    });
+  }
+};
+
+// POST /api/social/profile/avatar
+export const uploadAvatar = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No se ha enviado ninguna imagen'
+      });
+    }
+
+    // Actualizar el avatar en la base de datos
+    const avatarUrl = `/uploads/social/${req.file.filename}`;
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    await user.update({ avatar: avatarUrl });
+
+    res.json({
+      success: true,
+      avatarUrl,
+      message: 'Avatar actualizado correctamente'
+    });
+  } catch (error) {
+    console.error('Error uploading avatar:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error al subir el avatar'
     });
   }
 };
@@ -609,10 +649,16 @@ export const addComment = async (req, res) => {
       }],
     });
 
+    // Agregar isLiked = false (el usuario recién creó el comentario, no le ha dado like aún)
+    const commentWithLikeStatus = {
+      ...commentWithUser.toJSON(),
+      isLiked: false,
+    };
+
     res.status(201).json({
       success: true,
       message: 'Comentario agregado',
-      data: commentWithUser,
+      data: commentWithLikeStatus,
     });
   } catch (error) {
     console.error('Error adding comment:', error);
@@ -628,6 +674,7 @@ export const getComments = async (req, res) => {
   try {
     const { contentType, contentId } = req.params;
     const { page = 1, limit = 20 } = req.query;
+    const userId = req.user?.id; // Usuario autenticado (puede ser undefined si no está autenticado)
 
     const offset = (page - 1) * limit;
 
@@ -646,10 +693,32 @@ export const getComments = async (req, res) => {
       offset: parseInt(offset),
     });
 
+    // Agregar campo isLiked a cada comentario
+    const commentsWithLikeStatus = await Promise.all(
+      comments.map(async (comment) => {
+        let isLiked = false;
+
+        if (userId) {
+          const like = await CommentLike.findOne({
+            where: {
+              commentId: comment.id,
+              userId: userId,
+            },
+          });
+          isLiked = !!like;
+        }
+
+        return {
+          ...comment.toJSON(),
+          isLiked,
+        };
+      })
+    );
+
     res.json({
       success: true,
       data: {
-        comments,
+        comments: commentsWithLikeStatus,
         pagination: {
           total: count,
           page: parseInt(page),

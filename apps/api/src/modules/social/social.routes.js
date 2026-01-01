@@ -16,6 +16,9 @@ router.get('/profile/:userId', optionalAuthenticate, socialController.getUserPro
 // Actualizar perfil social
 router.patch('/profile', authenticate, socialController.updateProfile);
 
+// Subir avatar
+router.post('/profile/avatar', authenticate, uploadSocial.single('avatar'), socialController.uploadAvatar);
+
 // Obtener estadísticas de perfil
 router.get('/profile/:userId/stats', socialController.getProfileStats);
 

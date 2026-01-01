@@ -32,7 +32,7 @@ const createPropertyIcon = (price, isHovered = false) => {
         cursor: pointer;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       ">
-        $${price}
+        S/${price}
       </div>
     `,
     iconSize: [70, 36],
@@ -158,10 +158,11 @@ function PropertiesMap({
         const lat = property.latitude || property.addressLatitude;
         const lng = property.longitude || property.addressLongitude;
 
-        // Obtener precio (de rooms o basePrice)
-        const price = property.rooms && property.rooms.length > 0
-          ? property.rooms[0].pricePerNight
-          : property.basePrice || 0;
+        // Obtener precio (soporta múltiples formatos)
+        const price = property.price ||  // Desde resultados de búsqueda
+                     (property.rooms && property.rooms.length > 0 ? property.rooms[0].pricePerNight : null) || // Desde rooms
+                     property.basePrice || // Desde basePrice
+                     0;
 
         return (
           <Marker
@@ -184,10 +185,10 @@ function PropertiesMap({
                   />
                 )}
                 <h3 className="font-semibold text-sm mb-1">
-                  {property.propertyName || property.hotelName || `${property.accommodationType} en ${property.addressCity}`}
+                  {property.name || property.propertyName || property.hotelName || `${property.accommodationType || 'Propiedad'} en ${property.addressCity || property.location?.city}`}
                 </h3>
                 <p className="text-xs text-gray-600 mb-2">
-                  {property.addressCity}, {property.addressCountry}
+                  {property.addressCity || property.location?.city}, {property.addressCountry || property.location?.country}
                 </p>
 
                 {property.ratingAverage > 0 && (
@@ -206,7 +207,7 @@ function PropertiesMap({
 
                 <div className="flex items-center gap-1 text-sm font-bold">
                   <DollarSign size={14} />
-                  <span>${price}</span>
+                  <span>S/{price}</span>
                   <span className="text-xs font-normal text-gray-600">/ noche</span>
                 </div>
               </div>

@@ -27,7 +27,6 @@ const businessTypes = [
   { value: 'hotel', label: 'Hotel / Alojamiento', icon: '🏨' },
   { value: 'restaurant', label: 'Restaurante', icon: '🍽️' },
   { value: 'entertainment', label: 'Entretenimiento', icon: '🎭' },
-  { value: 'events', label: 'Eventos', icon: '🎉' },
   { value: 'tours', label: 'Tours y Excursiones', icon: '🗺️' },
   { value: 'transport', label: 'Transporte', icon: '🚗' },
   { value: 'spa', label: 'Spa y Bienestar', icon: '💆' },

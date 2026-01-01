@@ -20,6 +20,20 @@ export const updateSocialProfile = async (updates) => {
   return response.data;
 };
 
+// Subir avatar
+export const uploadAvatar = async (file) => {
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  const response = await api.post('/social/profile/avatar', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  // El interceptor de axios ya desenvuelve response.data, así que devolvemos directamente
+  return response;
+};
+
 // Obtener estadísticas de perfil
 export const getProfileStats = async (userId) => {
   const response = await api.get(`/social/profile/${userId}/stats`);
@@ -75,7 +89,7 @@ export const searchUsers = async (query, limit = 20) => {
 // Verificar disponibilidad de username
 export const checkUsernameAvailability = async (username) => {
   const response = await api.get(`/social/username/check/${username}`);
-  return response.data;
+  return response; // response already is the data object {success, available, message}
 };
 
 // Obtener perfil por username
@@ -87,16 +101,38 @@ export const getProfileByUsername = async (username) => {
 
 // Obtener posts de un usuario
 export const getUserPosts = async (userId, page = 1, limit = 20) => {
-  const response = await api.get(`/social/posts/user/${userId}`, {
+  const response = await api.get(`/social/users/${userId}/posts`, {
     params: { page, limit }
   });
-  return response.data;
+  // El interceptor desenvuelve response.data, entonces response contiene { posts, pagination }
+  return response.data; // Devuelve { posts: [...], pagination: {...} }
 };
 
-// Obtener reels de un usuario  
+// Obtener reels de un usuario
 export const getUserReels = async (userId, page = 1, limit = 20) => {
-  const response = await api.get(`/social/reels/user/${userId}`, {
+  const response = await api.get(`/social/users/${userId}/reels`, {
     params: { page, limit }
   });
-  return response.data;
+  // El interceptor desenvuelve response.data, entonces response contiene { reels, pagination }
+  return response.data; // Devuelve { reels: [...], pagination: {...} }
+};
+
+// Crear un post
+export const createPost = async (formData) => {
+  const response = await api.post('/social/posts', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response;
+};
+
+// Crear un reel
+export const createReel = async (formData) => {
+  const response = await api.post('/social/reels', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response;
 };

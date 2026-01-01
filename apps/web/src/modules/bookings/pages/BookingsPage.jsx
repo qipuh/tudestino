@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Users, Clock, DollarSign, AlertCircle, CheckCircle, XCircle, MessageCircle } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, DollarSign, AlertCircle, CheckCircle, XCircle, MessageCircle, Hotel, Utensils } from 'lucide-react';
 import useBookingStore from '../../../store/bookingStore';
 import useAuthStore from '../../../store/authStore';
+import * as businessReservationService from '../../../services/businessReservationService';
+import api, { getImageUrl } from '../../../services/api';
 
 const STATUS_CONFIG = {
   pending: {
@@ -39,12 +41,74 @@ function BookingsPage() {
   const [filter, setFilter] = useState('all'); // all, upcoming, past, cancelled
   const [cancellingId, setCancellingId] = useState(null);
   const [actioningId, setActioningId] = useState(null);
+  const [bookingType, setBookingType] = useState('properties'); // properties, businesses
+  const [businessReservations, setBusinessReservations] = useState([]);
+  const [businessLoading, setBusinessLoading] = useState(false);
+  const [businessError, setBusinessError] = useState(null);
+  const [viewMode, setViewMode] = useState('made'); // received (como dueño) o made (como cliente)
+  const [myBusinesses, setMyBusinesses] = useState([]);
 
   const isHost = user?.role === 'host' || user?.role === 'admin';
+  const hasBusinesses = myBusinesses && myBusinesses.length > 0;
 
   useEffect(() => {
-    fetchMyBookings();
-  }, [fetchMyBookings, user]);
+    if (bookingType === 'properties') {
+      fetchMyBookings();
+    } else {
+      fetchBusinessReservations();
+    }
+  }, [fetchMyBookings, user, bookingType, viewMode]);
+
+  // Fetch user's businesses to determine if they should see the toggle
+  useEffect(() => {
+    const fetchMyBusinesses = async () => {
+      try {
+        const response = await api.get('/businesses/my-businesses');
+        setMyBusinesses(response.data || []);
+      } catch (error) {
+        console.error('Error fetching my businesses:', error);
+        setMyBusinesses([]);
+      }
+    };
+
+    if (bookingType === 'businesses') {
+      fetchMyBusinesses();
+    }
+  }, [bookingType]);
+
+  const fetchBusinessReservations = async () => {
+    setBusinessLoading(true);
+    setBusinessError(null);
+    try {
+      if (viewMode === 'made') {
+        // Reservaciones que yo hice como cliente
+        const response = await businessReservationService.getMyBusinessReservations();
+        setBusinessReservations(response.data || []);
+      } else {
+        // Reservaciones que recibí en mis negocios
+        // Primero obtener mis negocios
+        const businessesResponse = await api.get('/businesses/my-businesses');
+        const myBusinesses = businessesResponse.data || [];
+
+        // Obtener reservaciones de cada negocio
+        const allReservations = [];
+        for (const business of myBusinesses) {
+          try {
+            const reservationsResponse = await businessReservationService.getBusinessReservations(business.id);
+            const reservations = reservationsResponse.data || [];
+            allReservations.push(...reservations);
+          } catch (err) {
+            console.error(`Error fetching reservations for business ${business.id}:`, err);
+          }
+        }
+        setBusinessReservations(allReservations);
+      }
+    } catch (error) {
+      setBusinessError(error.message);
+    } finally {
+      setBusinessLoading(false);
+    }
+  };
 
   const handleCancelBooking = async (bookingId) => {
     if (!confirm('¿Estás seguro de que deseas cancelar esta reserva?')) {
@@ -88,6 +152,57 @@ function BookingsPage() {
       alert('Reserva rechazada');
     } catch (error) {
       alert('Error al rechazar la reserva: ' + error.message);
+    } finally {
+      setActioningId(null);
+    }
+  };
+
+  const handleCancelBusinessReservation = async (reservationId) => {
+    if (!confirm('¿Estás seguro de que deseas cancelar esta reservación?')) {
+      return;
+    }
+
+    setCancellingId(reservationId);
+    try {
+      await businessReservationService.cancelBusinessReservation(reservationId);
+      alert('Reservación cancelada exitosamente');
+      fetchBusinessReservations(); // Recargar lista
+    } catch (error) {
+      alert('Error al cancelar la reservación: ' + error.message);
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
+  const handleConfirmBusinessReservation = async (businessId, reservationId) => {
+    if (!confirm('¿Confirmar esta reservación?')) {
+      return;
+    }
+
+    setActioningId(reservationId);
+    try {
+      await businessReservationService.updateBusinessReservationStatus(businessId, reservationId, 'confirmed');
+      alert('Reservación confirmada exitosamente');
+      fetchBusinessReservations(); // Recargar lista
+    } catch (error) {
+      alert('Error al confirmar la reservación: ' + error.message);
+    } finally {
+      setActioningId(null);
+    }
+  };
+
+  const handleRejectBusinessReservation = async (businessId, reservationId) => {
+    if (!confirm('¿Rechazar esta reservación?')) {
+      return;
+    }
+
+    setActioningId(reservationId);
+    try {
+      await businessReservationService.updateBusinessReservationStatus(businessId, reservationId, 'cancelled');
+      alert('Reservación rechazada');
+      fetchBusinessReservations(); // Recargar lista
+    } catch (error) {
+      alert('Error al rechazar la reservación: ' + error.message);
     } finally {
       setActioningId(null);
     }
@@ -142,18 +257,28 @@ function BookingsPage() {
     }
   };
 
-  const filteredBookings = filterBookings();
+  const filterBusinessReservations = () => {
+    if (!businessReservations) return [];
 
-  if (loading) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando reservas...</p>
-        </div>
-      </div>
-    );
-  }
+    const validReservations = businessReservations.filter(r => r && r.reservationDate);
+
+    switch (filter) {
+      case 'upcoming':
+        return validReservations.filter(r => new Date(r.reservationDate) > new Date() && r.status !== 'cancelled');
+      case 'past':
+        return validReservations.filter(r => new Date(r.reservationDate) < new Date());
+      case 'cancelled':
+        return validReservations.filter(r => r.status === 'cancelled');
+      default:
+        return validReservations;
+    }
+  };
+
+  const filteredBookings = filterBookings();
+  const filteredBusinessReservations = filterBusinessReservations();
+
+  const currentLoading = bookingType === 'properties' ? loading : businessLoading;
+  const currentError = bookingType === 'properties' ? error : businessError;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -166,6 +291,76 @@ function BookingsPage() {
             : 'Gestiona tus viajes y reservas'}
         </p>
       </div>
+
+      {/* Booking Type Tabs */}
+      <div className="flex gap-4 mb-6 border-b">
+        <button
+          onClick={() => setBookingType('properties')}
+          className={`flex items-center gap-2 px-6 py-3 font-medium transition -mb-px ${
+            bookingType === 'properties'
+              ? 'text-primary border-b-2 border-primary'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <Hotel size={20} />
+          Alojamientos
+          {bookings && bookings.length > 0 && (
+            <span className="ml-1 px-2 py-0.5 bg-gray-200 text-gray-700 rounded-full text-xs">
+              {bookings.length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setBookingType('businesses')}
+          className={`flex items-center gap-2 px-6 py-3 font-medium transition -mb-px ${
+            bookingType === 'businesses'
+              ? 'text-primary border-b-2 border-primary'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <Utensils size={20} />
+          Restaurantes y Servicios
+          {businessReservations && businessReservations.length > 0 && (
+            <span className="ml-1 px-2 py-0.5 bg-gray-200 text-gray-700 rounded-full text-xs">
+              {businessReservations.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* View Mode Toggle for Business Reservations - Solo para dueños de negocios */}
+      {bookingType === 'businesses' && !currentLoading && hasBusinesses && (
+        <div className="flex gap-2 mb-4 bg-gray-100 p-1 rounded-lg w-fit">
+          <button
+            onClick={() => setViewMode('received')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+              viewMode === 'received'
+                ? 'bg-white text-primary shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Reservaciones Recibidas
+          </button>
+          <button
+            onClick={() => setViewMode('made')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+              viewMode === 'made'
+                ? 'bg-white text-primary shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Mis Reservaciones
+          </button>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {currentLoading && (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando reservas...</p>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -212,15 +407,15 @@ function BookingsPage() {
       </div>
 
       {/* Error */}
-      {error && (
+      {currentError && !currentLoading && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
           <AlertCircle className="text-red-600" size={20} />
-          <p className="text-red-600">{error}</p>
+          <p className="text-red-600">{currentError}</p>
         </div>
       )}
 
-      {/* Bookings List */}
-      {filteredBookings.length === 0 ? (
+      {/* Property Bookings List */}
+      {bookingType === 'properties' && filteredBookings.length === 0 && !loading ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
           <h3 className="text-xl font-semibold text-gray-700 mb-2">
@@ -416,6 +611,203 @@ function BookingsPage() {
                       <div className="mt-4 p-3 bg-red-50 rounded-lg">
                         <p className="text-sm text-red-600">
                           <span className="font-medium">Motivo de cancelación:</span> {booking.cancellationReason}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Business Reservations List */}
+      {bookingType === 'businesses' && filteredBusinessReservations.length === 0 && !businessLoading ? (
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+            No tienes reservaciones {filter !== 'all' && `${filter === 'upcoming' ? 'próximas' : filter === 'past' ? 'pasadas' : 'canceladas'}`}
+          </h3>
+          <p className="text-gray-600 mb-6">
+            {filter === 'all'
+              ? '¡Explora restaurantes y servicios para hacer tu primera reservación!'
+              : 'Intenta cambiar el filtro para ver otras reservaciones'}
+          </p>
+          {filter === 'all' && (
+            <Link
+              to="/search"
+              className="inline-block bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-dark"
+            >
+              Explorar negocios
+            </Link>
+          )}
+        </div>
+      ) : bookingType === 'businesses' && !businessLoading && (
+        <div className="space-y-4">
+          {filteredBusinessReservations.map((reservation) => {
+            const StatusIcon = STATUS_CONFIG[reservation.status]?.icon || Clock;
+            const canCancel = reservation.status === 'pending' || reservation.status === 'confirmed';
+            const business = reservation.business;
+
+            return (
+              <div
+                key={reservation.id}
+                className="bg-white border rounded-lg p-6 hover:shadow-md transition"
+              >
+                <div className="flex flex-col lg:flex-row gap-6">
+                  {/* Business Image */}
+                  <div className="lg:w-64 h-48 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                    {business?.logo ? (
+                      <img
+                        src={getImageUrl(business.logo, 'business')}
+                        alt={business.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-4xl">
+                        🏢
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Reservation Info */}
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <Link
+                          to={`/business/${reservation.businessId}`}
+                          className="text-xl font-bold hover:text-primary"
+                        >
+                          {business?.name || 'Negocio'}
+                        </Link>
+                        {business?.address && (
+                          <div className="flex items-center gap-1 text-gray-600 mt-1">
+                            <MapPin size={14} />
+                            <span className="text-sm">
+                              {business.address.city || 'Ciudad'}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Status Badge */}
+                      <div
+                        className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
+                          STATUS_CONFIG[reservation.status]?.color || 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        <StatusIcon size={14} />
+                        {STATUS_CONFIG[reservation.status]?.label || reservation.status}
+                      </div>
+                    </div>
+
+                    {/* Customer Info (solo para dueños) */}
+                    {viewMode === 'received' && reservation.user && (
+                      <div className="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-200">
+                        <p className="text-sm font-medium text-blue-900 mb-2">Cliente:</p>
+                        <div className="flex items-center gap-2">
+                          <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 font-semibold">
+                            {reservation.user.name?.charAt(0).toUpperCase() || 'U'}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{reservation.user.name || 'Usuario'}</p>
+                            <p className="text-sm text-gray-600">{reservation.user.email}</p>
+                            {reservation.user.phone && (
+                              <p className="text-sm text-gray-600">📞 {reservation.user.phone}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Reservation Details */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <Calendar size={18} className="text-gray-500" />
+                        <div>
+                          <p className="text-sm font-medium">Fecha</p>
+                          <p className="text-sm">{formatDate(reservation.reservationDate)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <Clock size={18} className="text-gray-500" />
+                        <div>
+                          <p className="text-sm font-medium">Hora</p>
+                          <p className="text-sm">{reservation.reservationTime}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <Users size={18} className="text-gray-500" />
+                        <div>
+                          <p className="text-sm font-medium">Personas</p>
+                          <p className="text-sm">{reservation.numberOfPeople} {reservation.numberOfPeople === 1 ? 'persona' : 'personas'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Special Requests */}
+                    {reservation.specialRequests && (
+                      <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Solicitudes especiales:</p>
+                        <p className="text-sm text-gray-600">{reservation.specialRequests}</p>
+                      </div>
+                    )}
+
+                    {/* Confirmation Code */}
+                    {reservation.confirmationCode && (
+                      <div className="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-200">
+                        <p className="text-sm font-medium text-blue-900 mb-1">Código de confirmación:</p>
+                        <p className="text-lg font-mono font-bold text-blue-700">{reservation.confirmationCode}</p>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex gap-3 flex-wrap">
+                      <Link
+                        to={`/business/${reservation.businessId}`}
+                        className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark"
+                      >
+                        Ver negocio
+                      </Link>
+
+                      {/* Botones para dueños del negocio (vista de reservaciones recibidas) */}
+                      {viewMode === 'received' && reservation.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => handleConfirmBusinessReservation(reservation.businessId, reservation.id)}
+                            disabled={actioningId === reservation.id}
+                            className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+                          >
+                            {actioningId === reservation.id ? 'Confirmando...' : 'Confirmar'}
+                          </button>
+                          <button
+                            onClick={() => handleRejectBusinessReservation(reservation.businessId, reservation.id)}
+                            disabled={actioningId === reservation.id}
+                            className="px-4 py-2 border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 disabled:opacity-50"
+                          >
+                            {actioningId === reservation.id ? 'Rechazando...' : 'Rechazar'}
+                          </button>
+                        </>
+                      )}
+
+                      {/* Cancel Button para clientes (vista de mis reservaciones) */}
+                      {viewMode === 'made' && canCancel && (
+                        <button
+                          onClick={() => handleCancelBusinessReservation(reservation.id)}
+                          disabled={cancellingId === reservation.id}
+                          className="px-4 py-2 border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 disabled:opacity-50"
+                        >
+                          {cancellingId === reservation.id ? 'Cancelando...' : 'Cancelar reservación'}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Cancellation Info */}
+                    {reservation.status === 'cancelled' && (
+                      <div className="mt-4 p-3 bg-red-50 rounded-lg">
+                        <p className="text-sm text-red-600 font-medium">
+                          Reservación cancelada
                         </p>
                       </div>
                     )}

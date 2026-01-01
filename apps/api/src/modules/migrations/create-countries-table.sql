@@ -1,0 +1,46 @@
+-- Crear tabla de países
+CREATE TABLE IF NOT EXISTS countries (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  code CHAR(2) NOT NULL UNIQUE COMMENT 'ISO 3166-1 alpha-2 code',
+  name VARCHAR(100) NOT NULL,
+  native_name VARCHAR(100) COMMENT 'Nombre en idioma local',
+  phone_code VARCHAR(10) NOT NULL COMMENT 'Código telefónico internacional',
+  flag_emoji CHAR(10) COMMENT 'Emoji de bandera',
+  currency_code CHAR(3) COMMENT 'Código de moneda ISO 4217',
+  document_types JSON COMMENT 'Tipos de documento válidos en el país',
+  active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_code (code),
+  INDEX idx_active (active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Insertar países principales de Latinoamérica
+INSERT INTO countries (code, name, native_name, phone_code, flag_emoji, currency_code, document_types) VALUES
+('PE', 'Perú', 'Perú', '+51', '🇵🇪', 'PEN', '["DNI", "Pasaporte", "Carnet de Extranjería"]'),
+('MX', 'México', 'México', '+52', '🇲🇽', 'MXN', '["INE", "Pasaporte", "Cédula Profesional"]'),
+('AR', 'Argentina', 'Argentina', '+54', '🇦🇷', 'ARS', '["DNI", "Pasaporte"]'),
+('CL', 'Chile', 'Chile', '+56', '🇨🇱', 'CLP', '["RUT", "Pasaporte"]'),
+('CO', 'Colombia', 'Colombia', '+57', '🇨🇴', 'COP', '["Cédula de Ciudadanía", "Pasaporte", "Cédula de Extranjería"]'),
+('EC', 'Ecuador', 'Ecuador', '+593', '🇪🇨', 'USD', '["Cédula", "Pasaporte"]'),
+('BO', 'Bolivia', 'Bolivia', '+591', '🇧🇴', 'BOB', '["Cédula de Identidad", "Pasaporte"]'),
+('PY', 'Paraguay', 'Paraguay', '+595', '🇵🇾', 'PYG', '["Cédula de Identidad", "Pasaporte"]'),
+('UY', 'Uruguay', 'Uruguay', '+598', '🇺🇾', 'UYU', '["Cédula de Identidad", "Pasaporte"]'),
+('VE', 'Venezuela', 'Venezuela', '+58', '🇻🇪', 'VES', '["Cédula de Identidad", "Pasaporte"]'),
+('BR', 'Brasil', 'Brasil', '+55', '🇧🇷', 'BRL', '["CPF", "Pasaporte", "RG"]'),
+('CR', 'Costa Rica', 'Costa Rica', '+506', '🇨🇷', 'CRC', '["Cédula", "Pasaporte"]'),
+('PA', 'Panamá', 'Panamá', '+507', '🇵🇦', 'PAB', '["Cédula", "Pasaporte"]'),
+('GT', 'Guatemala', 'Guatemala', '+502', '🇬🇹', 'GTQ', '["DPI", "Pasaporte"]'),
+('HN', 'Honduras', 'Honduras', '+504', '🇭🇳', 'HNL', '["Identidad", "Pasaporte"]'),
+('SV', 'El Salvador', 'El Salvador', '+503', '🇸🇻', 'USD', '["DUI", "Pasaporte"]'),
+('NI', 'Nicaragua', 'Nicaragua', '+505', '🇳🇮', 'NIO', '["Cédula", "Pasaporte"]'),
+('DO', 'República Dominicana', 'República Dominicana', '+1-809', '🇩🇴', 'DOP', '["Cédula", "Pasaporte"]'),
+('CU', 'Cuba', 'Cuba', '+53', '🇨🇺', 'CUP', '["Carnet de Identidad", "Pasaporte"]'),
+('US', 'Estados Unidos', 'United States', '+1', '🇺🇸', 'USD', '["Driver License", "Passport", "State ID"]'),
+('CA', 'Canadá', 'Canada', '+1', '🇨🇦', 'CAD', '["Driver License", "Passport", "Health Card"]'),
+('ES', 'España', 'España', '+34', '🇪🇸', 'EUR', '["DNI", "NIE", "Pasaporte"]'),
+('FR', 'Francia', 'France', '+33', '🇫🇷', 'EUR', '["CNI", "Passeport"]'),
+('GB', 'Reino Unido', 'United Kingdom', '+44', '🇬🇧', 'GBP', '["Passport", "Driver License"]'),
+('DE', 'Alemania', 'Deutschland', '+49', '🇩🇪', 'EUR', '["Personalausweis", "Reisepass"]'),
+('IT', 'Italia', 'Italia', '+39', '🇮🇹', 'EUR', '["Carta d\'Identità", "Passaporto"]'),
+('PT', 'Portugal', 'Portugal', '+351', '🇵🇹', 'EUR', '["Cartão de Cidadão", "Passaporte"]');

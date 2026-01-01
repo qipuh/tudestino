@@ -151,5 +151,225 @@ router.post('/add-business-service-settings', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/migrations/add-ticket-name
+ * Adds name column to event_tickets table
+ */
+router.post('/add-ticket-name', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('event_tickets');
+
+    if (tableDescription.name) {
+      return res.status(200).json({
+        success: true,
+        message: 'Column name already exists in event_tickets',
+        alreadyExists: true
+      });
+    }
+
+    await queryInterface.addColumn('event_tickets', 'name', {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      defaultValue: 'General', // Default temporal para registros existentes
+      comment: 'Ej: General, VIP, Estudiante, Early Bird, etc.'
+    });
+
+    // Remove default value after adding column if needed, or keep it.
+    // Generally safe to keep default or remove constraint later.
+
+    res.status(200).json({
+      success: true,
+      message: 'Successfully added name column to event_tickets',
+      alreadyExists: false
+    });
+  } catch (error) {
+    console.error('Error adding name column to event_tickets:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error adding name column',
+      error: error.message
+    });
+  }
+});
+
+// Migración para agregar isActive a events
+router.post('/add-event-isactive', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('events');
+
+    if (tableDescription.isActive) {
+      return res.status(200).json({
+        success: true,
+        message: 'Column isActive already exists in events table',
+        alreadyExists: true,
+      });
+    }
+
+    await queryInterface.addColumn('events', 'isActive', {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+      comment: 'Indica si el evento está activo (campo legacy/compatibilidad)',
+    });
+
+    res.json({
+      success: true,
+      message: 'Column isActive added to events table'
+    });
+  } catch (error) {
+    console.error('Error adding column:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error adding column',
+      error: error.message
+    });
+  }
+});
+
+// Migración para agregar description a event_tickets
+router.post('/add-ticket-description', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('event_tickets');
+
+    if (tableDescription.description) {
+      return res.status(200).json({
+        success: true,
+        message: 'Column description already exists in event_tickets table',
+        alreadyExists: true,
+      });
+    }
+
+    await queryInterface.addColumn('event_tickets', 'description', {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Descripción del tipo de entrada',
+    });
+
+    res.json({
+      success: true,
+      message: 'Column description added to event_tickets table'
+    });
+  } catch (error) {
+    console.error('Error adding column:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error adding column',
+      error: error.message
+    });
+  }
+});
+
+// Migración para agregar status a event_tickets
+router.post('/add-ticket-status', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('event_tickets');
+
+    if (tableDescription.status) {
+      return res.status(200).json({
+        success: true,
+        message: 'Column status already exists in event_tickets table',
+        alreadyExists: true,
+      });
+    }
+
+    await queryInterface.addColumn('event_tickets', 'status', {
+      type: DataTypes.ENUM('active', 'sold_out', 'paused', 'inactive'),
+      allowNull: false,
+      defaultValue: 'active',
+    });
+
+    res.json({
+      success: true,
+      message: 'Column status added to event_tickets table'
+    });
+  } catch (error) {
+    console.error('Error adding column:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error adding column',
+      error: error.message
+    });
+  }
+});
+
+// Migración completa para asegurar esquema de tickets
+router.post('/fix-ticket-schema', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('event_tickets');
+    const addedColumns = [];
+
+    // Lista de columnas críticas a verificar
+    const columnsToCheck = [
+      { name: 'isFree', type: DataTypes.BOOLEAN, options: { allowNull: false, defaultValue: false, field: 'is_free' } },
+      { name: 'price', type: DataTypes.DECIMAL(10, 2), options: { allowNull: false, defaultValue: 0 } },
+      { name: 'currency', type: DataTypes.STRING(3), options: { allowNull: false, defaultValue: 'PEN' } },
+      { name: 'displayOrder', type: DataTypes.INTEGER, options: { allowNull: false, defaultValue: 0, field: 'display_order' } },
+      { name: 'minQuantityPerOrder', type: DataTypes.INTEGER, options: { allowNull: false, defaultValue: 1, field: 'min_quantity_per_order' } },
+      { name: 'maxQuantityPerOrder', type: DataTypes.INTEGER, options: { allowNull: true, field: 'max_quantity_per_order' } },
+      { name: 'soldQuantity', type: DataTypes.INTEGER, options: { allowNull: false, defaultValue: 0, field: 'sold_quantity' } },
+      { name: 'reservedQuantity', type: DataTypes.INTEGER, options: { allowNull: false, defaultValue: 0, field: 'reserved_quantity' } }
+    ];
+
+    for (const col of columnsToCheck) {
+      if (!tableDescription[col.name]) {
+        await queryInterface.addColumn('event_tickets', col.name, {
+          type: col.type,
+          ...col.options
+        });
+        addedColumns.push(col.name);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: addedColumns.length > 0
+        ? `Added columns: ${addedColumns.join(', ')}`
+        : 'All critical columns already exist',
+      addedColumns
+    });
+  } catch (error) {
+    console.error('Error fixing ticket schema:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fixing schema',
+      error: error.message
+    });
+  }
+});
+
+// Migración para renombrar isFree a is_free si es necesario
+router.post('/fix-ticket-isfree-column', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('event_tickets');
+
+    if (tableDescription.isFree && !tableDescription.is_free) {
+      await queryInterface.renameColumn('event_tickets', 'isFree', 'is_free');
+      return res.json({
+        success: true,
+        message: 'Renamed isFree to is_free'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Column is_free already exists or isFree not found',
+      columns: Object.keys(tableDescription)
+    });
+  } catch (error) {
+    console.error('Error fixing is_free column:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fixing column',
+      error: error.message
+    });
+  }
+});
+
 export default router;
 

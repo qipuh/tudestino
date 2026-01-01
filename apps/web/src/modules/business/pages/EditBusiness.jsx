@@ -42,6 +42,15 @@ function EditBusiness() {
       instagram: '',
       twitter: '',
     },
+    operatingHours: {
+      monday: { open: '09:00', close: '18:00', closed: false },
+      tuesday: { open: '09:00', close: '18:00', closed: false },
+      wednesday: { open: '09:00', close: '18:00', closed: false },
+      thursday: { open: '09:00', close: '18:00', closed: false },
+      friday: { open: '09:00', close: '18:00', closed: false },
+      saturday: { open: '09:00', close: '18:00', closed: false },
+      sunday: { open: '09:00', close: '18:00', closed: true },
+    },
   });
   const [logoImages, setLogoImages] = useState([]);
   const [coverImages, setCoverImages] = useState([]);
@@ -82,6 +91,15 @@ function EditBusiness() {
           facebook: '',
           instagram: '',
           twitter: '',
+        },
+        operatingHours: business.operatingHours || {
+          monday: { open: '09:00', close: '18:00', closed: false },
+          tuesday: { open: '09:00', close: '18:00', closed: false },
+          wednesday: { open: '09:00', close: '18:00', closed: false },
+          thursday: { open: '09:00', close: '18:00', closed: false },
+          friday: { open: '09:00', close: '18:00', closed: false },
+          saturday: { open: '09:00', close: '18:00', closed: false },
+          sunday: { open: '09:00', close: '18:00', closed: true },
         },
       });
 
@@ -137,6 +155,19 @@ function EditBusiness() {
     setFormData({
       ...formData,
       coverImage: images[0] || ''
+    });
+  };
+
+  const handleHoursChange = (day, field, value) => {
+    setFormData({
+      ...formData,
+      operatingHours: {
+        ...formData.operatingHours,
+        [day]: {
+          ...formData.operatingHours[day],
+          [field]: value
+        }
+      }
     });
   };
 
@@ -477,6 +508,71 @@ function EditBusiness() {
                   </div>
                 </div>
               </div>
+            </section>
+
+            {/* Horarios de Atención */}
+            <section>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">⏰ Horarios de Atención</h2>
+              <div className="space-y-3">
+                {[
+                  { key: 'monday', label: 'Lunes' },
+                  { key: 'tuesday', label: 'Martes' },
+                  { key: 'wednesday', label: 'Miércoles' },
+                  { key: 'thursday', label: 'Jueves' },
+                  { key: 'friday', label: 'Viernes' },
+                  { key: 'saturday', label: 'Sábado' },
+                  { key: 'sunday', label: 'Domingo' },
+                ].map(day => (
+                  <div key={day.key} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
+                    <div className="w-28">
+                      <span className="font-medium text-gray-900">{day.label}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={!formData.operatingHours[day.key].closed}
+                        onChange={(e) => handleHoursChange(day.key, 'closed', !e.target.checked)}
+                        className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                      />
+                      <span className="text-sm text-gray-600">Abierto</span>
+                    </div>
+
+                    {!formData.operatingHours[day.key].closed && (
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm text-gray-600">De:</label>
+                          <input
+                            type="time"
+                            value={formData.operatingHours[day.key].open}
+                            onChange={(e) => handleHoursChange(day.key, 'open', e.target.value)}
+                            className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                          />
+                        </div>
+                        <span className="text-gray-400">→</span>
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm text-gray-600">Hasta:</label>
+                          <input
+                            type="time"
+                            value={formData.operatingHours[day.key].close}
+                            onChange={(e) => handleHoursChange(day.key, 'close', e.target.value)}
+                            className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {formData.operatingHours[day.key].closed && (
+                      <div className="flex-1">
+                        <span className="text-sm text-gray-500 italic">Cerrado</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-3">
+                💡 Configura los horarios de atención de tu negocio para que tus clientes sepan cuándo pueden visitarte.
+              </p>
             </section>
 
             {/* Botones */}

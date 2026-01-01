@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { X, User } from 'lucide-react';
 import { getFollowers, getFollowing } from '../../services/socialService';
+import { getImageUrl } from '../../services/api';
 import FollowButton from './FollowButton';
 import { Link } from 'react-router-dom';
 
@@ -66,7 +67,7 @@ function FollowersModal({ isOpen, onClose, userId, type = 'followers' }) {
                   <Link to={`/profile/${user.id}`} className="flex items-center gap-3 flex-1">
                     {user.avatar ? (
                       <img
-                        src={user.avatar}
+                        src={getImageUrl(user.avatar, 'social')}
                         alt={user.name}
                         className="w-12 h-12 rounded-full object-cover"
                       />

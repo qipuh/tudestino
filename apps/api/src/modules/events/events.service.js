@@ -1,5 +1,6 @@
 import Event from './event.model.js';
 import EventTicket from './event-ticket.model.js';
+import EventTicketPhase from './event-ticket-phase.model.js';
 import EventRegistration from './event-registration.model.js';
 import EventImage from './event-image.model.js';
 import { Op } from 'sequelize';
@@ -8,25 +9,34 @@ import { Op } from 'sequelize';
 Event.hasMany(EventTicket, { foreignKey: 'event_id', as: 'tickets' });
 EventTicket.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
 
+// Relación Ticket -> Phases
+EventTicket.hasMany(EventTicketPhase, { foreignKey: 'ticket_id', as: 'phases' });
+EventTicketPhase.belongsTo(EventTicket, { foreignKey: 'ticket_id', as: 'ticket' });
+
 Event.hasMany(EventRegistration, { foreignKey: 'event_id', as: 'registrations' });
 EventRegistration.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
 EventRegistration.belongsTo(EventTicket, { foreignKey: 'ticket_id', as: 'ticket' });
 
-Event.hasMany(EventImage, { foreignKey: 'event_id', as: 'images' });
+Event.hasMany(EventImage, { foreignKey: 'event_id', as: 'eventImages' });
 EventImage.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
 
 class EventsService {
   // EVENTOS
-  async createEvent(eventData, organizerId) {
+  async createEvent(eventData, userId, organizedBy = 'user', businessServiceId = null) {
     try {
-      // Generar slug si no se proporciona
-      if (!eventData.slug && eventData.title) {
-        eventData.slug = this.generateSlug(eventData.title);
+      // Validar que se proporcione organizerId O businessServiceId según organizedBy
+      if (organizedBy === 'user' && !userId) {
+        throw new Error('organizerId is required for user-organized events');
+      }
+      if (organizedBy === 'business' && !businessServiceId) {
+        throw new Error('businessServiceId is required for business-organized events');
       }
 
       const event = await Event.create({
         ...eventData,
-        organizerId
+        organizerId: organizedBy === 'user' ? userId : null,
+        businessServiceId: organizedBy === 'business' ? businessServiceId : null,
+        organizedBy
       });
       return event;
     } catch (error) {
@@ -42,20 +52,23 @@ class EventsService {
             model: EventTicket,
             as: 'tickets',
             where: { status: 'active' },
-            required: false
+            required: false,
+            include: [
+              {
+                model: EventTicketPhase,
+                as: 'phases',
+                required: false,
+                order: [['display_order', 'ASC'], ['start_date', 'ASC']]
+              }
+            ]
           },
           {
             model: EventImage,
-            as: 'images',
-            order: [['displayOrder', 'ASC']]
+            as: 'eventImages',
+            required: false
           }
         ]
       });
-
-      if (event) {
-        // Incrementar contador de vistas
-        await event.increment('viewCount');
-      }
 
       return event;
     } catch (error) {
@@ -72,19 +85,23 @@ class EventsService {
             model: EventTicket,
             as: 'tickets',
             where: { status: 'active' },
-            required: false
+            required: false,
+            include: [
+              {
+                model: EventTicketPhase,
+                as: 'phases',
+                required: false,
+                order: [['display_order', 'ASC'], ['start_date', 'ASC']]
+              }
+            ]
           },
           {
             model: EventImage,
-            as: 'images',
-            order: [['displayOrder', 'ASC']]
+            as: 'eventImages',
+            required: false
           }
         ]
       });
-
-      if (event) {
-        await event.increment('viewCount');
-      }
 
       return event;
     } catch (error) {
@@ -131,7 +148,7 @@ class EventsService {
       const {
         category,
         city,
-        startDate,
+        eventDate,
         endDate,
         isFree,
         locationType,
@@ -140,13 +157,16 @@ class EventsService {
         organizerId,
         page = 1,
         limit = 20,
-        sortBy = 'startDate',
+        sortBy = 'eventDate',
         sortOrder = 'ASC'
       } = filters;
 
+      const pageNum = parseInt(page) || 1;
+      const limitNum = parseInt(limit) || 20;
+
       const where = {
-        status: 'published',
-        isActive: true
+        // Filter by active status
+        status: 'active'
       };
 
       if (category) {
@@ -161,14 +181,14 @@ class EventsService {
         where.city = { [Op.like]: `%${city}%` };
       }
 
-      if (startDate) {
-        where.startDate = { [Op.gte]: startDate };
+      if (eventDate) {
+        where.eventDate = { [Op.gte]: eventDate };
       }
 
       if (endDate) {
         where[Op.or] = [
           { endDate: { [Op.lte]: endDate } },
-          { endDate: null, startDate: { [Op.lte]: endDate } }
+          { endDate: null, eventDate: { [Op.lte]: endDate } }
         ];
       }
 
@@ -194,16 +214,18 @@ class EventsService {
         where.organizerId = organizerId;
       }
 
-      const offset = (page - 1) * limit;
+      const offset = (pageNum - 1) * limitNum;
 
       const { count, rows } = await Event.findAndCountAll({
         where,
         include: [
           {
             model: EventImage,
-            as: 'images',
-            where: { isCover: true },
-            required: false
+            as: 'eventImages',
+            required: false,
+            // Ordenar por isCover primero para que la imagen de portada aparezca primero
+            separate: true,
+            order: [['isCover', 'DESC'], ['id', 'ASC']]
           },
           {
             model: EventTicket,
@@ -213,7 +235,7 @@ class EventsService {
             required: false
           }
         ],
-        limit,
+        limit: limitNum,
         offset,
         order: [[sortBy, sortOrder]]
       });
@@ -221,8 +243,8 @@ class EventsService {
       return {
         events: rows,
         total: count,
-        page: parseInt(page),
-        totalPages: Math.ceil(count / limit)
+        page: pageNum,
+        totalPages: Math.ceil(count / limitNum)
       };
     } catch (error) {
       throw new Error(`Error searching events: ${error.message}`);
@@ -233,20 +255,20 @@ class EventsService {
     try {
       const events = await Event.findAll({
         where: {
-          status: 'published',
-          isActive: true,
-          startDate: { [Op.gte]: new Date() }
+          status: 'active',
+          eventDate: { [Op.gte]: new Date() }
         },
         include: [
           {
             model: EventImage,
-            as: 'images',
-            where: { isCover: true },
-            required: false
+            as: 'eventImages',
+            required: false,
+            separate: true,
+            order: [['isCover', 'DESC'], ['id', 'ASC']]
           }
         ],
         limit,
-        order: [['startDate', 'ASC']]
+        order: [['eventDate', 'ASC']]
       });
 
       return events;
@@ -259,21 +281,21 @@ class EventsService {
     try {
       const events = await Event.findAll({
         where: {
-          status: 'published',
-          isActive: true,
+          status: 'active',
           isFeatured: true,
-          startDate: { [Op.gte]: new Date() }
+          eventDate: { [Op.gte]: new Date() }
         },
         include: [
           {
             model: EventImage,
-            as: 'images',
-            where: { isCover: true },
-            required: false
+            as: 'eventImages',
+            required: false,
+            separate: true,
+            order: [['isCover', 'DESC'], ['id', 'ASC']]
           }
         ],
         limit,
-        order: [['startDate', 'ASC']]
+        order: [['eventDate', 'ASC']]
       });
 
       return events;
@@ -289,9 +311,10 @@ class EventsService {
         include: [
           {
             model: EventImage,
-            as: 'images',
-            where: { isCover: true },
-            required: false
+            as: 'eventImages',
+            required: false,
+            separate: true,
+            order: [['isCover', 'DESC'], ['id', 'ASC']]
           }
         ],
         order: [['createdAt', 'DESC']]
@@ -350,11 +373,93 @@ class EventsService {
     try {
       const tickets = await EventTicket.findAll({
         where: { eventId },
+        include: [
+          {
+            model: EventTicketPhase,
+            as: 'phases',
+            required: false,
+            order: [['display_order', 'ASC']]
+          }
+        ],
         order: [['displayOrder', 'ASC'], ['price', 'ASC']]
       });
       return tickets;
     } catch (error) {
       throw new Error(`Error fetching tickets: ${error.message}`);
+    }
+  }
+
+  // FASES DE TICKETS
+  async createTicketPhase(phaseData) {
+    try {
+      const phase = await EventTicketPhase.create(phaseData);
+      return phase;
+    } catch (error) {
+      throw new Error(`Error creating ticket phase: ${error.message}`);
+    }
+  }
+
+  async updateTicketPhase(id, ticketId, updateData) {
+    try {
+      const phase = await EventTicketPhase.findOne({
+        where: { id, ticketId }
+      });
+
+      if (!phase) {
+        throw new Error('Ticket phase not found');
+      }
+
+      await phase.update(updateData);
+      return phase;
+    } catch (error) {
+      throw new Error(`Error updating ticket phase: ${error.message}`);
+    }
+  }
+
+  async deleteTicketPhase(id, ticketId) {
+    try {
+      const phase = await EventTicketPhase.findOne({
+        where: { id, ticketId }
+      });
+
+      if (!phase) {
+        throw new Error('Ticket phase not found');
+      }
+
+      await phase.destroy();
+      return { message: 'Ticket phase deleted successfully' };
+    } catch (error) {
+      throw new Error(`Error deleting ticket phase: ${error.message}`);
+    }
+  }
+
+  async getTicketPhases(ticketId) {
+    try {
+      const phases = await EventTicketPhase.findAll({
+        where: { ticketId },
+        order: [['displayOrder', 'ASC'], ['startDate', 'ASC']]
+      });
+      return phases;
+    } catch (error) {
+      throw new Error(`Error fetching ticket phases: ${error.message}`);
+    }
+  }
+
+  async getActivePhase(ticketId) {
+    try {
+      const now = new Date();
+      const phase = await EventTicketPhase.findOne({
+        where: {
+          ticketId,
+          status: 'active',
+          startDate: { [Op.lte]: now },
+          endDate: { [Op.gte]: now }
+        },
+        order: [['displayOrder', 'ASC']]
+      });
+      return phase;
+    } catch (error) {
+      throw new Error(`Error fetching active phase: ${error.message}`);
     }
   }
 
@@ -367,7 +472,7 @@ class EventsService {
       const registration = await EventRegistration.create({
         ...registrationData,
         registrationCode,
-        status: 'registered'
+        status: 'confirmed'
       });
 
       // Actualizar contador de asistentes del evento

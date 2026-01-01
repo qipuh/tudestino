@@ -18,21 +18,12 @@ class BusinessFollowService {
         throw new Error('Negocio no encontrado');
       }
 
-      // Verificar si ya sigue al negocio
+      // Verificar si ya sigue al negocio (solo activos)
       const existingFollow = await BusinessFollow.findOne({
-        where: { userId, businessId }
+        where: { userId, businessId, status: 'active' }
       });
 
       if (existingFollow) {
-        // Si ya existe pero está bloqueado, reactivarlo
-        if (existingFollow.status === 'blocked') {
-          await existingFollow.update({ status: 'active' });
-          await businessService.incrementFollowers(businessId);
-          return {
-            message: 'Ahora sigues este negocio',
-            following: true
-          };
-        }
         throw new Error('Ya sigues este negocio');
       }
 

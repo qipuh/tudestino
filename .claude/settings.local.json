@@ -214,7 +214,8 @@
       "Bash(winget install:*)",
       "Bash(powershell.exe -Command \"$password = ConvertTo-SecureString ''3@monitoSS'' -AsPlainText -Force; $cred = New-Object System.Management.Automation.PSCredential\\(''root'', $password\\); ssh root@161.132.38.151 ''cat /etc/os-release && uname -m''\")",
       "Bash(plink -ssh -batch -pw '3@monitoSS' root@161.132.38.151 'cat /etc/os-release && uname -m')",
-      "Bash(plink -ssh -batch -pw '3@monitoSS' root@161.132.38.151 'apt update && apt upgrade -y')"
+      "Bash(plink -ssh -batch -pw '3@monitoSS' root@161.132.38.151 'apt update && apt upgrade -y')",
+      "Bash(ssh root@161.132.38.151 \"cd /var/www/tudestino && cat ecosystem.config.cjs\")"
     ],
     "deny": [],
     "ask": []

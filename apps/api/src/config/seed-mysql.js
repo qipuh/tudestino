@@ -1,11 +1,17 @@
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import bcrypt from 'bcryptjs';
 import sequelize from './database-mysql.js';
 import User from '../modules/users/user.model-mysql.js';
 import { Property } from '../modules/properties/property.model.sequelize.js';
 import Booking from '../modules/bookings/booking.model.js';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Cargar variables de entorno desde el archivo .env en producción
+dotenv.config({ path: join(__dirname, '../../.env') });
 
 const seedDatabase = async () => {
   try {

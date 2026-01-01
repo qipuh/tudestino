@@ -206,7 +206,8 @@
       "Bash(npm install:*)",
       "Bash(powershell -Command \"Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force\")",
       "Bash(node check-user-verification.js:*)",
-      "Bash(node check-usernames.js:*)"
+      "Bash(node check-usernames.js:*)",
+      "Bash(./mysql.exe:*)"
     ],
     "deny": [],
     "ask": []

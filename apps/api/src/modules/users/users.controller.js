@@ -1,4 +1,5 @@
 import { usersService } from './users.service.js';
+import User from './user.model-mysql.js';
 
 export const getProfile = async (req, res, next) => {
   try {
@@ -42,6 +43,36 @@ export const getBookingHistory = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: bookings,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const uploadAvatarImage = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No se ha proporcionado ninguna imagen',
+      });
+    }
+
+    // Construir la URL del avatar
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+    // Actualizar el usuario con el nuevo avatar
+    await User.update(
+      { avatar: avatarUrl },
+      { where: { id: req.user.id } }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Avatar actualizado correctamente',
+      data: {
+        avatar: avatarUrl,
+      },
     });
   } catch (error) {
     next(error);

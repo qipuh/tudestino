@@ -87,12 +87,26 @@ function VerifyEmailPage() {
         code: verificationCode,
       });
 
-      if (response.data.success) {
-        setSuccess('¡Email verificado exitosamente! Redirigiendo...');
+      if (response.success) {
+        setSuccess('¡Email verificado exitosamente! Redirigiendo a tu cuenta...');
 
-        // Wait 2 seconds before redirecting
+        // Guardar token y usuario en localStorage y authStore
+        const { token, user: verifiedUser } = response.data;
+
+        if (token) {
+          localStorage.setItem('token', token);
+
+          // Actualizar el store de autenticación
+          useAuthStore.setState({
+            user: verifiedUser,
+            token: token,
+            isAuthenticated: true,
+          });
+        }
+
+        // Redirigir a la cuenta del usuario después de 2 segundos
         setTimeout(() => {
-          navigate('/', { replace: true });
+          navigate('/profile', { replace: true });
         }, 2000);
       }
     } catch (err) {

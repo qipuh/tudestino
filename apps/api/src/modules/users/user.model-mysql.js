@@ -180,7 +180,7 @@ const User = sequelize.define('User', {
     field: 'selfie_photo',
   },
   countryCode: {
-    type: DataTypes.VARCHAR(10),
+    type: DataTypes.STRING(10),
     allowNull: true,
     field: 'country_code',
   },

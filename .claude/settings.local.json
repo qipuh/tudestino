@@ -207,7 +207,14 @@
       "Bash(powershell -Command \"Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force\")",
       "Bash(node check-user-verification.js:*)",
       "Bash(node check-usernames.js:*)",
-      "Bash(./mysql.exe:*)"
+      "Bash(./mysql.exe:*)",
+      "Bash(ssh -o StrictHostKeyChecking=no root@161.132.38.151 \"uname -a && cat /etc/os-release\")",
+      "Bash(ssh-keygen:*)",
+      "Bash(sshpass -p '3@monitoSS' ssh -o StrictHostKeyChecking=no root@161.132.38.151 'cat /etc/os-release && uname -m')",
+      "Bash(winget install:*)",
+      "Bash(powershell.exe -Command \"$password = ConvertTo-SecureString ''3@monitoSS'' -AsPlainText -Force; $cred = New-Object System.Management.Automation.PSCredential\\(''root'', $password\\); ssh root@161.132.38.151 ''cat /etc/os-release && uname -m''\")",
+      "Bash(plink -ssh -batch -pw '3@monitoSS' root@161.132.38.151 'cat /etc/os-release && uname -m')",
+      "Bash(plink -ssh -batch -pw '3@monitoSS' root@161.132.38.151 'apt update && apt upgrade -y')"
     ],
     "deny": [],
     "ask": []

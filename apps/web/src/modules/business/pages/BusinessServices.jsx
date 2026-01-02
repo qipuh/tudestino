@@ -4,6 +4,7 @@ import useBusiness from '../hooks/useBusiness';
 import useBusinessService from '../hooks/useBusinessService';
 import useBusinessProperty from '../hooks/useBusinessProperty';
 import ServiceCard from '../components/ServiceCard';
+import { getImageUrl } from '../../../services/api';
 
 const serviceTypes = [
   { value: 'property', label: 'Propiedad / Habitación', icon: '🏠', description: 'Alojamiento, habitaciones' },
@@ -21,7 +22,7 @@ function BusinessServices() {
   const navigate = useNavigate();
   const { business, fetchBusiness } = useBusiness();
   const { services, loading, error, fetchServices, createService, updateService, deleteService } = useBusinessService();
-  const { rooms, loading: loadingRooms, fetchBusinessProperty } = useBusinessProperty();
+  const { rooms, loading: loadingRooms, fetchBusinessProperty, deleteRoom } = useBusinessProperty();
 
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
@@ -158,6 +159,22 @@ function BusinessServices() {
     }
   };
 
+  const handleDeleteRoom = async (roomId) => {
+    if (!window.confirm('¿Estás seguro de eliminar esta habitación?')) {
+      return;
+    }
+
+    const result = await deleteRoom(roomId);
+    if (result.success) {
+      await loadData();
+    }
+  };
+
+  const handleEditRoom = (room) => {
+    // Redirigir a una página de edición de habitación
+    navigate(`/business/${id}/property/edit/${room.id}`);
+  };
+
   if (!business) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -283,7 +300,7 @@ function BusinessServices() {
                   <div className="relative h-48 bg-gray-200">
                     {room.images && room.images.length > 0 ? (
                       <img
-                        src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/uploads/rooms/${room.images[0]}`}
+                        src={getImageUrl(`/uploads/rooms/${room.images[0]}`)}
                         alt={room.name}
                         className="w-full h-full object-cover"
                       />
@@ -343,12 +360,28 @@ function BusinessServices() {
                     )}
 
                     {/* Status */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-3">
                       <span className={`text-xs px-2 py-1 rounded ${
                         room.isAvailable ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                       }`}>
                         {room.isAvailable ? '✓ Disponible' : '✗ No disponible'}
                       </span>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-3 border-t border-gray-200">
+                      <button
+                        onClick={() => handleEditRoom(room)}
+                        className="flex-1 bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary-dark transition text-sm font-medium"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRoom(room.id)}
+                        className="flex-1 border border-red-500 text-red-600 py-2 px-4 rounded-lg hover:bg-red-50 transition text-sm font-medium"
+                      >
+                        Eliminar
+                      </button>
                     </div>
                   </div>
                 </div>

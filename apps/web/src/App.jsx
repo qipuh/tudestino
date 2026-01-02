@@ -8,6 +8,13 @@ import LoginPage from '@modules/auth/pages/LoginPage';
 import RegisterPage from '@modules/auth/pages/RegisterPage';
 import VerifyEmailPage from '@modules/auth/pages/VerifyEmailPage';
 import AccountPage from '@modules/auth/pages/AccountPage';
+import AccountDashboard from '@modules/account/pages/AccountDashboard';
+import AccountBusinesses from '@modules/account/pages/AccountBusinesses';
+import AccountProfile from '@modules/account/pages/AccountProfile';
+import AccountSocial from '@modules/account/pages/AccountSocial';
+import AccountEvents from '@modules/account/pages/AccountEvents';
+import AccountFavorites from '@modules/account/pages/AccountFavorites';
+import NotificationsPage from '@modules/notifications/pages/NotificationsPage';
 import BookingsPage from '@modules/bookings/pages/BookingsPage';
 import BookingDetailPage from '@modules/bookings/pages/BookingDetailPage';
 import RoomSelectionPage from '@modules/bookings/pages/RoomSelectionPage';
@@ -26,7 +33,6 @@ import RoomManagementPage from '@modules/properties/pages/RoomManagementPage';
 import AddRoomPage from '@modules/properties/pages/AddRoomPage';
 import EditRoomPage from '@modules/properties/pages/EditRoomPage';
 import HelpPage from '@modules/help/pages/HelpPage';
-import BusinessDashboard from '@modules/business/pages/BusinessDashboard';
 import CreateBusiness from '@modules/business/pages/CreateBusiness';
 import EditBusiness from '@modules/business/pages/EditBusiness';
 import BusinessDetail from '@modules/business/pages/BusinessDetail';
@@ -66,7 +72,18 @@ function App() {
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="verify-email" element={<VerifyEmailPage />} />
-        <Route path="account" element={<AccountPage />} />
+
+        {/* Account Routes - New unified account system */}
+        <Route path="account" element={<AccountDashboard />} />
+        <Route path="account/businesses" element={<AccountBusinesses />} />
+        <Route path="account/profile" element={<AccountProfile />} />
+        <Route path="account/social" element={<AccountSocial />} />
+        <Route path="account/events" element={<AccountEvents />} />
+        <Route path="account/favorites" element={<AccountFavorites />} />
+
+        {/* Notifications */}
+        <Route path="notifications" element={<NotificationsPage />} />
+
         <Route path="bookings" element={<BookingsPage />} />
         <Route path="bookings/:id" element={<BookingDetailPage />} />
         <Route path="room-selection" element={<RoomSelectionPage />} />
@@ -95,7 +112,8 @@ function App() {
         <Route path="help" element={<HelpPage />} />
 
         {/* Business Routes */}
-        <Route path="business/dashboard" element={<BusinessDashboard />} />
+        {/* Redirect old business dashboard to new account businesses */}
+        <Route path="business/dashboard" element={<AccountBusinesses />} />
         <Route path="business/create" element={<CreateBusiness />} />
         <Route path="business/:id/edit" element={<EditBusiness />} />
         <Route path="business/:id/manage" element={<BusinessManagementDashboard />} />

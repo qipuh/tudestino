@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, User } from 'lucide-react';
+import { Search, Menu, User, Bell, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 import useAuthStore from '../store/authStore';
 import { useSidebar } from '../contexts/SidebarContext';
@@ -45,92 +45,95 @@ function Header() {
 
           {/* User Menu */}
           <div className="flex items-center gap-4">
-            <Link to="/business_owner" className="hidden md:block text-sm font-medium hover:bg-gray-100 px-3 py-2 rounded-full">
-              Pon tu espacio en TuDestino
-            </Link>
+            {!user && (
+              <Link to="/business_owner" className="hidden md:block text-sm font-medium hover:bg-gray-100 px-3 py-2 rounded-full">
+                Pon tu espacio en TuDestino
+              </Link>
+            )}
 
-            <div className="relative">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="flex items-center gap-2 border border-gray-300 rounded-full px-3 py-2 hover:shadow-md transition"
-              >
-                <Menu size={16} />
-                <User size={20} className="text-gray-600" />
-              </button>
+            {user ? (
+              <>
+                {/* Logged in - Show direct links */}
+                <Link
+                  to="/account"
+                  className="hidden md:flex items-center gap-2 text-sm font-medium hover:bg-gray-100 px-3 py-2 rounded-lg transition"
+                >
+                  <User size={18} />
+                  MI CUENTA
+                </Link>
+                <Link
+                  to="/notifications"
+                  className="hidden md:flex items-center gap-2 text-sm font-medium hover:bg-gray-100 px-3 py-2 rounded-lg transition relative"
+                >
+                  <Bell size={18} />
+                  NOTIFICACIONES
+                </Link>
+                <Link
+                  to="/messages"
+                  className="hidden md:flex items-center gap-2 text-sm font-medium hover:bg-gray-100 px-3 py-2 rounded-lg transition"
+                >
+                  <MessageSquare size={18} />
+                  MENSAJES
+                </Link>
 
-              {/* Dropdown Menu */}
-              {isMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                  {user ? (
-                    <>
-                      <Link
-                        to="/account"
-                        className="block px-4 py-2 text-sm hover:bg-gray-50"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Mi cuenta
-                      </Link>
-                      <Link
-                        to="/profile"
-                        className="block px-4 py-2 text-sm hover:bg-gray-50"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Mi perfil de viajero
-                      </Link>
-                      <Link
-                        to="/feed"
-                        className="block px-4 py-2 text-sm hover:bg-gray-50"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Muro Social
-                      </Link>
-                      {user.role === 'business_owner' && (
+                {/* Mobile/Small Menu with logout */}
+                <div className="relative">
+                  <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="flex items-center gap-2 border border-gray-300 rounded-full px-3 py-2 hover:shadow-md transition"
+                  >
+                    <Menu size={16} />
+                  </button>
+
+                  {isMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+                      <div className="md:hidden">
                         <Link
-                          to="/business/dashboard"
+                          to="/account"
                           className="block px-4 py-2 text-sm hover:bg-gray-50"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          Mis Negocios
+                          Mi Cuenta
                         </Link>
-                      )}
-                      <Link
-                        to="/bookings"
-                        className="block px-4 py-2 text-sm hover:bg-gray-50"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Mis reservas
-                      </Link>
-                      <Link
-                        to="/events/my-events"
-                        className="block px-4 py-2 text-sm hover:bg-gray-50"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Mis Eventos
-                      </Link>
-                      <Link
-                        to="/messages"
-                        className="block px-4 py-2 text-sm hover:bg-gray-50"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Mensajes
-                      </Link>
-                      <Link
-                        to="/favorites"
-                        className="block px-4 py-2 text-sm hover:bg-gray-50"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Favoritos
-                      </Link>
-                      <hr className="my-2" />
+                        <Link
+                          to="/notifications"
+                          className="block px-4 py-2 text-sm hover:bg-gray-50"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          Notificaciones
+                        </Link>
+                        <Link
+                          to="/messages"
+                          className="block px-4 py-2 text-sm hover:bg-gray-50"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          Mensajes
+                        </Link>
+                        <hr className="my-2" />
+                      </div>
                       <button
                         className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
                         onClick={handleLogout}
                       >
                         Cerrar sesión
                       </button>
-                    </>
-                  ) : (
-                    <>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="relative">
+                <button
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="flex items-center gap-2 border border-gray-300 rounded-full px-3 py-2 hover:shadow-md transition"
+                >
+                  <Menu size={16} />
+                  <User size={20} className="text-gray-600" />
+                </button>
+
+                {/* Dropdown Menu for non-logged users */}
+                {isMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
                       <Link
                         to="/login"
                         className="block px-4 py-3 text-sm font-medium hover:bg-gray-50"
@@ -160,11 +163,10 @@ function Header() {
                       >
                         Ayuda
                       </Link>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

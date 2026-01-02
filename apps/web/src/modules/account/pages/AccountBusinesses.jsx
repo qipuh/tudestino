@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import useBusiness from '../hooks/useBusiness';
-import BusinessCard from '../components/BusinessCard';
+import { Link } from 'react-router-dom';
+import useBusiness from '../../business/hooks/useBusiness';
+import BusinessCard from '../../business/components/BusinessCard';
+import UserAccountLayout from '../../../layouts/UserAccountLayout';
 
-function BusinessDashboard() {
-  const navigate = useNavigate();
+function AccountBusinesses() {
   const { businesses, loading, error, fetchMyBusinesses, deleteBusiness } = useBusiness();
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
@@ -19,13 +19,12 @@ function BusinessDashboard() {
   const handleDelete = async (businessId) => {
     if (deleteConfirm !== businessId) {
       setDeleteConfirm(businessId);
-      setTimeout(() => setDeleteConfirm(null), 3000); // Resetear después de 3 segundos
+      setTimeout(() => setDeleteConfirm(null), 3000);
       return;
     }
 
     const result = await deleteBusiness(businessId);
     if (result.success) {
-      // Recargar lista
       loadBusinesses();
       setDeleteConfirm(null);
     }
@@ -33,22 +32,20 @@ function BusinessDashboard() {
 
   if (loading && businesses.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-center items-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-gray-600">Cargando negocios...</p>
-            </div>
+      <UserAccountLayout activeMenu="businesses">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando negocios...</p>
           </div>
         </div>
-      </div>
+      </UserAccountLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
+    <UserAccountLayout activeMenu="businesses">
+      <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
@@ -163,8 +160,8 @@ function BusinessDashboard() {
           </div>
         </div>
       </div>
-    </div>
+    </UserAccountLayout>
   );
 }
 
-export default BusinessDashboard;
+export default AccountBusinesses;

@@ -103,6 +103,55 @@ class VerificationService {
   }
 
   /**
+   * Envía código de verificación por WhatsApp usando API de Factiliza
+   */
+  async sendWhatsAppVerification(phone, code, userName = '') {
+    try {
+      const token = process.env.FACTILIZA_TOKEN;
+      const instanceName = process.env.FACTILIZA_INSTANCE;
+
+      if (!token || !instanceName) {
+        throw new Error('Factiliza credentials not configured');
+      }
+
+      // Formatear número: asegurarse que tenga código de país (51 para Perú)
+      let formattedPhone = phone.replace(/\D/g, ''); // Remover caracteres no numéricos
+      if (formattedPhone.startsWith('0')) {
+        formattedPhone = formattedPhone.substring(1);
+      }
+      if (!formattedPhone.startsWith('51')) {
+        formattedPhone = '51' + formattedPhone;
+      }
+
+      const message = `🎉 *¡Bienvenido a TuDestino!*\n\nHola${userName ? ` ${userName}` : ''},\n\nTu código de verificación es:\n\n*${code}*\n\n⏱️ Este código expira en 10 minutos.\n\nSi no solicitaste este código, puedes ignorar este mensaje.\n\n_TuDestino - Tu destino perfecto te espera_ 🌎`;
+
+      const response = await fetch(`https://apiwsp.factiliza.com/v1/message/sendtext/${instanceName}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          number: formattedPhone,
+          text: message
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log('📱 WhatsApp enviado:', formattedPhone);
+        return { success: true, message: 'WhatsApp enviado exitosamente' };
+      } else {
+        throw new Error(data.message || 'Error enviando WhatsApp');
+      }
+    } catch (error) {
+      console.error('❌ Error enviando WhatsApp:', error);
+      throw new Error(`Error sending WhatsApp verification: ${error.message}`);
+    }
+  }
+
+  /**
    * Envía código de verificación por SMS (simulado por ahora)
    * En producción integrar con Twilio, AWS SNS, o similar
    */

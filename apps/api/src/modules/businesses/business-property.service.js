@@ -228,10 +228,17 @@ class BusinessPropertyService {
         where: {
           businessId: businessId
         },
-        include: [{
-          model: Room,
-          as: 'rooms'
-        }],
+        include: [
+          {
+            model: Room,
+            as: 'rooms'
+          },
+          {
+            model: Business,
+            as: 'business',
+            attributes: ['id', 'name', 'slug', 'logo', 'ownerId', 'followersCount']
+          }
+        ],
         order: [['createdAt', 'DESC']]
       });
 

@@ -10,6 +10,8 @@ const AMENITY_ICONS = {
   kitchen: { icon: '🍳', name: 'Cocina' },
   parking: { icon: '🅿️', name: 'Estacionamiento' },
   pool: { icon: '🏊', name: 'Piscina' },
+  swimming_pool: { icon: '🏊', name: 'Piscina' },
+  restaurant: { icon: '🍽️', name: 'Restaurante' },
   gym: { icon: '💪', name: 'Gimnasio' },
   ac: { icon: '❄️', name: 'Aire acondicionado' },
   heating: { icon: '🔥', name: 'Calefacción' },

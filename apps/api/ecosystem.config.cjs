@@ -1,5 +1,5 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+require('dotenv').config({ path: path.join(__dirname, '.env.production') });
 
 module.exports = {
   apps: [{
@@ -24,7 +24,15 @@ module.exports = {
       WEB_URL: process.env.WEB_URL || 'https://tudestino.lat',
       API_URL: process.env.API_URL || 'https://api.tudestino.lat',
       CORS_ORIGIN: process.env.CORS_ORIGIN || 'https://tudestino.lat,https://admin.tudestino.lat,https://api.tudestino.lat',
-      CLIENT_URL: process.env.CLIENT_URL || 'https://tudestino.lat'
+      CLIENT_URL: process.env.CLIENT_URL || 'https://tudestino.lat',
+      FACTILIZA_TOKEN: process.env.FACTILIZA_TOKEN,
+      FACTILIZA_INSTANCE: process.env.FACTILIZA_INSTANCE,
+      SMTP_HOST: process.env.SMTP_HOST,
+      SMTP_PORT: process.env.SMTP_PORT,
+      SMTP_USER: process.env.SMTP_USER,
+      SMTP_PASS: process.env.SMTP_PASS,
+      EMAIL_FROM: process.env.EMAIL_FROM,
+      EMAIL_FROM_NAME: process.env.EMAIL_FROM_NAME
     }
   }]
 };

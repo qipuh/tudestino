@@ -121,11 +121,11 @@ function BusinessDetail({ businessIdProp }) {
   const loadProperty = async () => {
     try {
       setLoadingProperty(true);
-      // Buscar la propiedad asociada al negocio (público, no requiere auth)
-      const response = await api.get(`/properties/search?businessId=${id}`);
+      // Buscar la propiedad asociada al negocio
+      const response = await api.get(`/businesses/${id}/properties`);
 
-      if (response.data && response.data.length > 0) {
-        const propertyData = response.data[0];
+      if (response.data) {
+        const propertyData = response.data;
         setProperty(propertyData);
         setRooms(propertyData.rooms || []);
 

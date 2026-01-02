@@ -139,8 +139,11 @@ class VerificationService {
 
       const data = await response.json();
 
-      if (data.success) {
-        console.log('📱 WhatsApp enviado:', formattedPhone);
+      console.log('📱 Factiliza response:', data);
+
+      // La API de Factiliza retorna success:true o un mensaje de éxito
+      if (data.success || data.message === 'Mensaje Enviado' || response.ok) {
+        console.log('📱 WhatsApp enviado exitosamente a:', formattedPhone);
         return { success: true, message: 'WhatsApp enviado exitosamente' };
       } else {
         throw new Error(data.message || 'Error enviando WhatsApp');

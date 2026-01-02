@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, User, Bell, MessageSquare } from 'lucide-react';
+import { Search, Menu, User, Bell, MessageSquare, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import useAuthStore from '../store/authStore';
 import { useSidebar } from '../contexts/SidebarContext';
@@ -79,9 +79,10 @@ function Header() {
                 {/* Logout button */}
                 <button
                   onClick={handleLogout}
-                  className="hidden md:block text-sm font-medium hover:bg-gray-100 px-3 py-2 rounded-lg transition"
+                  className="hidden md:flex items-center gap-2 text-sm font-medium hover:bg-gray-100 p-2 rounded-lg transition"
+                  title="Cerrar sesión"
                 >
-                  Cerrar sesión
+                  <LogOut size={18} />
                 </button>
 
                 {/* Mobile Menu */}

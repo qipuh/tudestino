@@ -1100,8 +1100,15 @@ function BusinessDetail({ businessIdProp }) {
 
           <div className="mt-6 flex gap-3">
             <Link
+              to={`/business/${business.id}/manage`}
+              className="px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg font-bold flex items-center gap-2 transition-all"
+            >
+              <Grid size={20} />
+              Panel de Gestión
+            </Link>
+            <Link
               to={`/business/${business.id}/edit`}
-              className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium"
+              className="px-6 py-2 bg-white border-2 border-primary text-primary rounded-lg hover:bg-primary hover:text-white font-medium transition-all"
             >
               Editar Información
             </Link>

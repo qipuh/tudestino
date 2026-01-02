@@ -30,6 +30,7 @@ import BusinessDashboard from '@modules/business/pages/BusinessDashboard';
 import CreateBusiness from '@modules/business/pages/CreateBusiness';
 import EditBusiness from '@modules/business/pages/EditBusiness';
 import BusinessDetail from '@modules/business/pages/BusinessDetail';
+import BusinessManagementDashboard from '@modules/business/pages/BusinessManagementDashboard';
 import BusinessServices from '@modules/business/pages/BusinessServices';
 import RestaurantMenu from '@modules/business/pages/RestaurantMenu';
 import CreatePropertySimplified from '@modules/business/pages/CreatePropertySimplified';
@@ -93,6 +94,7 @@ function App() {
         <Route path="business/dashboard" element={<BusinessDashboard />} />
         <Route path="business/create" element={<CreateBusiness />} />
         <Route path="business/:id/edit" element={<EditBusiness />} />
+        <Route path="business/:id/manage" element={<BusinessManagementDashboard />} />
         <Route path="business/:id" element={<BusinessDetail />} />
         <Route path="business/:id/services" element={<BusinessServices />} />
         <Route path="business/:id/menu" element={<RestaurantMenu />} />

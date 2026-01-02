@@ -36,6 +36,16 @@ function BusinessServices() {
 
   const [showRoomModal, setShowRoomModal] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
+  const [roomFormData, setRoomFormData] = useState({
+    name: '',
+    roomType: 'double',
+    quantity: 1,
+    guestCapacity: 2,
+    pricePerNight: '',
+    amenities: [],
+    isAvailable: true,
+    images: []
+  });
 
   useEffect(() => {
     if (id) {
@@ -175,6 +185,17 @@ function BusinessServices() {
 
   const handleEditRoom = (room) => {
     setEditingRoom(room);
+    // Cargar todos los datos de la habitación en el formulario
+    setRoomFormData({
+      name: room.name || '',
+      roomType: room.roomType || 'double',
+      quantity: room.quantity || 1,
+      guestCapacity: room.guestCapacity || 2,
+      pricePerNight: room.pricePerNight || '',
+      amenities: room.amenities || [],
+      isAvailable: room.isAvailable !== undefined ? room.isAvailable : true,
+      images: room.images || []
+    });
     setShowRoomModal(true);
   };
 
@@ -182,17 +203,40 @@ function BusinessServices() {
     e.preventDefault();
     if (!editingRoom) return;
 
-    const result = await updateRoom(editingRoom.id, {
-      pricePerNight: editingRoom.pricePerNight,
-      isAvailable: editingRoom.isAvailable,
-      name: editingRoom.name,
-    });
+    const result = await updateRoom(editingRoom.id, roomFormData);
 
     if (result.success) {
       setShowRoomModal(false);
       setEditingRoom(null);
+      setRoomFormData({
+        name: '',
+        roomType: 'double',
+        quantity: 1,
+        guestCapacity: 2,
+        pricePerNight: '',
+        amenities: [],
+        isAvailable: true,
+        images: []
+      });
       await loadData();
     }
+  };
+
+  const handleRoomFormChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setRoomFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleAmenityToggle = (amenity) => {
+    setRoomFormData(prev => ({
+      ...prev,
+      amenities: prev.amenities.includes(amenity)
+        ? prev.amenities.filter(a => a !== amenity)
+        : [...prev.amenities, amenity]
+    }));
   };
 
   if (!business) {
@@ -703,8 +747,8 @@ function BusinessServices() {
 
       {/* Modal Edit Room */}
       {showRoomModal && editingRoom && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-lg w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-3xl w-full my-8">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold">Editar Habitación</h2>
@@ -720,49 +764,161 @@ function BusinessServices() {
               </div>
 
               <form onSubmit={handleSaveRoom}>
-                <div className="space-y-4">
-                  {/* Name */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nombre
-                    </label>
-                    <input
-                      type="text"
-                      value={editingRoom.name || ''}
-                      onChange={(e) => setEditingRoom({ ...editingRoom, name: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                    />
+                <div className="space-y-6 max-h-[70vh] overflow-y-auto px-2">
+                  {/* Name and Type */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Nombre de la habitación *
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={roomFormData.name}
+                        onChange={handleRoomFormChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Tipo
+                      </label>
+                      <select
+                        name="roomType"
+                        value={roomFormData.roomType}
+                        onChange={handleRoomFormChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                      >
+                        <option value="single">Individual</option>
+                        <option value="double">Doble</option>
+                        <option value="triple">Triple</option>
+                        <option value="quad">Cuádruple</option>
+                        <option value="suite">Suite</option>
+                        <option value="family">Familiar</option>
+                      </select>
+                    </div>
                   </div>
 
-                  {/* Price */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Precio por noche (S/.)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={editingRoom.pricePerNight || ''}
-                      onChange={(e) => setEditingRoom({ ...editingRoom, pricePerNight: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                    />
+                  {/* Quantity, Capacity, Price */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Cantidad
+                      </label>
+                      <input
+                        type="number"
+                        name="quantity"
+                        min="1"
+                        value={roomFormData.quantity}
+                        onChange={handleRoomFormChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Capacidad
+                      </label>
+                      <input
+                        type="number"
+                        name="guestCapacity"
+                        min="1"
+                        value={roomFormData.guestCapacity}
+                        onChange={handleRoomFormChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Precio (S/.) *
+                      </label>
+                      <input
+                        type="number"
+                        name="pricePerNight"
+                        step="0.01"
+                        min="0"
+                        value={roomFormData.pricePerNight}
+                        onChange={handleRoomFormChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                        required
+                      />
+                    </div>
                   </div>
+
+                  {/* Amenities */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Características de la habitación
+                    </label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { value: 'tv', label: 'TV', icon: '📺' },
+                        { value: 'wifi', label: 'WiFi', icon: '📶' },
+                        { value: 'air_conditioning', label: 'Aire', icon: '❄️' },
+                        { value: 'heating', label: 'Calefacción', icon: '🔥' },
+                        { value: 'private_bathroom', label: 'Baño privado', icon: '🚿' },
+                        { value: 'balcony', label: 'Balcón', icon: '🪟' },
+                        { value: 'minibar', label: 'Minibar', icon: '🍷' },
+                        { value: 'safe_box', label: 'Caja fuerte', icon: '🔒' },
+                        { value: 'jacuzzi_tub', label: 'Jacuzzi', icon: '🛁' },
+                      ].map((amenity) => (
+                        <label
+                          key={amenity.value}
+                          className={`flex items-center gap-2 p-2 border rounded-lg cursor-pointer transition text-sm ${
+                            roomFormData.amenities.includes(amenity.value)
+                              ? 'border-primary bg-primary bg-opacity-5'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={roomFormData.amenities.includes(amenity.value)}
+                            onChange={() => handleAmenityToggle(amenity.value)}
+                            className="sr-only"
+                          />
+                          <span>{amenity.icon}</span>
+                          <span>{amenity.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Images */}
+                  {roomFormData.images && roomFormData.images.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Imágenes actuales ({roomFormData.images.length})
+                      </label>
+                      <div className="grid grid-cols-4 gap-3">
+                        {roomFormData.images.map((img, idx) => (
+                          <div key={idx} className="relative aspect-square">
+                            <img
+                              src={getImageUrl(`/uploads/rooms/${img}`)}
+                              alt={`Imagen ${idx + 1}`}
+                              className="w-full h-full object-cover rounded-lg border border-gray-200"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Nota: Por ahora no puedes agregar o eliminar imágenes desde aquí. Contacta con soporte si necesitas cambiar las fotos.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Availability */}
-                  <div>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={editingRoom.isAvailable}
-                        onChange={(e) => setEditingRoom({ ...editingRoom, isAvailable: e.target.checked })}
-                        className="h-4 w-4"
-                      />
-                      <span className="text-sm font-medium text-gray-700">Disponible para reservas</span>
-                    </label>
-                  </div>
-
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-                    <strong>Nota:</strong> Por ahora solo puedes editar el nombre, precio y disponibilidad. Para cambiar las características, amenidades o imágenes, contacta con soporte.
+                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                    <input
+                      type="checkbox"
+                      name="isAvailable"
+                      checked={roomFormData.isAvailable}
+                      onChange={handleRoomFormChange}
+                      className="h-5 w-5"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-gray-700 block">Disponible para reservas</span>
+                      <span className="text-xs text-gray-500">Desactiva esta opción para ocultar temporalmente la habitación</span>
+                    </div>
                   </div>
                 </div>
 

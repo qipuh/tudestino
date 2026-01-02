@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import useBusiness from '../hooks/useBusiness';
 import ImageUpload from '../../../components/ImageUpload';
+import BusinessLayout from '../components/BusinessLayout';
 
 const businessTypes = [
   { value: 'hotel', label: 'Hotel / Alojamiento', icon: '🏨' },
@@ -225,13 +226,10 @@ function EditBusiness() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
+    <BusinessLayout activeMenu="edit">
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <Link to={`/business/${id}`} className="text-primary hover:text-primary-dark mb-4 inline-block">
-            ← Volver al negocio
-          </Link>
           <h1 className="text-3xl font-bold text-gray-900">Editar Negocio</h1>
           <p className="text-gray-600 mt-2">
             Actualiza la información de tu negocio
@@ -595,7 +593,7 @@ function EditBusiness() {
           </form>
         </div>
       </div>
-    </div>
+    </BusinessLayout>
   );
 }
 

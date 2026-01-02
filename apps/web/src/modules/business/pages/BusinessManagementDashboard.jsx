@@ -1,29 +1,22 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   Calendar,
   DollarSign,
   Users,
   Star,
-  Home,
-  Edit,
-  Settings,
-  Eye,
-  MessageSquare,
-  TrendingUp,
   Package,
-  BarChart3,
-  ArrowLeft
+  Eye,
+  TrendingUp
 } from 'lucide-react';
-import api, { getImageUrl } from '../../../services/api';
+import api from '../../../services/api';
 import StatsCard from '../components/StatsCard';
-import QuickActionCard from '../components/QuickActionCard';
 import ReservationList from '../components/ReservationList';
 import ActivityFeed from '../components/ActivityFeed';
+import BusinessLayout from '../components/BusinessLayout';
 
 function BusinessManagementDashboard() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -138,109 +131,8 @@ function BusinessManagementDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
-      {/* Header con información del negocio */}
-      <div className="bg-gradient-to-r from-primary to-primary-dark text-white">
-        <div className="container mx-auto px-4 py-8">
-          <button
-            onClick={() => navigate('/business/dashboard')}
-            className="flex items-center gap-2 text-white/90 hover:text-white mb-4 transition"
-          >
-            <ArrowLeft size={20} />
-            Volver a mis negocios
-          </button>
-
-          <div className="flex items-start gap-6">
-            {business.logo ? (
-              <img
-                src={getImageUrl(business.logo, 'business')}
-                alt={business.name}
-                className="w-24 h-24 rounded-lg object-cover border-4 border-white/20"
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-lg bg-white/20 flex items-center justify-center">
-                <Home size={40} />
-              </div>
-            )}
-
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2 text-white">{business.name}</h1>
-              <p className="text-white/90 mb-3">{business.description}</p>
-              <div className="flex flex-wrap gap-3">
-                <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
-                  {business.businessType}
-                </span>
-                <span className="bg-white/20 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                  <Star size={14} fill="currentColor" />
-                  {stats.rating || 'N/A'}
-                </span>
-              </div>
-            </div>
-
-            <Link
-              to={`/business/${id}`}
-              className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition flex items-center gap-2"
-            >
-              <Eye size={18} />
-              Ver página pública
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Menú de acciones rápidas */}
-      <div className="bg-white border-b shadow-sm">
-        <div className="container mx-auto px-4">
-          <div className="flex overflow-x-auto gap-1 py-2">
-            <Link
-              to={`/business/${id}/edit`}
-              className="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 rounded-lg transition whitespace-nowrap"
-            >
-              <Edit size={18} className="text-primary" />
-              <span className="text-sm font-medium text-gray-700">Editar Negocio</span>
-            </Link>
-            <Link
-              to={`/business/${id}/services`}
-              className="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 rounded-lg transition whitespace-nowrap"
-            >
-              {business.businessType === 'property' ? <Home size={18} className="text-blue-600" /> : <Package size={18} className="text-blue-600" />}
-              <span className="text-sm font-medium text-gray-700">
-                {business.businessType === 'property' ? 'Habitaciones' : 'Servicios'}
-              </span>
-            </Link>
-            <Link
-              to={`/business/${id}/reservations`}
-              className="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 rounded-lg transition whitespace-nowrap"
-            >
-              <Calendar size={18} className="text-green-600" />
-              <span className="text-sm font-medium text-gray-700">Reservas</span>
-            </Link>
-            <Link
-              to={`/business/${id}/posts`}
-              className="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 rounded-lg transition whitespace-nowrap"
-            >
-              <MessageSquare size={18} className="text-purple-600" />
-              <span className="text-sm font-medium text-gray-700">Posts</span>
-            </Link>
-            <Link
-              to={`/business/${id}/analytics`}
-              className="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 rounded-lg transition whitespace-nowrap"
-            >
-              <BarChart3 size={18} className="text-orange-600" />
-              <span className="text-sm font-medium text-gray-700">Estadísticas</span>
-            </Link>
-            <Link
-              to={`/business/${id}/settings`}
-              className="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 rounded-lg transition whitespace-nowrap"
-            >
-              <Settings size={18} className="text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">Configuración</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 mt-6">
+    <BusinessLayout activeMenu="manage">
+      <div>
         {/* Estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
           <StatsCard
@@ -321,7 +213,7 @@ function BusinessManagementDashboard() {
           </div>
         </div>
       </div>
-    </div>
+    </BusinessLayout>
   );
 }
 

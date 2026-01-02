@@ -32,6 +32,10 @@ import EditBusiness from '@modules/business/pages/EditBusiness';
 import BusinessDetail from '@modules/business/pages/BusinessDetail';
 import BusinessManagementDashboard from '@modules/business/pages/BusinessManagementDashboard';
 import BusinessServices from '@modules/business/pages/BusinessServices';
+import BusinessReservations from '@modules/business/pages/BusinessReservations';
+import BusinessPosts from '@modules/business/pages/BusinessPosts';
+import BusinessAnalytics from '@modules/business/pages/BusinessAnalytics';
+import BusinessSettings from '@modules/business/pages/BusinessSettings';
 import RestaurantMenu from '@modules/business/pages/RestaurantMenu';
 import CreatePropertySimplified from '@modules/business/pages/CreatePropertySimplified';
 import CreateRoomsSimplified from '@modules/business/pages/CreateRoomsSimplified';
@@ -95,8 +99,12 @@ function App() {
         <Route path="business/create" element={<CreateBusiness />} />
         <Route path="business/:id/edit" element={<EditBusiness />} />
         <Route path="business/:id/manage" element={<BusinessManagementDashboard />} />
-        <Route path="business/:id" element={<BusinessDetail />} />
         <Route path="business/:id/services" element={<BusinessServices />} />
+        <Route path="business/:id/reservations" element={<BusinessReservations />} />
+        <Route path="business/:id/posts" element={<BusinessPosts />} />
+        <Route path="business/:id/analytics" element={<BusinessAnalytics />} />
+        <Route path="business/:id/settings" element={<BusinessSettings />} />
+        <Route path="business/:id" element={<BusinessDetail />} />
         <Route path="business/:id/menu" element={<RestaurantMenu />} />
         <Route path="business/:businessId/property/create" element={<CreatePropertySimplified />} />
         <Route path="business/:businessId/property/create-rooms" element={<CreateRoomsSimplified />} />

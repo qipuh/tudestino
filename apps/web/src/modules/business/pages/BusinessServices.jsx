@@ -5,6 +5,7 @@ import useBusinessService from '../hooks/useBusinessService';
 import useBusinessProperty from '../hooks/useBusinessProperty';
 import ServiceCard from '../components/ServiceCard';
 import { getImageUrl } from '../../../services/api';
+import BusinessLayout from '../components/BusinessLayout';
 
 const serviceTypes = [
   { value: 'property', label: 'Propiedad / Habitación', icon: '🏠', description: 'Alojamiento, habitaciones' },
@@ -255,27 +256,14 @@ function BusinessServices() {
   console.log('[BusinessServices] Render - rooms:', rooms);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
-        <div className="mb-6">
-          <Link to="/business/dashboard" className="text-primary hover:text-primary-dark">
-            Dashboard
-          </Link>
-          <span className="mx-2 text-gray-400">/</span>
-          <Link to={`/business/${id}`} className="text-primary hover:text-primary-dark">
-            {business.name}
-          </Link>
-          <span className="mx-2 text-gray-400">/</span>
-          <span className="text-gray-600">Servicios</span>
-        </div>
-
+    <BusinessLayout activeMenu="services">
+      <div>
         {/* Header */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                {business.businessType === 'hotel' ? 'Habitaciones' : 'Servicios'} de {business.name}
+                {business.businessType === 'hotel' ? 'Habitaciones' : 'Servicios'}
               </h1>
               <p className="text-gray-600 mt-1">
                 {business.businessType === 'hotel'
@@ -947,7 +935,7 @@ function BusinessServices() {
           </div>
         </div>
       )}
-    </div>
+    </BusinessLayout>
   );
 }
 

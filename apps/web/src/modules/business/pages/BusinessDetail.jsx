@@ -213,6 +213,13 @@ function BusinessDetail({ businessIdProp }) {
   // Verificar si el usuario actual es el dueño del negocio
   const isOwner = business && user && business.ownerId === user.id;
 
+  // Si es el dueño, redirigir al panel de gestión
+  useEffect(() => {
+    if (isOwner && business && !businessIdProp) {
+      navigate(`/business/${business.id}/manage`, { replace: true });
+    }
+  }, [isOwner, business, businessIdProp, navigate]);
+
   if (loading && !business) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
+import { getImageUrl } from '../services/api';
 
 function ImageUpload({
   label = 'Subir imagen',
@@ -198,7 +199,7 @@ function ImageUpload({
           {images.map((img, index) => (
             <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
               <img
-                src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/uploads/${uploadType}/${img}`}
+                src={getImageUrl(img.startsWith('/uploads/') || img.startsWith('http') ? img : `/uploads/${uploadType}/${img}`, uploadType)}
                 alt={`Imagen ${index + 1}`}
                 className="w-full h-full object-cover"
               />

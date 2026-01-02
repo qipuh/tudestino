@@ -234,7 +234,7 @@ function AccountPage() {
                   <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
                     {user.avatar ? (
                       <img
-                        src={user.avatar.startsWith('http') ? user.avatar : `http://localhost:3000${user.avatar}`}
+                        src={getImageUrl(user.avatar)}
                         alt={user.name}
                         className="w-full h-full object-cover"
                       />

@@ -104,7 +104,7 @@ function ReelCard({ reel, onDelete, currentUserId, isActive }) {
       {/* Video */}
       <video
         ref={videoRef}
-        src={`http://localhost:3000${reel.videoUrl}`}
+        src={getImageUrl(reel.videoUrl)}
         loop
         playsInline
         muted={isMuted}

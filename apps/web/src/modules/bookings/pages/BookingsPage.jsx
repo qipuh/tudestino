@@ -5,6 +5,7 @@ import useBookingStore from '../../../store/bookingStore';
 import useAuthStore from '../../../store/authStore';
 import * as businessReservationService from '../../../services/businessReservationService';
 import api, { getImageUrl } from '../../../services/api';
+import UserAccountLayout from '../../../layouts/UserAccountLayout';
 
 const STATUS_CONFIG = {
   pending: {
@@ -281,16 +282,17 @@ function BookingsPage() {
   const currentError = bookingType === 'properties' ? error : businessError;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Mis Reservas</h1>
-        <p className="text-gray-600">
-          {user?.role === 'host'
-            ? 'Reservas de tus propiedades'
-            : 'Gestiona tus viajes y reservas'}
-        </p>
-      </div>
+    <UserAccountLayout activeMenu="bookings">
+      <div>
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Mis Reservas</h1>
+          <p className="text-gray-600">
+            {user?.role === 'host'
+              ? 'Reservas de tus propiedades'
+              : 'Gestiona tus viajes y reservas'}
+          </p>
+        </div>
 
       {/* Booking Type Tabs */}
       <div className="flex gap-4 mb-6 border-b">
@@ -818,7 +820,8 @@ function BookingsPage() {
           })}
         </div>
       )}
-    </div>
+      </div>
+    </UserAccountLayout>
   );
 }
 

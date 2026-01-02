@@ -215,7 +215,21 @@
       "Bash(powershell.exe -Command \"$password = ConvertTo-SecureString ''3@monitoSS'' -AsPlainText -Force; $cred = New-Object System.Management.Automation.PSCredential\\(''root'', $password\\); ssh root@161.132.38.151 ''cat /etc/os-release && uname -m''\")",
       "Bash(plink -ssh -batch -pw '3@monitoSS' root@161.132.38.151 'cat /etc/os-release && uname -m')",
       "Bash(plink -ssh -batch -pw '3@monitoSS' root@161.132.38.151 'apt update && apt upgrade -y')",
-      "Bash(ssh root@161.132.38.151 \"cd /var/www/tudestino && cat ecosystem.config.cjs\")"
+      "Bash(ssh root@161.132.38.151 \"cd /var/www/tudestino && cat ecosystem.config.cjs\")",
+      "Bash(ssh root@161.132.38.151 \"curl -s http://localhost:3000/api/events/search | head -c 2000\")",
+      "Bash(ssh root@161.132.38.151 \"cat /var/www/tudestino/apps/web/.env\")",
+      "Bash(ssh root@161.132.38.151 \"grep -A 10 ''location /uploads'' /etc/nginx/sites-available/tudestino-web.conf\")",
+      "Bash(ssh root@161.132.38.151 \"ls /etc/nginx/sites-available/\")",
+      "Bash(ssh root@161.132.38.151 \"grep -A 10 ''location /uploads'' /etc/nginx/sites-available/tudestino\")",
+      "Bash(ssh root@161.132.38.151 \"cat /etc/nginx/sites-available/tudestino | grep -A 5 uploads\")",
+      "Bash(ssh root@161.132.38.151 \"cd /var/www/tudestino/apps/web && sed -i ''2a\\\\n# Server URL for static files \\(images, videos, etc.\\)\\\\nVITE_SERVER_URL=https://tudestino.pe'' .env && cat .env\")",
+      "Bash(ssh root@161.132.38.151 \"cat > /var/www/tudestino/apps/web/.env << ''EOF''\n# API URL - Producción \\(dominio principal .pe\\)\nVITE_API_URL=https://api.tudestino.pe/api\n\n# Server URL for static files \\(images, videos, etc.\\)\nVITE_SERVER_URL=https://tudestino.pe\n\n# Google Maps\nVITE_GOOGLE_MAPS_API_KEY=your-google-maps-api-key\n\n# Culqi - Payment Gateway \\(Production keys\\)\n# Obtén tus claves en: https://panel.culqi.com/\nVITE_CULQI_PUBLIC_KEY=pk_live_your_production_key\n\n# PayPal - Payment Gateway \\(Production\\)\n# Obtén tu Client ID en: https://developer.paypal.com/\n# Para producción usa el Live Client ID\nVITE_PAYPAL_CLIENT_ID=AeL-kN8KP_lLSEwVv5G7X8NvLy6-0im5F9MF0Qm7XqTr8QzVE8YF5xK3X5wZJfPxE0zME5F7p5P9C3Jv\nEOF\n\")",
+      "Bash(ssh root@161.132.38.151 \"cd /var/www/tudestino && git pull && cd apps/web && NODE_ENV=production npm run build\")",
+      "Bash(ssh root@161.132.38.151 \"cd /var/www/tudestino && git pull\")",
+      "Bash(ssh root@161.132.38.151 \"cd /var/www/tudestino/apps/web && NODE_ENV=production npm run build 2>&1 | tail -20\")",
+      "Bash(ssh root@161.132.38.151 \"grep -o ''api\\\\.tudestino\\\\.pe'' /var/www/tudestino/apps/web/dist/assets/index-*.js | head -5\")",
+      "Bash(NODE_ENV=production npm run build:*)",
+      "Bash(ssh root@161.132.38.151 \"cd /var/www/tudestino/apps/web && NODE_ENV=production npm run build\")"
     ],
     "deny": [],
     "ask": []

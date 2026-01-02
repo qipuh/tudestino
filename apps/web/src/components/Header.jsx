@@ -59,25 +59,33 @@ function Header() {
                   className="hidden md:flex items-center gap-2 text-sm font-medium hover:bg-gray-100 px-3 py-2 rounded-lg transition"
                 >
                   <User size={18} />
-                  MI CUENTA
+                  Mi cuenta
                 </Link>
                 <Link
                   to="/notifications"
-                  className="hidden md:flex items-center gap-2 text-sm font-medium hover:bg-gray-100 px-3 py-2 rounded-lg transition relative"
+                  className="hidden md:flex items-center gap-2 text-sm font-medium hover:bg-gray-100 p-2 rounded-lg transition relative"
+                  title="Notificaciones"
                 >
                   <Bell size={18} />
-                  NOTIFICACIONES
                 </Link>
                 <Link
                   to="/messages"
-                  className="hidden md:flex items-center gap-2 text-sm font-medium hover:bg-gray-100 px-3 py-2 rounded-lg transition"
+                  className="hidden md:flex items-center gap-2 text-sm font-medium hover:bg-gray-100 p-2 rounded-lg transition"
+                  title="Mensajes"
                 >
                   <MessageSquare size={18} />
-                  MENSAJES
                 </Link>
 
-                {/* Mobile/Small Menu with logout */}
-                <div className="relative">
+                {/* Logout button */}
+                <button
+                  onClick={handleLogout}
+                  className="hidden md:block text-sm font-medium hover:bg-gray-100 px-3 py-2 rounded-lg transition"
+                >
+                  Cerrar sesión
+                </button>
+
+                {/* Mobile Menu */}
+                <div className="md:hidden relative">
                   <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                     className="flex items-center gap-2 border border-gray-300 rounded-full px-3 py-2 hover:shadow-md transition"
@@ -87,30 +95,28 @@ function Header() {
 
                   {isMenuOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                      <div className="md:hidden">
-                        <Link
-                          to="/account"
-                          className="block px-4 py-2 text-sm hover:bg-gray-50"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Mi Cuenta
-                        </Link>
-                        <Link
-                          to="/notifications"
-                          className="block px-4 py-2 text-sm hover:bg-gray-50"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Notificaciones
-                        </Link>
-                        <Link
-                          to="/messages"
-                          className="block px-4 py-2 text-sm hover:bg-gray-50"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Mensajes
-                        </Link>
-                        <hr className="my-2" />
-                      </div>
+                      <Link
+                        to="/account"
+                        className="block px-4 py-2 text-sm hover:bg-gray-50"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Mi Cuenta
+                      </Link>
+                      <Link
+                        to="/notifications"
+                        className="block px-4 py-2 text-sm hover:bg-gray-50"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Notificaciones
+                      </Link>
+                      <Link
+                        to="/messages"
+                        className="block px-4 py-2 text-sm hover:bg-gray-50"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Mensajes
+                      </Link>
+                      <hr className="my-2" />
                       <button
                         className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
                         onClick={handleLogout}

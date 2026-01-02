@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, Plus, MapPin, Clock, Users, Building2, User } from 'lucide-react';
 import useEvents from '../hooks/useEvents';
 import { getImageUrl } from '../../../services/api';
+import UserAccountLayout from '../../../layouts/UserAccountLayout';
 
 const categoryIcons = {
   concert: '🎵',
@@ -108,13 +109,13 @@ function MyEventsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 max-w-6xl">
+    <UserAccountLayout activeMenu="events">
+      <div>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">Mis Eventos</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Mis Eventos</h1>
               <p className="text-gray-600">
                 Gestiona tus eventos y revisa tus registros
               </p>
@@ -419,7 +420,7 @@ function MyEventsPage() {
           </>
         )}
       </div>
-    </div>
+    </UserAccountLayout>
   );
 }
 

@@ -12,7 +12,6 @@ import AccountDashboard from '@modules/account/pages/AccountDashboard';
 import AccountBusinesses from '@modules/account/pages/AccountBusinesses';
 import AccountProfile from '@modules/account/pages/AccountProfile';
 import AccountSocial from '@modules/account/pages/AccountSocial';
-import AccountEvents from '@modules/account/pages/AccountEvents';
 import AccountFavorites from '@modules/account/pages/AccountFavorites';
 import NotificationsPage from '@modules/notifications/pages/NotificationsPage';
 import BookingsPage from '@modules/bookings/pages/BookingsPage';
@@ -78,7 +77,7 @@ function App() {
         <Route path="account/businesses" element={<AccountBusinesses />} />
         <Route path="account/profile" element={<AccountProfile />} />
         <Route path="account/social" element={<AccountSocial />} />
-        <Route path="account/events" element={<AccountEvents />} />
+        <Route path="account/events" element={<MyEventsPage />} />
         <Route path="account/favorites" element={<AccountFavorites />} />
 
         {/* Notifications */}

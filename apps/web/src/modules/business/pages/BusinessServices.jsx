@@ -141,7 +141,7 @@ function BusinessServices() {
 
     // Si es tipo property y no está editando, redirigir al flujo especializado
     if (!editingService && formData.serviceType === 'property') {
-      navigate(`/business/${id}/property/create`);
+      navigate(`/business/${id}/property/create-rooms`);
       return;
     }
 
@@ -275,7 +275,7 @@ function BusinessServices() {
             <button
               onClick={() => {
                 if (business.businessType === 'hotel') {
-                  navigate(`/business/${id}/property/create`);
+                  navigate(`/business/${id}/property/create-rooms`);
                 } else {
                   handleOpenModal();
                 }
@@ -314,7 +314,7 @@ function BusinessServices() {
               Agrega habitaciones para que los huéspedes puedan reservar en tu hotel
             </p>
             <button
-              onClick={() => navigate(`/business/${id}/property/create`)}
+              onClick={() => navigate(`/business/${id}/property/create-rooms`)}
               className="inline-block bg-primary text-white px-8 py-3 rounded-lg hover:bg-primary-dark font-medium"
             >
               Agregar Habitaciones

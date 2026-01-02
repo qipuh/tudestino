@@ -32,7 +32,7 @@ router.get('/', getProperties);
 // Rutas protegidas con nombre específico (ANTES de /:id)
 router.get('/my-properties', authenticate, authorize('host', 'admin', 'business_owner'), async (req, res) => {
   try {
-    const { Property, Room } = await import('./property.model.sequelize.js');
+    const { Property, Room } = await import('./hotel-property.model.js');
     const properties = await Property.findAll({
       where: { hostId: req.user.id },
       include: [

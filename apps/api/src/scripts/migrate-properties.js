@@ -1,5 +1,5 @@
 import sequelize from '../config/database-mysql.js';
-import { Property, Room } from '../modules/properties/property.model.sequelize.js';
+import { Property, Room } from '../modules/properties/hotel-property.model.js';
 
 async function migrateDatabase() {
   try {

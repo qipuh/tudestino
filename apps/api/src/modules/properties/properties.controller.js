@@ -1,4 +1,4 @@
-import { propertiesService } from './properties.service.js';
+import { propertiesService } from './hotel-properties.service.js';
 
 export const createProperty = async (req, res, next) => {
   try {

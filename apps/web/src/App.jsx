@@ -19,14 +19,12 @@ import BookingDetailPage from '@modules/bookings/pages/BookingDetailPage';
 import RoomSelectionPage from '@modules/bookings/pages/RoomSelectionPage';
 import CheckoutPage from '@modules/bookings/pages/CheckoutPage';
 import MyPropertiesPage from '@modules/properties/pages/MyPropertiesPage';
-import PropertyFormPage from '@modules/properties/pages/PropertyFormPage';
 import MessagesPage from '@modules/messaging/pages/MessagesPage';
 import ProfilePage from '@modules/user/pages/ProfilePage';
 import UsernameProfilePage from '@modules/user/pages/UsernameProfilePage';
 import FeedPage from '@modules/social/pages/FeedPage';
 import ReelsPage from '@modules/social/pages/ReelsPage';
 import HostLandingPage from '@modules/properties/pages/HostLandingPage';
-import PropertyRegistrationPage from '@modules/properties/pages/PropertyRegistrationPage';
 import EditPropertyPage from '@modules/properties/pages/EditPropertyPage';
 import RoomManagementPage from '@modules/properties/pages/RoomManagementPage';
 import AddRoomPage from '@modules/properties/pages/AddRoomPage';
@@ -95,11 +93,9 @@ function App() {
         <Route path="profile" element={<ProfilePage />} />
         <Route path="profile/:userId" element={<ProfilePage />} />
 
-        {/* Host Routes */}
+        {/* Host Routes - DEPRECATED: Use /business/create instead */}
         <Route path="host" element={<HostLandingPage />} />
         <Route path="host/properties" element={<MyPropertiesPage />} />
-        <Route path="host/properties/new" element={<PropertyFormPage />} />
-        <Route path="host/properties/register" element={<PropertyRegistrationPage />} />
         <Route path="host/properties/:id/edit" element={<EditPropertyPage />} />
 
         {/* Room Management Routes */}

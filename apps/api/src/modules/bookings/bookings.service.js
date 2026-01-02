@@ -1,5 +1,5 @@
 import Booking from './booking.model.js';
-import { Property, Room } from '../properties/property.model.sequelize.js';
+import { Property, Room } from '../properties/hotel-property.model.js';
 import User from '../users/user.model-mysql.js';
 import { Op } from 'sequelize';
 

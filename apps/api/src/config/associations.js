@@ -1,5 +1,5 @@
 import User from '../modules/users/user.model-mysql.js';
-import { Property, Room } from '../modules/properties/property.model.sequelize.js';
+import { Property, Room } from '../modules/properties/hotel-property.model.js';
 import Booking from '../modules/bookings/booking.model.js';
 import Message from '../modules/messaging/message.model.js';
 import Conversation from '../modules/messaging/conversation.model.js';
@@ -31,7 +31,7 @@ export const setupAssociations = () => {
   User.hasMany(Booking, { foreignKey: 'hostId', as: 'hostBookings' });
   Booking.belongsTo(User, { foreignKey: 'hostId', as: 'host' });
 
-  // Property - Room association is already defined in property.model.sequelize.js
+  // Property - Room association is already defined in hotel-property.model.js
 
   // Property - Booking
   Property.hasMany(Booking, { foreignKey: 'propertyId', as: 'bookings' });

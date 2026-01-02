@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../../config/database-mysql.js';
+import Business from '../businesses/business.model.js';
 
 // Modelo de Property
 const Property = sequelize.define('Property', {
@@ -178,7 +179,7 @@ const Property = sequelize.define('Property', {
     defaultValue: true,
   },
 }, {
-  tableName: 'properties',
+  tableName: 'hotel_properties',
   timestamps: true,
   indexes: [
     { fields: ['hostId'] },
@@ -186,6 +187,7 @@ const Property = sequelize.define('Property', {
     { fields: ['status'] },
     { fields: ['addressCity'] },
     { fields: ['addressCountry'] },
+    { fields: ['businessId'] },
   ],
 });
 
@@ -200,7 +202,7 @@ const Room = sequelize.define('Room', {
     type: DataTypes.CHAR(36),
     allowNull: false,
     references: {
-      model: 'properties',
+      model: 'hotel_properties',
       key: 'id',
     },
     onDelete: 'CASCADE',
@@ -280,10 +282,9 @@ Room.belongsTo(Property, {
 });
 
 // Relación con Business
-// NOTA: Descomentar después de ejecutar la migración add-business-id-to-properties.sql
-// Property.belongsTo(sequelize.model('Business'), {
-//   foreignKey: 'businessId',
-//   as: 'business',
-// });
+Property.belongsTo(Business, {
+  foreignKey: 'businessId',
+  as: 'business',
+});
 
 export { Property, Room };

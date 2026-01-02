@@ -230,7 +230,13 @@
       "Bash(ssh root@161.132.38.151 \"grep -o ''api\\\\.tudestino\\\\.pe'' /var/www/tudestino/apps/web/dist/assets/index-*.js | head -5\")",
       "Bash(NODE_ENV=production npm run build:*)",
       "Bash(ssh root@161.132.38.151 \"cd /var/www/tudestino/apps/web && NODE_ENV=production npm run build\")",
-      "Bash(ssh root@161.132.38.151:*)"
+      "Bash(ssh root@161.132.38.151:*)",
+      "Bash(git push)",
+      "Bash(mysql --version:*)",
+      "Bash(\"c:\\\\laragon\\\\bin\\\\mysql\\\\mysql-8.0.30-winx64\\\\bin\\\\mysql.exe\" --version)",
+      "Bash(node --check:*)",
+      "Bash(node verify-hotel.js:*)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []

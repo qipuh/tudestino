@@ -1,4 +1,4 @@
-import { Property, Room } from './property.model.sequelize.js';
+import { Property, Room } from './hotel-property.model.js';
 import sequelize from '../../config/database-mysql.js';
 
 /**

@@ -266,7 +266,7 @@ function BookingFlow({ property }) {
                     }
                   }}
                 >
-                  <label className="text-xs font-semibold block mb-1 text-gray-700">CHECKOUT</label>
+                  <label className="text-xs font-semibold block mb-1 text-gray-700">CHECK-OUT</label>
                   <div className="text-sm font-medium text-gray-900">
                     {checkOut ? formatDate(checkOut) : 'Seleccionar'}
                   </div>

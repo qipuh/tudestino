@@ -1,5 +1,5 @@
 import Business from './business.model.js';
-import { Property, Room } from '../properties/property.model.sequelize.js';
+import { Property, Room } from '../properties/hotel-property.model.js';
 import sequelize from '../../config/database-mysql.js';
 
 class BusinessPropertyService {

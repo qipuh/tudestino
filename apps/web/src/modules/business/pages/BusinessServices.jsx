@@ -22,7 +22,7 @@ function BusinessServices() {
   const navigate = useNavigate();
   const { business, fetchBusiness } = useBusiness();
   const { services, loading, error, fetchServices, createService, updateService, deleteService } = useBusinessService();
-  const { rooms, loading: loadingRooms, fetchBusinessProperty, deleteRoom } = useBusinessProperty();
+  const { rooms, loading: loadingRooms, fetchBusinessProperty, deleteRoom, updateRoom } = useBusinessProperty();
 
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
@@ -33,6 +33,9 @@ function BusinessServices() {
     status: 'active',
     settings: {},
   });
+
+  const [showRoomModal, setShowRoomModal] = useState(false);
+  const [editingRoom, setEditingRoom] = useState(null);
 
   useEffect(() => {
     if (id) {
@@ -171,8 +174,25 @@ function BusinessServices() {
   };
 
   const handleEditRoom = (room) => {
-    // Redirigir a una página de edición de habitación
-    navigate(`/business/${id}/property/edit/${room.id}`);
+    setEditingRoom(room);
+    setShowRoomModal(true);
+  };
+
+  const handleSaveRoom = async (e) => {
+    e.preventDefault();
+    if (!editingRoom) return;
+
+    const result = await updateRoom(editingRoom.id, {
+      pricePerNight: editingRoom.pricePerNight,
+      isAvailable: editingRoom.isAvailable,
+      name: editingRoom.name,
+    });
+
+    if (result.success) {
+      setShowRoomModal(false);
+      setEditingRoom(null);
+      await loadData();
+    }
   };
 
   if (!business) {
@@ -673,6 +693,97 @@ function BusinessServices() {
                     className="flex-1 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium disabled:opacity-50"
                   >
                     {loading ? 'Guardando...' : editingService ? 'Actualizar' : 'Crear Servicio'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit Room */}
+      {showRoomModal && editingRoom && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-lg w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Editar Habitación</h2>
+                <button
+                  onClick={() => {
+                    setShowRoomModal(false);
+                    setEditingRoom(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveRoom}>
+                <div className="space-y-4">
+                  {/* Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nombre
+                    </label>
+                    <input
+                      type="text"
+                      value={editingRoom.name || ''}
+                      onChange={(e) => setEditingRoom({ ...editingRoom, name: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                    />
+                  </div>
+
+                  {/* Price */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Precio por noche (S/.)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingRoom.pricePerNight || ''}
+                      onChange={(e) => setEditingRoom({ ...editingRoom, pricePerNight: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                    />
+                  </div>
+
+                  {/* Availability */}
+                  <div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={editingRoom.isAvailable}
+                        onChange={(e) => setEditingRoom({ ...editingRoom, isAvailable: e.target.checked })}
+                        className="h-4 w-4"
+                      />
+                      <span className="text-sm font-medium text-gray-700">Disponible para reservas</span>
+                    </label>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+                    <strong>Nota:</strong> Por ahora solo puedes editar el nombre, precio y disponibilidad. Para cambiar las características, amenidades o imágenes, contacta con soporte.
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowRoomModal(false);
+                      setEditingRoom(null);
+                    }}
+                    className="flex-1 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading || loadingRooms}
+                    className="flex-1 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium disabled:opacity-50"
+                  >
+                    {loading || loadingRooms ? 'Guardando...' : 'Guardar Cambios'}
                   </button>
                 </div>
               </form>

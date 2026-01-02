@@ -85,7 +85,7 @@ router.put('/reservations/:reservationId/cancel', authenticate, businessControll
 
 // Rutas de propiedades
 router.post('/:businessId/properties', authenticate, businessController.createPropertyWithRooms);
-router.get('/:businessId/properties', authenticate, businessController.getBusinessProperty);
+router.get('/:businessId/properties', businessController.getBusinessProperty); // Público para que /hotel-slug funcione
 
 // Rutas de reservaciones de negocio específico
 router.post('/:businessId/reservations', authenticate, businessController.createReservation);

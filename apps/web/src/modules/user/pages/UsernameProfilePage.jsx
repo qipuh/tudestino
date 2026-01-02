@@ -4,15 +4,18 @@ import { getProfileByUsername } from '../../../services/socialService';
 import api from '../../../services/api';
 import ProfilePage from './ProfilePage';
 import BusinessDetail from '../../business/pages/BusinessDetail';
+import PropertyDetail from '../../properties/pages/PropertyDetail';
 
 function UsernameProfilePage() {
   const { username } = useParams();
   const navigate = useNavigate();
   const [userId, setUserId] = useState(null);
   const [businessId, setBusinessId] = useState(null);
+  const [propertyId, setPropertyId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isBusiness, setIsBusiness] = useState(false);
+  const [isHotel, setIsHotel] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -23,8 +26,26 @@ function UsernameProfilePage() {
         try {
           const businessResponse = await api.get(`/businesses/slug/${username}`);
           if (businessResponse.data && businessResponse.data.id) {
-            // Es un negocio, mostrar BusinessDetail sin cambiar la URL
-            setBusinessId(businessResponse.data.id);
+            const business = businessResponse.data;
+
+            // Si es un hotel, verificar si tiene propiedad asociada
+            if (business.businessType === 'hotel') {
+              try {
+                const propertyResponse = await api.get(`/businesses/${business.id}/properties`);
+                if (propertyResponse.data && propertyResponse.data.id) {
+                  // Es un hotel con propiedad, renderizar PropertyDetail
+                  setPropertyId(propertyResponse.data.id);
+                  setIsHotel(true);
+                  setLoading(false);
+                  return;
+                }
+              } catch (propertyError) {
+                console.log('Hotel has no property, showing BusinessDetail');
+              }
+            }
+
+            // Es un negocio (no hotel o hotel sin propiedad), mostrar BusinessDetail
+            setBusinessId(business.id);
             setIsBusiness(true);
             setLoading(false);
             return;
@@ -85,6 +106,12 @@ function UsernameProfilePage() {
         </div>
       </div>
     );
+  }
+
+  // Si es un hotel con propiedad, renderizar PropertyDetail
+  // Esto mantiene la URL bonita (/slug) en el navegador
+  if (isHotel && propertyId) {
+    return <PropertyDetail propertyIdProp={propertyId} />;
   }
 
   // Si es un negocio, renderizar BusinessDetail sin cambiar la URL

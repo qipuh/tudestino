@@ -229,7 +229,8 @@
       "Bash(ssh root@161.132.38.151 \"cd /var/www/tudestino/apps/web && NODE_ENV=production npm run build 2>&1 | tail -20\")",
       "Bash(ssh root@161.132.38.151 \"grep -o ''api\\\\.tudestino\\\\.pe'' /var/www/tudestino/apps/web/dist/assets/index-*.js | head -5\")",
       "Bash(NODE_ENV=production npm run build:*)",
-      "Bash(ssh root@161.132.38.151 \"cd /var/www/tudestino/apps/web && NODE_ENV=production npm run build\")"
+      "Bash(ssh root@161.132.38.151 \"cd /var/www/tudestino/apps/web && NODE_ENV=production npm run build\")",
+      "Bash(ssh root@161.132.38.151:*)"
     ],
     "deny": [],
     "ask": []

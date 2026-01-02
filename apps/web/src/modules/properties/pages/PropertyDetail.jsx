@@ -20,8 +20,8 @@ const AMENITY_ICONS = {
   pets: { icon: '🐕', name: 'Mascotas permitidas' },
 };
 
-function PropertyDetail() {
-  const { id } = useParams();
+function PropertyDetail({ propertyIdProp }) {
+  const { id: urlId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [property, setProperty] = useState(null);
@@ -32,8 +32,13 @@ function PropertyDetail() {
   const [followLoading, setFollowLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
 
+  // Usar propertyIdProp si está disponible, de lo contrario usar el ID de la URL
+  const id = propertyIdProp || urlId;
+
   useEffect(() => {
-    fetchProperty();
+    if (id) {
+      fetchProperty();
+    }
   }, [id]);
 
   useEffect(() => {

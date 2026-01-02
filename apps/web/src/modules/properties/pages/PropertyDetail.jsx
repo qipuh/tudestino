@@ -157,8 +157,12 @@ function PropertyDetail() {
   // Imágenes: de las habitaciones o de la propiedad
   let images = [];
   if (hasRooms && rooms[0].images && rooms[0].images.length > 0) {
-    // Combinar imágenes de todas las habitaciones
-    images = rooms.flatMap(room => room.images || []);
+    // Combinar imágenes de todas las habitaciones con la ruta correcta
+    images = rooms.flatMap(room =>
+      (room.images || []).map(img =>
+        img.startsWith('/uploads/') || img.startsWith('http') ? img : `/uploads/rooms/${img}`
+      )
+    );
   } else if (property.images) {
     images = property.images;
   }
@@ -565,7 +569,7 @@ function PropertyDetail() {
                       {room.images && room.images.length > 0 && (
                         <div className="w-full sm:w-48 h-48 sm:h-auto flex-shrink-0">
                           <img
-                            src={getImageUrl(room.images[0])}
+                            src={getImageUrl(room.images[0].startsWith('/uploads/') || room.images[0].startsWith('http') ? room.images[0] : `/uploads/rooms/${room.images[0]}`)}
                             alt={room.roomType}
                             className="w-full h-full object-cover"
                           />

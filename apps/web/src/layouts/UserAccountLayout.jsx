@@ -6,7 +6,8 @@ import {
   Ticket,
   MessageSquare,
   Heart,
-  Settings
+  Settings,
+  ExternalLink
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { getImageUrl } from '../services/api';
@@ -61,7 +62,18 @@ function UserAccountLayout({ children, activeMenu }) {
             )}
 
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2 text-white">{user.name}</h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold text-white">{user.name}</h1>
+                <a
+                  href={`/${user.username || 'rocio'}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-sm text-white/90 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition"
+                >
+                  <ExternalLink size={14} />
+                  Ver perfil
+                </a>
+              </div>
               <p className="text-white/90 mb-3">{user.email}</p>
               <div className="flex flex-wrap gap-3">
                 {user.role && (

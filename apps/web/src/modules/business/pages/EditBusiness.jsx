@@ -52,6 +52,18 @@ function EditBusiness() {
       saturday: { open: '09:00', close: '18:00', closed: false },
       sunday: { open: '09:00', close: '18:00', closed: true },
     },
+    // Configuración específica para hoteles
+    hotelSettings: {
+      checkInTime: '14:00',
+      checkOutTime: '12:00',
+      hasWifi: true,
+      hasParking: false,
+      hasSwimmingPool: false,
+      hasRestaurant: false,
+      petsAllowed: false,
+      breakfastIncluded: false,
+      childrenAllowed: true,
+    },
   });
   const [logoImages, setLogoImages] = useState([]);
   const [coverImages, setCoverImages] = useState([]);
@@ -102,6 +114,17 @@ function EditBusiness() {
           saturday: { open: '09:00', close: '18:00', closed: false },
           sunday: { open: '09:00', close: '18:00', closed: true },
         },
+        hotelSettings: business.hotelSettings || {
+          checkInTime: '14:00',
+          checkOutTime: '12:00',
+          hasWifi: true,
+          hasParking: false,
+          hasSwimmingPool: false,
+          hasRestaurant: false,
+          petsAllowed: false,
+          breakfastIncluded: false,
+          childrenAllowed: true,
+        },
       });
 
       // Cargar imágenes actuales
@@ -115,7 +138,8 @@ function EditBusiness() {
   }, [business]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+    const actualValue = type === 'checkbox' ? checked : value;
 
     if (name.startsWith('address.')) {
       const addressField = name.split('.')[1];
@@ -123,7 +147,7 @@ function EditBusiness() {
         ...formData,
         address: {
           ...formData.address,
-          [addressField]: value,
+          [addressField]: actualValue,
         },
       });
     } else if (name.startsWith('socialMedia.')) {
@@ -132,7 +156,16 @@ function EditBusiness() {
         ...formData,
         socialMedia: {
           ...formData.socialMedia,
-          [socialField]: value,
+          [socialField]: actualValue,
+        },
+      });
+    } else if (name.startsWith('hotelSettings.')) {
+      const hotelField = name.split('.')[1];
+      setFormData({
+        ...formData,
+        hotelSettings: {
+          ...formData.hotelSettings,
+          [hotelField]: actualValue,
         },
       });
     } else {
@@ -572,6 +605,132 @@ function EditBusiness() {
                 💡 Configura los horarios de atención de tu negocio para que tus clientes sepan cuándo pueden visitarte.
               </p>
             </section>
+
+            {/* Configuración del Hotel - Solo para hoteles */}
+            {formData.businessType === 'hotel' && (
+              <section>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">🏨 Configuración del Hotel</h2>
+
+                {/* Check-in / Check-out */}
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Hora de Check-in
+                      </label>
+                      <input
+                        type="time"
+                        name="hotelSettings.checkInTime"
+                        value={formData.hotelSettings?.checkInTime || '14:00'}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Hora de Check-out
+                      </label>
+                      <input
+                        type="time"
+                        name="hotelSettings.checkOutTime"
+                        value={formData.hotelSettings?.checkOutTime || '12:00'}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Servicios del Hotel */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Servicios del hotel
+                    </label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          name="hotelSettings.hasWifi"
+                          checked={formData.hotelSettings?.hasWifi || false}
+                          onChange={handleChange}
+                          className="w-5 h-5 text-primary focus:ring-primary border-gray-300 rounded"
+                        />
+                        <span>📶 WiFi</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          name="hotelSettings.hasParking"
+                          checked={formData.hotelSettings?.hasParking || false}
+                          onChange={handleChange}
+                          className="w-5 h-5 text-primary focus:ring-primary border-gray-300 rounded"
+                        />
+                        <span>🅿️ Estacionamiento</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          name="hotelSettings.hasSwimmingPool"
+                          checked={formData.hotelSettings?.hasSwimmingPool || false}
+                          onChange={handleChange}
+                          className="w-5 h-5 text-primary focus:ring-primary border-gray-300 rounded"
+                        />
+                        <span>🏊 Piscina</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          name="hotelSettings.hasRestaurant"
+                          checked={formData.hotelSettings?.hasRestaurant || false}
+                          onChange={handleChange}
+                          className="w-5 h-5 text-primary focus:ring-primary border-gray-300 rounded"
+                        />
+                        <span>🍽️ Restaurante</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Políticas */}
+                  <div className="border-t pt-4 space-y-3">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name="hotelSettings.petsAllowed"
+                        checked={formData.hotelSettings?.petsAllowed || false}
+                        onChange={handleChange}
+                        className="w-5 h-5 text-primary focus:ring-primary border-gray-300 rounded"
+                      />
+                      <span className="font-medium">🐕 ¿Se permiten mascotas?</span>
+                    </label>
+
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name="hotelSettings.breakfastIncluded"
+                        checked={formData.hotelSettings?.breakfastIncluded || false}
+                        onChange={handleChange}
+                        className="w-5 h-5 text-primary focus:ring-primary border-gray-300 rounded"
+                      />
+                      <span className="font-medium">☕ ¿Desayuno incluido?</span>
+                    </label>
+
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name="hotelSettings.childrenAllowed"
+                        checked={formData.hotelSettings?.childrenAllowed !== false}
+                        onChange={handleChange}
+                        className="w-5 h-5 text-primary focus:ring-primary border-gray-300 rounded"
+                      />
+                      <span className="font-medium">👶 ¿Se permiten niños?</span>
+                    </label>
+                  </div>
+                </div>
+
+                <p className="text-xs text-gray-500 mt-3">
+                  💡 Esta configuración se aplicará a todas las habitaciones del hotel.
+                </p>
+              </section>
+            )}
 
             {/* Botones */}
             <div className="flex gap-4 pt-6 border-t">

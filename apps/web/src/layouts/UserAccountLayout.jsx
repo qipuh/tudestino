@@ -16,16 +16,24 @@ function UserAccountLayout({ children, activeMenu }) {
   const { user } = useAuthStore();
   const location = useLocation();
 
-  const menuItems = [
+  const allMenuItems = [
     { to: '/account', label: 'Mi Cuenta', icon: User, key: 'account', exact: true },
     { to: '/account/profile', label: 'Mi Perfil de Viajero', icon: User, key: 'profile' },
     { to: '/account/social', label: 'Muro Social', icon: MessageSquare, key: 'social' },
-    { to: '/account/businesses', label: 'Mis Negocios', icon: Briefcase, key: 'businesses' },
+    { to: '/account/businesses', label: 'Mis Negocios', icon: Briefcase, key: 'businesses', roles: ['business_owner', 'admin'] },
     { to: '/bookings', label: 'Mis Reservas', icon: Calendar, key: 'bookings' },
     { to: '/account/events', label: 'Mis Eventos', icon: Ticket, key: 'events' },
     { to: '/messages', label: 'Mensajes', icon: MessageSquare, key: 'messages' },
     { to: '/account/favorites', label: 'Favoritos', icon: Heart, key: 'favorites' },
   ];
+
+  // Filtrar menú según rol del usuario
+  const menuItems = allMenuItems.filter(item => {
+    if (item.roles) {
+      return item.roles.includes(user?.role);
+    }
+    return true;
+  });
 
   // Determinar activeMenu basado en la ruta actual si no se proporciona
   const currentActiveMenu = activeMenu || menuItems.find(item => {

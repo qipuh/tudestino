@@ -27,8 +27,13 @@ api.interceptors.response.use(
   (response) => response.data,
   (error) => {
     if (error.response?.status === 401) {
+      const hadToken = localStorage.getItem('token');
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      // Only redirect to login if user had a token (meaning it expired)
+      // Don't redirect if user simply wasn't logged in
+      if (hadToken) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

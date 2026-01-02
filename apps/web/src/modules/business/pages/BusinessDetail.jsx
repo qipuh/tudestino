@@ -345,19 +345,35 @@ function BusinessDetail({ businessIdProp }) {
                             Contactar
                           </button>
                         )}
-                        <button
-                          onClick={() => {
-                            if (!user) {
-                              navigate('/login?redirect=/businesses/' + id);
-                              return;
-                            }
-                            setShowReservationModal(true);
-                          }}
-                          className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all shadow-lg hover:shadow-xl"
-                        >
-                          <Calendar size={16} />
-                          Reservar
-                        </button>
+                        {business.businessType === 'hotel' && property ? (
+                          <button
+                            onClick={() => {
+                              if (!user) {
+                                navigate('/login?redirect=/businesses/' + id);
+                                return;
+                              }
+                              document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }}
+                            className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all shadow-lg hover:shadow-xl"
+                          >
+                            <Bed size={16} />
+                            Ver habitaciones
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              if (!user) {
+                                navigate('/login?redirect=/businesses/' + id);
+                                return;
+                              }
+                              setShowReservationModal(true);
+                            }}
+                            className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all shadow-lg hover:shadow-xl"
+                          >
+                            <Calendar size={16} />
+                            Reservar
+                          </button>
+                        )}
                         <button
                           onClick={handleFollowToggle}
                           disabled={followLoading}
@@ -465,19 +481,36 @@ function BusinessDetail({ businessIdProp }) {
                               Contactar
                             </button>
                           )}
-                          <button
-                            onClick={() => {
-                              if (!user) {
-                                navigate('/login?redirect=/businesses/' + id);
-                                return;
-                              }
-                              setShowReservationModal(true);
-                            }}
-                            className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all shadow-lg"
-                          >
-                            <Calendar size={14} />
-                            Reservar
-                          </button>
+                          {business.businessType === 'hotel' && property ? (
+                            <button
+                              onClick={() => {
+                                if (!user) {
+                                  navigate('/login?redirect=/businesses/' + id);
+                                  return;
+                                }
+                                // Scroll to booking section
+                                document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }}
+                              className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all shadow-lg"
+                            >
+                              <Bed size={14} />
+                              Ver habitaciones
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                if (!user) {
+                                  navigate('/login?redirect=/businesses/' + id);
+                                  return;
+                                }
+                                setShowReservationModal(true);
+                              }}
+                              className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all shadow-lg"
+                            >
+                              <Calendar size={14} />
+                              Reservar
+                            </button>
+                          )}
                           <button
                             onClick={handleFollowToggle}
                             disabled={followLoading}
@@ -584,19 +617,35 @@ function BusinessDetail({ businessIdProp }) {
                         Contactar
                       </button>
                     )}
-                    <button
-                      onClick={() => {
-                        if (!user) {
-                          navigate('/login?redirect=/businesses/' + id);
-                          return;
-                        }
-                        setShowReservationModal(true);
-                      }}
-                      className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all shadow-lg hover:shadow-xl"
-                    >
-                      <Calendar size={16} />
-                      Reservar
-                    </button>
+                    {business.businessType === 'hotel' && property ? (
+                      <button
+                        onClick={() => {
+                          if (!user) {
+                            navigate('/login?redirect=/businesses/' + id);
+                            return;
+                          }
+                          document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }}
+                        className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all shadow-lg hover:shadow-xl"
+                      >
+                        <Bed size={16} />
+                        Ver habitaciones
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          if (!user) {
+                            navigate('/login?redirect=/businesses/' + id);
+                            return;
+                          }
+                          setShowReservationModal(true);
+                        }}
+                        className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all shadow-lg hover:shadow-xl"
+                      >
+                        <Calendar size={16} />
+                        Reservar
+                      </button>
+                    )}
                     <button
                       onClick={handleFollowToggle}
                       disabled={followLoading}
@@ -1047,7 +1096,7 @@ function BusinessDetail({ businessIdProp }) {
             {/* Booking Flow Sidebar - Solo para hoteles con propiedad */}
             {business.businessType === 'hotel' && property && (
               <div className="lg:col-span-1">
-                <div className="sticky top-24">
+                <div className="sticky top-24" id="booking-section">
                   <BookingFlow property={property} />
                 </div>
               </div>

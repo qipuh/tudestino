@@ -40,7 +40,7 @@ class VerificationService {
       });
 
       const mailOptions = {
-        from: `"TuDestino" <${process.env.SMTP_USER}>`,
+        from: `"${process.env.EMAIL_FROM_NAME || 'TuDestino'}" <${process.env.EMAIL_FROM || process.env.SMTP_USER}>`,
         to: email,
         subject: 'Verifica tu correo electrónico - TuDestino',
         html: `

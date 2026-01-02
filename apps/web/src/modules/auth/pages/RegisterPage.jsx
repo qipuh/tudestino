@@ -126,11 +126,16 @@ function RegisterPage() {
     });
 
     if (result.success) {
-      // Redirigir a verificación de email
+      // Redirigir a verificación
+      const verificationMessage = formData.phone
+        ? 'Usuario creado. Por favor verifica tu WhatsApp.'
+        : 'Usuario creado. Por favor verifica tu email.';
+
       navigate('/verify-email', {
         state: {
           email: formData.email,
-          message: result.message || 'Usuario creado. Por favor verifica tu email.'
+          phone: formData.phone,
+          message: result.message || verificationMessage
         }
       });
     } else {

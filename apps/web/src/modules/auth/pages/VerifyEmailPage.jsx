@@ -18,7 +18,11 @@ function VerifyEmailPage() {
   const inputRefs = useRef([]);
 
   const email = location.state?.email || user?.email;
+  const phone = location.state?.phone || user?.phone;
   const message = location.state?.message || '';
+
+  // Determinar si es verificación por WhatsApp o email
+  const isWhatsApp = !!phone;
 
   useEffect(() => {
     if (!email) {
@@ -88,7 +92,7 @@ function VerifyEmailPage() {
       });
 
       if (response.success) {
-        setSuccess('¡Email verificado exitosamente! Redirigiendo a tu cuenta...');
+        setSuccess(`¡${isWhatsApp ? 'WhatsApp' : 'Email'} verificado exitosamente! Redirigiendo a tu cuenta...`);
 
         // Guardar token y usuario en localStorage y authStore
         const { token, user: verifiedUser } = response.data;
@@ -134,7 +138,7 @@ function VerifyEmailPage() {
       const response = await api.post('/auth/send-email-code', { email });
 
       if (response.data.success) {
-        setSuccess('Código reenviado. Por favor revisa tu correo.');
+        setSuccess(`Código reenviado. Por favor revisa tu ${isWhatsApp ? 'WhatsApp' : 'correo'}.`);
         setCountdown(60); // 60 seconds cooldown
         setCode(['', '', '', '', '', '']);
         inputRefs.current[0]?.focus();
@@ -154,13 +158,13 @@ function VerifyEmailPage() {
             <span className="text-3xl font-bold text-primary">TuDestino</span>
           </Link>
           <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-            Verifica tu correo electrónico
+            {isWhatsApp ? 'Verifica tu WhatsApp' : 'Verifica tu correo electrónico'}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Hemos enviado un código de verificación de 6 dígitos a
           </p>
           <p className="text-center text-sm font-medium text-primary">
-            {email}
+            {isWhatsApp ? phone : email}
           </p>
         </div>
 
@@ -240,20 +244,22 @@ function VerifyEmailPage() {
           </div>
         </form>
 
-        <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-yellow-700">
-                <strong>Importante:</strong> Revisa tu carpeta de spam o correo no deseado si no encuentras el email.
-              </p>
+        {!isWhatsApp && (
+          <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  <strong>Importante:</strong> Revisa tu carpeta de spam o correo no deseado si no encuentras el email.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

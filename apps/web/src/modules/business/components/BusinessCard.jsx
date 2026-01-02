@@ -67,7 +67,7 @@ function BusinessCard({ business, onDelete }) {
 
       <div className="flex gap-2">
         <Link
-          to={business.slug ? `/${business.slug}` : `/business/${business.id}`}
+          to={`/business/${business.id}/manage`}
           className="flex-1 text-center bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary-dark transition font-medium"
         >
           Ver Detalle

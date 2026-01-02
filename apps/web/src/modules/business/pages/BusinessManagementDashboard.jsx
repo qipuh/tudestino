@@ -164,7 +164,7 @@ function BusinessManagementDashboard() {
             )}
 
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2">{business.name}</h1>
+              <h1 className="text-3xl font-bold mb-2 text-white">{business.name}</h1>
               <p className="text-white/90 mb-3">{business.description}</p>
               <div className="flex flex-wrap gap-3">
                 <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
@@ -188,7 +188,59 @@ function BusinessManagementDashboard() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 -mt-6">
+      {/* Menú de acciones rápidas */}
+      <div className="bg-white border-b shadow-sm">
+        <div className="container mx-auto px-4">
+          <div className="flex overflow-x-auto gap-1 py-2">
+            <Link
+              to={`/business/${id}/edit`}
+              className="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 rounded-lg transition whitespace-nowrap"
+            >
+              <Edit size={18} className="text-primary" />
+              <span className="text-sm font-medium text-gray-700">Editar Negocio</span>
+            </Link>
+            <Link
+              to={`/business/${id}/services`}
+              className="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 rounded-lg transition whitespace-nowrap"
+            >
+              {business.businessType === 'property' ? <Home size={18} className="text-blue-600" /> : <Package size={18} className="text-blue-600" />}
+              <span className="text-sm font-medium text-gray-700">
+                {business.businessType === 'property' ? 'Habitaciones' : 'Servicios'}
+              </span>
+            </Link>
+            <Link
+              to={`/business/${id}/reservations`}
+              className="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 rounded-lg transition whitespace-nowrap"
+            >
+              <Calendar size={18} className="text-green-600" />
+              <span className="text-sm font-medium text-gray-700">Reservas</span>
+            </Link>
+            <Link
+              to={`/business/${id}/posts`}
+              className="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 rounded-lg transition whitespace-nowrap"
+            >
+              <MessageSquare size={18} className="text-purple-600" />
+              <span className="text-sm font-medium text-gray-700">Posts</span>
+            </Link>
+            <Link
+              to={`/business/${id}/analytics`}
+              className="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 rounded-lg transition whitespace-nowrap"
+            >
+              <BarChart3 size={18} className="text-orange-600" />
+              <span className="text-sm font-medium text-gray-700">Estadísticas</span>
+            </Link>
+            <Link
+              to={`/business/${id}/settings`}
+              className="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 rounded-lg transition whitespace-nowrap"
+            >
+              <Settings size={18} className="text-gray-600" />
+              <span className="text-sm font-medium text-gray-700">Configuración</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 mt-6">
         {/* Estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
           <StatsCard
@@ -229,55 +281,6 @@ function BusinessManagementDashboard() {
             value={stats.visits}
             color="orange"
           />
-        </div>
-
-        {/* Acciones rápidas */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Acciones Rápidas</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <QuickActionCard
-              icon={Edit}
-              title="Editar Negocio"
-              description="Actualiza la información básica"
-              to={`/business/${id}/edit`}
-              color="primary"
-            />
-            <QuickActionCard
-              icon={business.businessType === 'property' ? Home : Package}
-              title={business.businessType === 'property' ? 'Gestionar Habitaciones' : 'Gestionar Servicios'}
-              description="Administra tus servicios"
-              to={`/business/${id}/services`}
-              color="blue"
-            />
-            <QuickActionCard
-              icon={Calendar}
-              title="Ver Reservas"
-              description="Revisa reservas y disponibilidad"
-              to={`/business/${id}/reservations`}
-              color="green"
-            />
-            <QuickActionCard
-              icon={MessageSquare}
-              title="Gestionar Posts"
-              description="Crea y edita publicaciones"
-              to={`/business/${id}/posts`}
-              color="purple"
-            />
-            <QuickActionCard
-              icon={BarChart3}
-              title="Estadísticas"
-              description="Análisis y reportes"
-              to={`/business/${id}/analytics`}
-              color="orange"
-            />
-            <QuickActionCard
-              icon={Settings}
-              title="Configuración"
-              description="Ajustes del negocio"
-              to={`/business/${id}/settings`}
-              color="gray"
-            />
-          </div>
         </div>
 
         {/* Contenido principal en dos columnas */}

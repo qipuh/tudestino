@@ -1,7 +1,7 @@
+import './dotenv-config.js';
 import express from 'express';
 import { createServer } from 'http';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { connectDB } from './config/database-mysql.js';
 import { setupAssociations } from './config/associations.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -27,8 +27,6 @@ import eventsRoutes from './modules/events/events.routes.js';
 import businessesRoutes from './modules/businesses/index.js';
 import uploadRoutes from './modules/upload/upload.routes.js';
 import countriesRoutes from './modules/countries/countries.routes.js';
-
-dotenv.config();
 
 const app = express();
 const server = createServer(app);

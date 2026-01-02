@@ -34,8 +34,7 @@ class BusinessPropertyService {
       // 2.5. Buscar si ya existe una propiedad para este negocio
       let property = await Property.findOne({
         where: {
-          hostId: ownerId,
-          hotelName: business.name
+          businessId: businessId
         }
       });
 
@@ -69,6 +68,7 @@ class BusinessPropertyService {
       if (!property) {
         property = await Property.create({
         hostId: ownerId,
+        businessId: businessId,
         accommodationType: 'hotel',
         multipleUnits: true,
         hotelName: business.name,
@@ -226,8 +226,7 @@ class BusinessPropertyService {
       // Buscar TODAS las propiedades del negocio
       const properties = await Property.findAll({
         where: {
-          hostId: business.ownerId,
-          hotelName: business.name
+          businessId: businessId
         },
         include: [{
           model: Room,

@@ -356,8 +356,8 @@ function BusinessDetail({ businessIdProp }) {
                             }}
                             className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all shadow-lg hover:shadow-xl"
                           >
-                            <Bed size={16} />
-                            Ver habitaciones
+                            <Calendar size={16} />
+                            Reservar
                           </button>
                         ) : (
                           <button
@@ -493,8 +493,8 @@ function BusinessDetail({ businessIdProp }) {
                               }}
                               className="px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all shadow-lg"
                             >
-                              <Bed size={14} />
-                              Ver habitaciones
+                              <Calendar size={14} />
+                              Reservar
                             </button>
                           ) : (
                             <button
@@ -628,8 +628,8 @@ function BusinessDetail({ businessIdProp }) {
                         }}
                         className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all shadow-lg hover:shadow-xl"
                       >
-                        <Bed size={16} />
-                        Ver habitaciones
+                        <Calendar size={16} />
+                        Reservar
                       </button>
                     ) : (
                       <button

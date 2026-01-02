@@ -260,7 +260,7 @@ function PropertyDetail({ propertyIdProp }) {
 
                   {/* Lado derecho: Botones */}
                   <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
-                    {user && property?.business && user.id !== property.business.ownerId && (
+                    {property?.business && (!user || user.id !== property.business.ownerId) && (
                       <button
                         onClick={handleContactBusiness}
                         className="px-3 py-2 sm:px-4 bg-white/90 hover:bg-white text-gray-900 rounded-lg font-medium text-xs sm:text-sm flex-1 sm:flex-initial justify-center flex items-center gap-1.5 sm:gap-2 transition-all shadow-lg hover:shadow-xl"
@@ -373,7 +373,7 @@ function PropertyDetail({ propertyIdProp }) {
                 </div>
 
                 <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
-                  {user && property?.business && user.id !== property.business.ownerId && (
+                  {property?.business && (!user || user.id !== property.business.ownerId) && (
                     <button
                       onClick={handleContactBusiness}
                       className="px-3 py-2 sm:px-4 bg-white/90 hover:bg-white text-gray-900 rounded-lg font-medium text-xs sm:text-sm flex-1 sm:flex-initial justify-center flex items-center gap-1.5 sm:gap-2 transition-all shadow-lg hover:shadow-xl"

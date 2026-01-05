@@ -11,12 +11,14 @@ const Tour = sequelize.define('Tour', {
 
   // INFORMACIÓN BÁSICA
   businessId: {
-    type: DataTypes.UUID,
+    type: DataTypes.CHAR(36),
     allowNull: false,
     references: {
       model: 'businesses',
       key: 'id'
-    }
+    },
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE'
   },
   tourCode: {
     type: DataTypes.STRING(50),

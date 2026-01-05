@@ -134,6 +134,17 @@ router.post('/:businessId/photos', authenticate, businessUpload.single('photo'),
 router.delete('/:businessId/photos/:photoId', authenticate, businessController.deletePhoto);
 
 /**
+ * Rutas de tours/excursiones
+ */
+import tourController from '../tours/tour.controller.js';
+
+// Obtener tours de un negocio (público)
+router.get('/:businessId/tours', tourController.getToursByBusiness);
+
+// Crear tour de un negocio
+router.post('/:businessId/tours', authenticate, tourController.createTour);
+
+/**
  * Ruta con parámetro dinámico (:id)
  * DEBE IR AL FINAL para no capturar rutas específicas como /my-businesses
  */

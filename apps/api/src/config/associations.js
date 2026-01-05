@@ -17,6 +17,7 @@ import BusinessFollow from '../modules/businesses/business-follow.model.js';
 import UserSocialPost from '../modules/social/user-social-post.model.js';
 import ServiceReview from '../modules/reviews/service-review.model.js';
 import Country from '../modules/countries/country.model.js';
+import Tour from '../modules/tours/tour.model.js';
 
 export const setupAssociations = () => {
   // User - Property (Host relationship)

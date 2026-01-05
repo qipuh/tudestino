@@ -25,6 +25,7 @@ import restaurantRoutes from './modules/restaurants/restaurants.routes.js';
 import entertainmentRoutes from './modules/entertainment/entertainment.routes.js';
 import eventsRoutes from './modules/events/events.routes.js';
 import businessesRoutes from './modules/businesses/index.js';
+import toursRoutes from './modules/tours/tour.routes.js';
 import uploadRoutes from './modules/upload/upload.routes.js';
 import countriesRoutes from './modules/countries/countries.routes.js';
 
@@ -70,6 +71,7 @@ app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/entertainment', entertainmentRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/businesses', businessesRoutes);
+app.use('/api/tours', toursRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/countries', countriesRoutes);
 

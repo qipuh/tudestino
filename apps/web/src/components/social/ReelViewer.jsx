@@ -291,27 +291,28 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
           <div className="relative flex-1 bg-black rounded-lg overflow-hidden flex items-center justify-center">
             {reel.videoUrl || reel.video_url ? (
               <video
-                src={reel.videoUrl || reel.video_url}
+                src={getImageUrl(reel.videoUrl || reel.video_url, 'social')}
                 className="max-w-full max-h-full object-contain"
                 controls
                 autoPlay
                 loop
                 playsInline
               />
-            ) : reel.images && reel.images.length > 0 ? (
-              <img
-                src={reel.images[0]}
-                alt={reel.content}
-                className="max-w-full max-h-full object-contain"
-              />
-            ) : (
-              <div className="flex items-center justify-center text-white text-center p-8">
-                <div>
-                  <Play size={64} className="mx-auto mb-4 opacity-50" />
-                  <p className="text-lg">{reel.content || 'Contenido no disponible'}</p>
+              ) : reel.images && reel.images.length > 0 ? (
+                <img
+                  src={getImageUrl(reel.images[0], 'social')}
+                  alt={reel.content}
+                  className="max-w-full max-h-full object-contain"
+                />
+              ) : (
+                <div className="flex items-center justify-center text-white text-center p-8">
+                  <div>
+                    <Play size={64} className="mx-auto mb-4 opacity-50" />
+                    <p className="text-lg">{reel.content || 'Contenido no disponible'}</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )
+            }
 
             {/* Overlay con info del reel */}
             {reel.user && (

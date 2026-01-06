@@ -42,6 +42,9 @@ import BusinessSettings from '@modules/business/pages/BusinessSettings';
 import RestaurantMenu from '@modules/business/pages/RestaurantMenu';
 import CreatePropertySimplified from '@modules/business/pages/CreatePropertySimplified';
 import CreateRoomsSimplified from '@modules/business/pages/CreateRoomsSimplified';
+import BusinessTours from '@modules/business/pages/BusinessTours';
+import CreateTourSteps from '@modules/business/pages/CreateTourSteps';
+import TourDetailPage from '@modules/tours/pages/TourDetailPage';
 import EventsListPage from '@modules/events/pages/EventsListPage';
 import CreateEvent from '@modules/events/pages/CreateEvent';
 import EditEvent from '@modules/events/pages/EditEvent';
@@ -121,6 +124,12 @@ function App() {
         <Route path="business/:id/menu" element={<RestaurantMenu />} />
         <Route path="business/:businessId/property/create" element={<CreatePropertySimplified />} />
         <Route path="business/:businessId/property/create-rooms" element={<CreateRoomsSimplified />} />
+        <Route path="business/:id/tours" element={<BusinessTours />} />
+        <Route path="business/:id/tours/create" element={<CreateTourSteps />} />
+        <Route path="business/:id/tours/:tourId/edit" element={<CreateTourSteps />} />
+
+        {/* Tours Public Routes */}
+        <Route path="tours/:id" element={<TourDetailPage />} />
 
         {/* Business Routes (plural for compatibility) */}
         <Route path="businesses/:id" element={<BusinessDetail />} />

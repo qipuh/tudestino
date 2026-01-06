@@ -151,5 +151,7 @@ export const setupAssociations = () => {
   Business.hasMany(ServiceReview, { foreignKey: 'businessId', as: 'reviews' });
   ServiceReview.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
 
+  // Note: Tour associations are defined in tour.model.js
+
   console.log('✅ Model associations configured (including Business module)');
 };

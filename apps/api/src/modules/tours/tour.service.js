@@ -57,7 +57,7 @@ class TourService {
       where: whereConditions,
       include: [{
         model: Business,
-        as: 'business',
+        as: 'Business',
         attributes: ['id', 'name', 'slug', 'logo']
       }],
       order: [['createdAt', 'DESC']]
@@ -73,8 +73,8 @@ class TourService {
     const tour = await Tour.findByPk(tourId, {
       include: [{
         model: Business,
-        as: 'business',
-        attributes: ['id', 'name', 'slug', 'logo', 'contactPhone', 'contactEmail']
+        as: 'Business',
+        attributes: ['id', 'name', 'slug', 'logo', 'contactPhone', 'contactEmail', 'verificationStatus']
       }]
     });
 
@@ -93,8 +93,8 @@ class TourService {
       where: { slug, status: 'active' },
       include: [{
         model: Business,
-        as: 'business',
-        attributes: ['id', 'name', 'slug', 'logo', 'contactPhone', 'contactEmail']
+        as: 'Business',
+        attributes: ['id', 'name', 'slug', 'logo', 'contactPhone', 'contactEmail', 'verificationStatus']
       }]
     });
 
@@ -112,7 +112,7 @@ class TourService {
     const tour = await Tour.findByPk(tourId, {
       include: [{
         model: Business,
-        as: 'business'
+        as: 'Business'
       }]
     });
 
@@ -120,7 +120,7 @@ class TourService {
       throw new Error('Tour no encontrado');
     }
 
-    if (tour.business.ownerId !== ownerId) {
+    if (tour.Business.ownerId !== ownerId) {
       throw new Error('No tienes permisos para actualizar este tour');
     }
 
@@ -141,7 +141,7 @@ class TourService {
     const tour = await Tour.findByPk(tourId, {
       include: [{
         model: Business,
-        as: 'business'
+        as: 'Business'
       }]
     });
 
@@ -149,7 +149,7 @@ class TourService {
       throw new Error('Tour no encontrado');
     }
 
-    if (tour.business.ownerId !== ownerId) {
+    if (tour.Business.ownerId !== ownerId) {
       throw new Error('No tienes permisos para eliminar este tour');
     }
 
@@ -223,8 +223,8 @@ class TourService {
       where: whereConditions,
       include: [{
         model: Business,
-        as: 'business',
-        attributes: ['id', 'name', 'slug', 'logo']
+        as: 'Business',
+        attributes: ['id', 'name', 'slug', 'logo', 'verificationStatus']
       }],
       limit: limitNum,
       offset,

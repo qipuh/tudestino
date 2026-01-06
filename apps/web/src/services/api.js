@@ -79,6 +79,12 @@ export const getImageUrl = (imagePath, context = 'auto') => {
     subfolder = 'social';
   } else if (context === 'menu') {
     subfolder = 'menu';
+  } else if (context === 'tours' || context === 'tour') {
+    subfolder = 'tours';
+  } else if (context === 'events' || context === 'event') {
+    subfolder = 'events';
+  } else if (context === 'avatars' || context === 'avatar') {
+    subfolder = 'avatars';
   }
 
   return `${SERVER_BASE_URL}/uploads/${subfolder}/${cleanPath}`;

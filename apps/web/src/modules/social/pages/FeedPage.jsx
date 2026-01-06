@@ -185,7 +185,7 @@ function FeedPage() {
                 {/* Thumbnail */}
                 {post.type === 'reel' ? (
                   <video
-                    src={post.videoUrl}
+                    src={getImageUrl(post.videoUrl, 'social')}
                     className="w-full h-full object-cover"
                     muted
                   />

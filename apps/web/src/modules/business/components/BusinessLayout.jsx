@@ -10,7 +10,8 @@ import {
   Calendar,
   MessageSquare,
   BarChart3,
-  Settings
+  Settings,
+  Map
 } from 'lucide-react';
 import api, { getImageUrl } from '../../../services/api';
 
@@ -55,13 +56,19 @@ function BusinessLayout({ children, activeMenu }) {
   const menuItems = [
     { to: `/business/${id}/manage`, label: 'Panel', icon: BarChart3, color: 'text-primary', key: 'manage' },
     { to: `/business/${id}/edit`, label: 'Editar Negocio', icon: Edit, color: 'text-primary', key: 'edit' },
-    {
-      to: `/business/${id}/services`,
-      label: business.businessType === 'property' ? 'Habitaciones' : 'Servicios',
-      icon: business.businessType === 'property' ? Home : Package,
-      color: 'text-blue-600',
-      key: 'services'
-    },
+    // Mostrar Tours solo para negocios tipo tour
+    ...(business.businessType === 'tour' ? [
+      { to: `/business/${id}/tours`, label: 'Tours', icon: Map, color: 'text-teal-600', key: 'tours' }
+    ] : [
+      // Mostrar Servicios/Habitaciones para otros tipos de negocio
+      {
+        to: `/business/${id}/services`,
+        label: business.businessType === 'property' ? 'Habitaciones' : 'Servicios',
+        icon: business.businessType === 'property' ? Home : Package,
+        color: 'text-blue-600',
+        key: 'services'
+      }
+    ]),
     { to: `/business/${id}/reservations`, label: 'Reservas', icon: Calendar, color: 'text-green-600', key: 'reservations' },
     { to: `/business/${id}/posts`, label: 'Posts', icon: MessageSquare, color: 'text-purple-600', key: 'posts' },
     { to: `/business/${id}/analytics`, label: 'Estadísticas', icon: BarChart3, color: 'text-orange-600', key: 'analytics' },

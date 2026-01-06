@@ -19,13 +19,18 @@ function ReelsSidebar({ isOpen, onToggle }) {
   const loadReels = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/social/posts?type=reel');
+      console.log('🎬 ReelsSidebar: Cargando reels...');
+      const response = await api.get('/social/reels/feed');
+      console.log('🎬 ReelsSidebar: Response completo:', response);
       const reelsData = response.data || response;
+      console.log('🎬 ReelsSidebar: Reels data:', reelsData);
+      console.log('🎬 ReelsSidebar: Es array?', Array.isArray(reelsData));
 
       const orderedReels = smartOrderReels(reelsData);
+      console.log('🎬 ReelsSidebar: Reels ordenados:', orderedReels);
       setReels(orderedReels);
     } catch (error) {
-      console.error('Error loading reels:', error);
+      console.error('❌ Error loading reels:', error);
       setReels([]);
     } finally {
       setLoading(false);
@@ -155,15 +160,15 @@ function ReelsSidebar({ isOpen, onToggle }) {
                   {/* Video/Image */}
                   {currentReel?.videoUrl || currentReel?.video_url ? (
                     <video
-                      src={currentReel.videoUrl || currentReel.video_url}
+                      src={getImageUrl(currentReel.videoUrl || currentReel.video_url, 'social')}
                       className="w-full h-full object-cover"
                       muted
                       loop
                       autoPlay
                     />
-                  ) : currentReel?.images && currentReel.images.length > 0 ? (
+                ) : currentReel?.images && currentReel.images.length > 0 ? (
                     <img
-                      src={currentReel.images[0]}
+                      src={getImageUrl(currentReel.images[0], 'social')}
                       alt={currentReel.content}
                       className="w-full h-full object-cover"
                     />

@@ -4,7 +4,7 @@ const SidebarContext = createContext();
 
 export function SidebarProvider({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [sidebarVisible, setSidebarVisible] = useState(false); // Controls if sidebar is rendered
+  const [sidebarVisible, setSidebarVisible] = useState(true); // Controls if sidebar is rendered - changed to true by default
 
   const toggleSidebar = () => {
     setSidebarOpen(prev => !prev);

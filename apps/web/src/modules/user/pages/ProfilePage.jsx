@@ -891,7 +891,7 @@ function ProfilePage({ userIdProp }) {
                     />
                   ) : (
                     <video
-                      src={getImageUrl(reel.videoUrl)}
+                      src={getImageUrl(reel.videoUrl, 'social')}
                       className="w-full h-full object-cover"
                       preload="metadata"
                     />
@@ -926,7 +926,7 @@ function ProfilePage({ userIdProp }) {
                 >
                   {/* Use video element for thumbnail - shows first frame */}
                   <video
-                    src={reel.videoUrl}
+                    src={getImageUrl(reel.videoUrl, 'social')}
                     className="w-full h-full object-cover"
                     preload="metadata"
                   />

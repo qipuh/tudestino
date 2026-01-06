@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Star, TrendingUp, Home, Building2, Castle, TreePine } from 'lucide-react';
+import { MapPin, Star, TrendingUp, Home, Building2, Castle, TreePine, Map, Calendar } from 'lucide-react';
 import SearchHero from '@components/SearchHero';
 import ReelsSidebar from '../../../components/social/ReelsSidebar';
 import api, { getImageUrl } from '../../../services/api';
@@ -8,6 +8,8 @@ import { useSidebar } from '../../../contexts/SidebarContext';
 
 function HomePage() {
   const [businesses, setBusinesses] = useState([]);
+  const [tours, setTours] = useState([]);
+  const [tourBusinesses, setTourBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
   const { sidebarOpen, toggleSidebar, setSidebarVisible } = useSidebar();
 
@@ -19,6 +21,8 @@ function HomePage() {
 
   useEffect(() => {
     fetchBusinesses();
+    fetchTours();
+    fetchTourBusinesses();
   }, []);
 
   const fetchBusinesses = async () => {
@@ -46,6 +50,32 @@ function HomePage() {
       console.error('Error fetching businesses:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTours = async () => {
+    try {
+      const response = await api.get('/tours/search?limit=8');
+      console.log('🗺️ Tours response:', response);
+
+      // La respuesta tiene estructura: { success: true, data: { tours: [...], pagination: {...} } }
+      const toursData = response.data?.tours || response.tours || [];
+      console.log('🗺️ Tours data:', toursData);
+      setTours(toursData);
+    } catch (error) {
+      console.error('Error fetching tours:', error);
+      setTours([]);
+    }
+  };
+
+  const fetchTourBusinesses = async () => {
+    try {
+      const response = await api.get('/businesses?businessType=tour&limit=8');
+      console.log('🏢 Tour businesses data:', response.data);
+      setTourBusinesses(response.data || []);
+    } catch (error) {
+      console.error('Error fetching tour businesses:', error);
+      setTourBusinesses([]);
     }
   };
 
@@ -260,6 +290,163 @@ function HomePage() {
                   </Link>
                 );
               })}
+            </div>
+          </section>
+        )}
+
+        {/* Tours Destacados */}
+        {tours.length > 0 && (
+          <section className="mb-16">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Map className="text-primary" size={24} />
+                <h2 className="text-xl sm:text-2xl font-bold text-primary-dark">Tours y Excursiones</h2>
+                <span className="text-xs sm:text-sm text-gray-500">({tours.length})</span>
+              </div>
+              <Link
+                to="/search?category=tour"
+                className="text-primary hover:text-primary-dark font-medium text-xs sm:text-sm transition-colors"
+              >
+                Ver todos →
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              {tours.map((tour) => (
+                <Link
+                  key={tour.id}
+                  to={`/tours/${tour.id}`}
+                  className="group bg-white border border-gray-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="h-40 sm:h-48 bg-gradient-to-br from-teal-500 to-teal-700 relative overflow-hidden">
+                    {tour.coverImage ? (
+                      <img
+                        src={getImageUrl(tour.coverImage, 'tours')}
+                        alt={tour.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white text-5xl">
+                        🗺️
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2 bg-primary text-white px-2 py-1 rounded-full text-xs font-bold">
+                      ${tour.basePricePerPerson}
+                    </div>
+                    {tour.category && (
+                      <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-semibold text-primary">
+                        {tour.category}
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3 sm:p-4">
+                    <h3 className="font-semibold text-base sm:text-lg line-clamp-2 group-hover:text-primary transition-colors min-h-[3rem]">
+                      {tour.name}
+                    </h3>
+
+                    {/* Nombre del negocio */}
+                    {tour.Business && (
+                      <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                        <Building2 size={12} className="flex-shrink-0" />
+                        <span className="truncate">{tour.Business.name}</span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-1 text-xs sm:text-sm text-gray-600 mt-2">
+                      <MapPin size={12} className="text-primary flex-shrink-0 sm:w-3.5 sm:h-3.5" />
+                      <span className="truncate">{tour.mainDestination}</span>
+                    </div>
+
+                    {tour.durationDays && (
+                      <div className="flex items-center gap-1 text-xs sm:text-sm text-gray-600 mt-1">
+                        <Calendar size={12} className="text-primary flex-shrink-0 sm:w-3.5 sm:h-3.5" />
+                        <span>{tour.durationDays}D/{tour.durationNights || tour.durationDays - 1}N</span>
+                      </div>
+                    )}
+
+                    <div className="mt-3 pt-2 border-t border-gray-100">
+                      <span className="text-base sm:text-lg font-bold text-primary-dark">
+                        {tour.priceCurrency} {tour.basePricePerPerson}
+                      </span>
+                      <span className="text-xs sm:text-sm text-gray-600"> / persona</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Empresas de Tours */}
+        {tourBusinesses.length > 0 && (
+          <section className="mb-16">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Building2 className="text-primary" size={24} />
+                <h2 className="text-xl sm:text-2xl font-bold text-primary-dark">Agencias de Tours</h2>
+                <span className="text-xs sm:text-sm text-gray-500">({tourBusinesses.length})</span>
+              </div>
+              <Link
+                to="/search?businessType=tour"
+                className="text-primary hover:text-primary-dark font-medium text-xs sm:text-sm transition-colors"
+              >
+                Ver todas →
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              {tourBusinesses.map((business) => (
+                <Link
+                  key={business.id}
+                  to={`/business/${business.id}`}
+                  className="group bg-white border border-gray-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="h-40 sm:h-48 bg-gradient-to-br from-primary to-primary-dark relative overflow-hidden">
+                    {business.logo || business.coverImage ? (
+                      <img
+                        src={getImageUrl(business.logo || business.coverImage, 'business')}
+                        alt={business.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white">
+                        <Building2 size={48} />
+                      </div>
+                    )}
+                    {business.verificationStatus === 'verified' && (
+                      <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                        <Star size={12} fill="white" />
+                        Verificado
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3 sm:p-4">
+                    <h3 className="font-semibold text-base sm:text-lg truncate group-hover:text-primary transition-colors">
+                      {business.name}
+                    </h3>
+                    {business.description && (
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">
+                        {business.description}
+                      </p>
+                    )}
+                    {business.address && (
+                      <div className="flex items-center gap-1 text-xs sm:text-sm text-gray-600 mt-2">
+                        <MapPin size={12} className="text-primary flex-shrink-0 sm:w-3.5 sm:h-3.5" />
+                        <span className="truncate">{business.address}</span>
+                      </div>
+                    )}
+                    {business.ratingAverage > 0 && (
+                      <div className="flex items-center gap-1 mt-2">
+                        <Star size={12} className="fill-yellow-400 text-yellow-400 sm:w-3.5 sm:h-3.5" />
+                        <span className="text-xs sm:text-sm font-medium">
+                          {business.ratingAverage.toFixed(1)}
+                        </span>
+                        <span className="text-xs sm:text-sm text-gray-600">
+                          ({business.reviewCount || 0})
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              ))}
             </div>
           </section>
         )}

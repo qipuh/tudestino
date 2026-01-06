@@ -212,7 +212,7 @@ function PostCard({ post, onDelete, currentUserId, onUpdate }) {
               />
             ) : (
               <video
-                src={getImageUrl(media[currentMediaIndex].url)}
+                src={getImageUrl(media[currentMediaIndex].url, 'social')}
                 controls
                 className="w-full h-full object-cover"
               />

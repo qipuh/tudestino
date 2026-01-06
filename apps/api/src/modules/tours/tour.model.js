@@ -231,7 +231,7 @@ const Tour = sequelize.define('Tour', {
 // Relaciones
 Tour.belongsTo(Business, {
   foreignKey: 'businessId',
-  as: 'business'
+  as: 'Business'
 });
 
 Business.hasMany(Tour, {

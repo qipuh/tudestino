@@ -14,6 +14,7 @@ const router = express.Router();
 router.use(authenticate); // Todas las rutas requieren autenticación
 
 router.get('/me', getProfile);
+router.patch('/me', updateProfile); // Actualizar perfil del usuario actual
 router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
 router.get('/bookings', getBookingHistory);

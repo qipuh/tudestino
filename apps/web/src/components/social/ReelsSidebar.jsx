@@ -24,9 +24,13 @@ function ReelsSidebar({ isOpen, onToggle }) {
       console.log('🎬 ReelsSidebar: Response completo:', response);
       const reelsData = response.data || response;
       console.log('🎬 ReelsSidebar: Reels data:', reelsData);
-      console.log('🎬 ReelsSidebar: Es array?', Array.isArray(reelsData));
 
-      const orderedReels = smartOrderReels(reelsData);
+      // Extraer el array de reels correctamente
+      const reelsArray = Array.isArray(reelsData) ? reelsData : (reelsData.reels || []);
+      console.log('🎬 ReelsSidebar: Reels array:', reelsArray);
+      console.log('🎬 ReelsSidebar: Es array?', Array.isArray(reelsArray));
+
+      const orderedReels = smartOrderReels(reelsArray);
       console.log('🎬 ReelsSidebar: Reels ordenados:', orderedReels);
       setReels(orderedReels);
     } catch (error) {
@@ -38,7 +42,13 @@ function ReelsSidebar({ isOpen, onToggle }) {
   };
 
   const smartOrderReels = (reelsArray) => {
-    if (!currentUser || !Array.isArray(reelsArray)) {
+    // Si no es un array, devolver array vacío
+    if (!Array.isArray(reelsArray)) {
+      return [];
+    }
+
+    // Si no hay usuario actual, solo mezclar aleatoriamente
+    if (!currentUser) {
       return shuffleArray([...reelsArray]);
     }
 

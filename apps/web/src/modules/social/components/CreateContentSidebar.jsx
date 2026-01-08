@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react';
-import { X, Image as ImageIcon, Video, MapPin, Users, Smile, Send, Upload, Play, Pause, Loader } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { X, Image as ImageIcon, Video, MapPin, Users, Smile, Send, Upload, Play, Pause, Loader, Search, AtSign } from 'lucide-react';
 import useAuthStore from '../../../store/authStore';
 import { getImageUrl } from '../../../services/api';
 import { createPost, createReel } from '../../../services/socialService';
+import api from '../../../services/api';
 
 /**
  * Sidebar para crear publicaciones y reels
@@ -14,6 +15,12 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
   const videoRef = useRef(null);
 
   const [contentType, setContentType] = useState(type); // 'post' | 'reel'
+
+  // Sincronizar contentType cuando cambia el prop type
+  useEffect(() => {
+    setContentType(type);
+    console.log('🔄 ContentType actualizado a:', type);
+  }, [type]);
   const [caption, setCaption] = useState('');
   const [location, setLocation] = useState('');
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -21,6 +28,110 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [locationSuggestions, setLocationSuggestions] = useState([]);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [loadingLocations, setLoadingLocations] = useState(false);
+  const [businessSuggestions, setBusinessSuggestions] = useState([]);
+  const [showBusinessSuggestions, setShowBusinessSuggestions] = useState(false);
+  const [loadingBusinesses, setLoadingBusinesses] = useState(false);
+  const [mentionSearch, setMentionSearch] = useState('');
+  const [cursorPosition, setCursorPosition] = useState(0);
+  const locationInputRef = useRef(null);
+  const captionInputRef = useRef(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  // Lista de emojis comunes
+  const commonEmojis = [
+    '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩',
+    '😘', '😗', '😚', '😙', '🥲', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐',
+    '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒',
+    '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '🥸', '😎', '🤓', '🧐', '😕',
+    '❤️', '🧡', '💛', '💚', '💙', '💜', '🤎', '🖤', '🤍', '💔', '❣️', '💕', '💞', '💓', '💗', '💖',
+    '✨', '💫', '⭐', '🌟', '⚡', '🔥', '💥', '💯', '👍', '👎', '👏', '🙌', '👐', '🤝', '🙏', '✊',
+    '🌈', '☀️', '⛅', '☁️', '🌙', '⭐', '✨', '🌍', '🌎', '🌏', '🗺️', '🏔️', '⛰️', '🏕️', '🏖️', '🏝️',
+    '🎉', '🎊', '🎈', '🎁', '🎀', '🎂', '🍰', '🧁', '🍕', '🍔', '🍟', '🌭', '🍿', '🥤', '☕', '🍺'
+  ];
+
+  // Buscar ubicaciones usando Nominatim (OpenStreetMap)
+  const searchLocations = async (query) => {
+    if (!query || query.length < 3) {
+      setLocationSuggestions([]);
+      return;
+    }
+
+    setLoadingLocations(true);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`
+      );
+      const data = await response.json();
+
+      const suggestions = data.map(item => ({
+        name: item.display_name,
+        city: item.address?.city || item.address?.town || item.address?.village,
+        country: item.address?.country,
+      }));
+
+      setLocationSuggestions(suggestions);
+    } catch (error) {
+      console.error('Error searching locations:', error);
+      setLocationSuggestions([]);
+    } finally {
+      setLoadingLocations(false);
+    }
+  };
+
+  // Buscar negocios para etiquetar
+  const searchBusinesses = async (query) => {
+    if (!query || query.length < 2) {
+      setBusinessSuggestions([]);
+      return;
+    }
+
+    setLoadingBusinesses(true);
+    try {
+      const response = await api.get(`/businesses/search?q=${encodeURIComponent(query)}&limit=5`);
+      setBusinessSuggestions(response.businesses || []);
+    } catch (error) {
+      console.error('Error searching businesses:', error);
+      setBusinessSuggestions([]);
+    } finally {
+      setLoadingBusinesses(false);
+    }
+  };
+
+  // Detectar @ en caption para buscar negocios
+  useEffect(() => {
+    if (!caption) return;
+
+    const cursorPos = captionInputRef.current?.selectionStart || 0;
+    const textBeforeCursor = caption.substring(0, cursorPos);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+    if (lastAtIndex !== -1) {
+      const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
+      const hasSpace = textAfterAt.includes(' ');
+
+      if (!hasSpace && textAfterAt.length > 0) {
+        setMentionSearch(textAfterAt);
+        searchBusinesses(textAfterAt);
+        setShowBusinessSuggestions(true);
+      } else {
+        setShowBusinessSuggestions(false);
+      }
+    } else {
+      setShowBusinessSuggestions(false);
+    }
+  }, [caption, cursorPosition]);
+
+  // Debounce para buscar ubicaciones
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchLocations(location);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [location]);
 
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
@@ -102,6 +213,11 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
       return;
     }
 
+    console.log('🚀 Iniciando creación de contenido...');
+    console.log('📝 ContentType:', contentType);
+    console.log('📝 Caption:', caption);
+    console.log('📁 Archivos seleccionados:', selectedFiles.length);
+
     setUploading(true);
     setUploadProgress(0);
 
@@ -114,8 +230,10 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
       // Agregar archivos
       selectedFiles.forEach((file, index) => {
         if (contentType === 'reel') {
+          console.log('🎬 Agregando video al FormData:', file.name);
           formData.append('video', file);
         } else {
+          console.log('📸 Agregando media al FormData:', file.name);
           formData.append('media', file);
         }
       });
@@ -132,6 +250,7 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
       }, 200);
 
       // Crear publicación
+      console.log('📡 Llamando a:', contentType === 'reel' ? 'createReel()' : 'createPost()');
       const response = contentType === 'reel'
         ? await createReel(formData)
         : await createPost(formData);
@@ -139,7 +258,8 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      console.log('Content created:', response);
+      console.log('✅ Content created:', response);
+      console.log('📦 Response data:', response.data);
 
       // Limpiar formulario
       setTimeout(() => {
@@ -160,6 +280,34 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
     }
   };
 
+  const handleSelectLocation = (suggestion) => {
+    setLocation(suggestion.name);
+    setLocationSuggestions([]);
+    setShowLocationSuggestions(false);
+  };
+
+  const handleSelectBusiness = (business) => {
+    const cursorPos = captionInputRef.current?.selectionStart || 0;
+    const textBeforeCursor = caption.substring(0, cursorPos);
+    const textAfterCursor = caption.substring(cursorPos);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+    const beforeMention = caption.substring(0, lastAtIndex);
+    const afterMention = textAfterCursor;
+
+    const newCaption = `${beforeMention}@${business.username || business.name} ${afterMention}`;
+    setCaption(newCaption);
+    setShowBusinessSuggestions(false);
+    setBusinessSuggestions([]);
+
+    // Enfocar el textarea
+    setTimeout(() => {
+      captionInputRef.current?.focus();
+      const newPos = (beforeMention + `@${business.username || business.name} `).length;
+      captionInputRef.current?.setSelectionRange(newPos, newPos);
+    }, 0);
+  };
+
   const resetForm = () => {
     setCaption('');
     setLocation('');
@@ -168,6 +316,10 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
     setPreviews([]);
     setUploading(false);
     setUploadProgress(0);
+    setLocationSuggestions([]);
+    setBusinessSuggestions([]);
+    setShowLocationSuggestions(false);
+    setShowBusinessSuggestions(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -263,19 +415,63 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
             </div>
 
             {/* Caption */}
-            <div>
+            <div className="relative">
               <textarea
+                ref={captionInputRef}
                 value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                placeholder={contentType === 'reel' ? '¿Qué está pasando en tu reel?' : '¿Qué quieres compartir?'}
+                onChange={(e) => {
+                  setCaption(e.target.value);
+                  setCursorPosition(e.target.selectionStart);
+                }}
+                onKeyUp={(e) => setCursorPosition(e.target.selectionStart)}
+                onClick={(e) => setCursorPosition(e.target.selectionStart)}
+                placeholder={contentType === 'reel' ? '¿Qué está pasando en tu reel? Usa @ para etiquetar negocios' : '¿Qué quieres compartir? Usa @ para etiquetar negocios'}
                 className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none resize-none"
                 rows="4"
                 disabled={uploading}
                 maxLength="2200"
               />
+
+              {/* Business Suggestions Dropdown */}
+              {showBusinessSuggestions && businessSuggestions.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border-2 border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                  {loadingBusinesses ? (
+                    <div className="p-3 text-center text-gray-500">
+                      <Loader size={16} className="animate-spin inline mr-2" />
+                      Buscando negocios...
+                    </div>
+                  ) : (
+                    businessSuggestions.map((business) => (
+                      <button
+                        key={business.id}
+                        type="button"
+                        onClick={() => handleSelectBusiness(business)}
+                        className="w-full p-3 text-left hover:bg-gray-100 transition flex items-center gap-3"
+                      >
+                        {business.avatar ? (
+                          <img
+                            src={getImageUrl(business.avatar, 'social')}
+                            alt={business.name}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <AtSign size={20} className="text-primary" />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm">{business.name}</p>
+                          <p className="text-xs text-gray-500">@{business.username || business.name}</p>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+
               <div className="flex items-center justify-between mt-1 px-1">
                 <span className="text-xs text-gray-500">
-                  {caption.length}/2200
+                  {caption.length}/2200 · Usa @ para etiquetar negocios
                 </span>
                 <button
                   type="button"
@@ -288,16 +484,48 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
             </div>
 
             {/* Location */}
-            <div className="flex items-center gap-2 p-3 border-2 border-gray-200 rounded-xl">
-              <MapPin size={20} className="text-gray-400" />
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Agregar ubicación"
-                className="flex-1 outline-none"
-                disabled={uploading}
-              />
+            <div className="relative">
+              <div className="flex items-center gap-2 p-3 border-2 border-gray-200 rounded-xl">
+                <MapPin size={20} className="text-gray-400" />
+                <input
+                  ref={locationInputRef}
+                  type="text"
+                  value={location}
+                  onChange={(e) => {
+                    setLocation(e.target.value);
+                    setShowLocationSuggestions(true);
+                  }}
+                  onFocus={() => location.length >= 3 && setShowLocationSuggestions(true)}
+                  placeholder="Agregar ubicación (ciudad, país...)"
+                  className="flex-1 outline-none"
+                  disabled={uploading}
+                />
+                {loadingLocations && (
+                  <Loader size={16} className="animate-spin text-gray-400" />
+                )}
+              </div>
+
+              {/* Location Suggestions Dropdown */}
+              {showLocationSuggestions && locationSuggestions.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border-2 border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                  {locationSuggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => handleSelectLocation(suggestion)}
+                      className="w-full p-3 text-left hover:bg-gray-100 transition"
+                    >
+                      <div className="flex items-start gap-2">
+                        <MapPin size={16} className="text-primary mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{suggestion.city || suggestion.name.split(',')[0]}</p>
+                          <p className="text-xs text-gray-500 truncate">{suggestion.name}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Media Upload Area */}

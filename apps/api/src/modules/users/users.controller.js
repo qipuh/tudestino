@@ -16,9 +16,15 @@ export const getProfile = async (req, res, next) => {
 export const updateProfile = async (req, res, next) => {
   try {
     const user = await usersService.updateProfile(req.user.id, req.body);
+
+    // Excluir password de la respuesta
+    const userData = user.toJSON();
+    delete userData.password;
+
     res.status(200).json({
       success: true,
-      data: user,
+      user: userData,
+      data: userData,
     });
   } catch (error) {
     next(error);

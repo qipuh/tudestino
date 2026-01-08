@@ -17,3 +17,11 @@ export class AppError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 }
+
+/**
+ * Async handler wrapper para rutas Express
+ * Captura errores en funciones async y los pasa al middleware de error
+ */
+export const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};

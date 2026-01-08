@@ -1,17 +1,69 @@
 import { useState } from 'react';
 import UserAccountLayout from '../../../layouts/UserAccountLayout';
-import { User, Camera, MapPin, Calendar, Mail, Phone, ExternalLink, Edit2, X } from 'lucide-react';
+import { User, Camera, MapPin, Calendar, Mail, Phone, ExternalLink, Edit2, X, Loader2 } from 'lucide-react';
 import useAuthStore from '../../../store/authStore';
+import api from '../../../services/api';
 
 function AccountProfile() {
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const [showUrlModal, setShowUrlModal] = useState(false);
   const [customUrl, setCustomUrl] = useState(user?.username || '');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSaveUrl = () => {
-    // TODO: Implementar guardado de URL personalizada
-    console.log('Saving custom URL:', customUrl);
-    setShowUrlModal(false);
+  const handleSaveUrl = async () => {
+    if (!customUrl || customUrl.length < 3) {
+      setError('La URL debe tener al menos 3 caracteres');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError('');
+
+      const response = await api.patch('/users/me', {
+        username: customUrl
+      });
+
+      console.log('✅ Response from API:', response.data);
+
+      // La respuesta viene directamente en response.data (no en response.data.user)
+      // porque el interceptor de axios ya extrae la propiedad 'data'
+      const userData = response.data;
+
+      console.log('📋 userData:', userData);
+      console.log('🔍 userData.username:', userData.username);
+      console.log('👤 Usuario actual antes del merge:', user);
+
+      // Actualizar el usuario en el store - hacer merge completo
+      if (userData?.id) {
+        // Hacer merge del usuario actual con los nuevos datos
+        const updatedUser = {
+          ...user,
+          ...userData
+        };
+
+        console.log('✨ Updated user después del merge:', updatedUser);
+        console.log('🎯 updatedUser.username:', updatedUser.username);
+
+        setUser(updatedUser);
+
+        // Forzar actualización del estado local también
+        setCustomUrl(userData.username);
+      } else {
+        console.error('❌ No hay datos de usuario en la respuesta!');
+      }
+
+      setShowUrlModal(false);
+
+      // Mostrar mensaje de éxito
+      alert('✓ URL personalizada guardada exitosamente!');
+    } catch (err) {
+      console.error('Error al guardar URL:', err);
+      setError(err.response?.data?.message || 'Error al guardar la URL. Puede que ya esté en uso.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -26,21 +78,28 @@ function AccountProfile() {
               </p>
             </div>
             <div className="flex gap-2">
-              <a
-                href={`https://tudestino.pe/${user?.username || 'rocio'}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 text-sm text-primary hover:text-primary-dark border border-primary rounded-lg hover:bg-blue-50 transition"
-              >
-                <ExternalLink size={16} />
-                Ver perfil público
-              </a>
+              {user?.username ? (
+                <a
+                  href={`/${user.username}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-primary hover:text-primary-dark border border-primary rounded-lg hover:bg-blue-50 transition"
+                >
+                  <ExternalLink size={16} />
+                  Ver perfil público
+                </a>
+              ) : (
+                <div className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 border border-gray-300 rounded-lg bg-gray-50">
+                  <ExternalLink size={16} />
+                  Configura tu URL primero
+                </div>
+              )}
               <button
                 onClick={() => setShowUrlModal(true)}
                 className="flex items-center gap-2 px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-dark transition"
               >
                 <Edit2 size={16} />
-                Cambiar URL
+                {user?.username ? 'Cambiar URL' : 'Configurar URL'}
               </button>
             </div>
           </div>
@@ -193,29 +252,50 @@ function AccountProfile() {
                   <input
                     type="text"
                     value={customUrl}
-                    onChange={(e) => setCustomUrl(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    onChange={(e) => {
+                      setCustomUrl(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''));
+                      setError('');
+                    }}
                     placeholder="tu-nombre"
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    disabled={saving}
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
                   Tu URL será: <strong>tudestino.pe/{customUrl || 'tu-nombre'}</strong>
                 </p>
+                {error && (
+                  <p className="text-xs text-red-600 mt-2 flex items-center gap-1">
+                    <X size={12} />
+                    {error}
+                  </p>
+                )}
               </div>
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => setShowUrlModal(false)}
+                  onClick={() => {
+                    setShowUrlModal(false);
+                    setError('');
+                  }}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                  disabled={saving}
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleSaveUrl}
-                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition"
-                  disabled={!customUrl}
+                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  disabled={!customUrl || saving}
                 >
-                  Guardar
+                  {saving ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Guardando...
+                    </>
+                  ) : (
+                    'Guardar'
+                  )}
                 </button>
               </div>
             </div>

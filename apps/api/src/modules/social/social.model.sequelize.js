@@ -159,14 +159,16 @@ export const Like = sequelize.define('Like', {
     field: 'user_id',
   },
   contentType: {
-    type: DataTypes.ENUM('post', 'reel'),
+    type: DataTypes.ENUM('post', 'reel', 'comment'),
     allowNull: false,
     field: 'content_type',
+    comment: 'Tipo de contenido: post, reel o comment',
   },
   contentId: {
     type: DataTypes.CHAR(36),
     allowNull: false,
     field: 'content_id',
+    comment: 'ID del post, reel o comentario',
   },
   createdAt: {
     type: DataTypes.DATE,
@@ -209,6 +211,12 @@ export const Comment = sequelize.define('Comment', {
     allowNull: false,
     field: 'content_id',
   },
+  parentCommentId: {
+    type: DataTypes.CHAR(36),
+    allowNull: true,
+    field: 'parent_comment_id',
+    comment: 'ID del comentario padre si es una respuesta',
+  },
   text: {
     type: DataTypes.TEXT,
     allowNull: false,
@@ -217,6 +225,12 @@ export const Comment = sequelize.define('Comment', {
     type: DataTypes.INTEGER,
     defaultValue: 0,
     field: 'likes_count',
+  },
+  repliesCount: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    field: 'replies_count',
+    comment: 'Número de respuestas a este comentario',
   },
   createdAt: {
     type: DataTypes.DATE,

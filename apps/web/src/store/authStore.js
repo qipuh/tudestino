@@ -155,6 +155,11 @@ const useAuthStore = create(
           get().logout();
         }
       },
+
+      // Set user (actualizar usuario directamente)
+      setUser: (user) => {
+        set({ user });
+      },
     }),
     {
       name: 'auth-storage',

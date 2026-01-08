@@ -1139,20 +1139,27 @@ function ProfilePage({ userIdProp }) {
         <ReelViewer
           reel={{
             ...selectedReel,
-            user: {
+            user: selectedReel.user || {
               id: profile.id,
               name: profile.name,
               avatar: profile.avatar,
               isFollowing: profile.isFollowing,
             }
           }}
-          reels={DEMO_REELS}
+          reels={realReels.length > 0 ? realReels : (profile.name === 'Host Demo' ? DEMO_REELS : [])}
           currentIndex={selectedReelIndex}
           onNavigate={(newIndex) => {
             setSelectedReelIndex(newIndex);
-            setSelectedReel(DEMO_REELS[newIndex]);
+            const reelsToUse = realReels.length > 0 ? realReels : (profile.name === 'Host Demo' ? DEMO_REELS : []);
+            setSelectedReel(reelsToUse[newIndex]);
           }}
-          onClose={() => setSelectedReel(null)}
+          onClose={() => {
+            setSelectedReel(null);
+            // Recargar reels para reflejar cambios de likes/comentarios
+            if (realReels.length > 0) {
+              loadRealReels(true);
+            }
+          }}
           isOwnProfile={isOwnProfile}
           onFollowChange={handleFollowChange}
         />

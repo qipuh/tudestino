@@ -450,13 +450,14 @@ export const getUserPosts = async (req, res) => {
 };
 
 /**
- * Obtener reels de un usuario
+ * Obtener reels de un usuario con estado de like
  * GET /api/social/users/:userId/reels
  */
 export const getUserReels = async (req, res) => {
   try {
     const { userId } = req.params;
     const { page = 1, limit = 20 } = req.query;
+    const currentUserId = req.user?.id; // Usuario autenticado (opcional)
 
     const offset = (page - 1) * limit;
 
@@ -475,10 +476,33 @@ export const getUserReels = async (req, res) => {
       offset: parseInt(offset),
     });
 
+    // Agregar campo isLiked a cada reel
+    const reelsWithLikeStatus = await Promise.all(
+      reels.map(async (reel) => {
+        let isLiked = false;
+
+        if (currentUserId) {
+          const like = await Like.findOne({
+            where: {
+              contentType: 'reel',
+              contentId: reel.id,
+              userId: currentUserId,
+            },
+          });
+          isLiked = !!like;
+        }
+
+        return {
+          ...reel.toJSON(),
+          isLiked,
+        };
+      })
+    );
+
     res.json({
       success: true,
       data: {
-        reels,
+        reels: reelsWithLikeStatus,
         pagination: {
           total: count,
           page: parseInt(page),
@@ -524,12 +548,13 @@ export const getFeed = async (req, res) => {
 };
 
 /**
- * Obtener feed de reels
+ * Obtener feed de reels con estado de like
  * GET /api/social/reels/feed
  */
 export const getReelsFeed = async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
+    const currentUserId = req.user?.id; // Usuario autenticado (opcional)
     const offset = (page - 1) * limit;
 
     const reels = await Reel.findAll({
@@ -544,7 +569,30 @@ export const getReelsFeed = async (req, res) => {
       offset: parseInt(offset),
     });
 
-    res.json({ success: true, data: { reels } });
+    // Agregar campo isLiked a cada reel
+    const reelsWithLikeStatus = await Promise.all(
+      reels.map(async (reel) => {
+        let isLiked = false;
+
+        if (currentUserId) {
+          const like = await Like.findOne({
+            where: {
+              contentType: 'reel',
+              contentId: reel.id,
+              userId: currentUserId,
+            },
+          });
+          isLiked = !!like;
+        }
+
+        return {
+          ...reel.toJSON(),
+          isLiked,
+        };
+      })
+    );
+
+    res.json({ success: true, data: { reels: reelsWithLikeStatus } });
   } catch (error) {
     console.error('Error getting reels feed:', error);
     res.status(500).json({ success: false, message: 'Error al obtener los reels', error: error.message });
@@ -552,7 +600,7 @@ export const getReelsFeed = async (req, res) => {
 };
 
 /**
- * Toggle like en un post o reel
+ * Toggle like en un post, reel o comentario
  * POST /api/social/like
  */
 export const toggleLike = async (req, res) => {
@@ -561,7 +609,7 @@ export const toggleLike = async (req, res) => {
     const userId = req.user.id;
 
     // Validar tipo de contenido
-    if (!['post', 'reel'].includes(contentType)) {
+    if (!['post', 'reel', 'comment'].includes(contentType)) {
       return res.status(400).json({ message: 'Tipo de contenido inválido' });
     }
 
@@ -578,11 +626,14 @@ export const toggleLike = async (req, res) => {
       // Si ya existe, eliminar (unlike)
       await existingLike.destroy();
 
-      // Decrementar contador
-      const Model = contentType === 'post' ? Post : Reel;
-      await Model.decrement('likesCount', {
-        where: { id: contentId },
-      });
+      // Decrementar contador según el tipo
+      if (contentType === 'post') {
+        await Post.decrement('likesCount', { where: { id: contentId } });
+      } else if (contentType === 'reel') {
+        await Reel.decrement('likesCount', { where: { id: contentId } });
+      } else if (contentType === 'comment') {
+        await Comment.decrement('likesCount', { where: { id: contentId } });
+      }
 
       res.json({ success: true, message: 'Like eliminado', data: { liked: false } });
     } else {
@@ -593,11 +644,14 @@ export const toggleLike = async (req, res) => {
         contentId,
       });
 
-      // Incrementar contador
-      const Model = contentType === 'post' ? Post : Reel;
-      await Model.increment('likesCount', {
-        where: { id: contentId },
-      });
+      // Incrementar contador según el tipo
+      if (contentType === 'post') {
+        await Post.increment('likesCount', { where: { id: contentId } });
+      } else if (contentType === 'reel') {
+        await Reel.increment('likesCount', { where: { id: contentId } });
+      } else if (contentType === 'comment') {
+        await Comment.increment('likesCount', { where: { id: contentId } });
+      }
 
       res.json({ success: true, message: 'Like agregado', data: { liked: true } });
     }
@@ -608,12 +662,12 @@ export const toggleLike = async (req, res) => {
 };
 
 /**
- * Agregar comentario
+ * Agregar comentario o respuesta
  * POST /api/social/comments
  */
 export const addComment = async (req, res) => {
   try {
-    const { contentType, contentId, text } = req.body;
+    const { contentType, contentId, text, parentCommentId } = req.body;
     const userId = req.user.id;
 
     // Validar tipo de contenido
@@ -626,19 +680,36 @@ export const addComment = async (req, res) => {
       return res.status(400).json({ message: 'El comentario no puede estar vacío' });
     }
 
+    // Si es una respuesta, validar que el comentario padre existe
+    if (parentCommentId) {
+      const parentComment = await Comment.findByPk(parentCommentId);
+      if (!parentComment) {
+        return res.status(404).json({ message: 'Comentario padre no encontrado' });
+      }
+    }
+
     // Crear comentario
     const comment = await Comment.create({
       userId,
       contentType,
       contentId,
       text: text.trim(),
+      parentCommentId: parentCommentId || null,
     });
 
-    // Incrementar contador
-    const Model = contentType === 'post' ? Post : Reel;
-    await Model.increment('commentsCount', {
-      where: { id: contentId },
-    });
+    // Incrementar contadores
+    if (parentCommentId) {
+      // Si es una respuesta, incrementar el contador de respuestas del comentario padre
+      await Comment.increment('repliesCount', {
+        where: { id: parentCommentId },
+      });
+    } else {
+      // Si es un comentario principal, incrementar el contador del post/reel
+      const Model = contentType === 'post' ? Post : Reel;
+      await Model.increment('commentsCount', {
+        where: { id: contentId },
+      });
+    }
 
     // Obtener comentario con información del usuario
     const commentWithUser = await Comment.findByPk(comment.id, {
@@ -649,15 +720,16 @@ export const addComment = async (req, res) => {
       }],
     });
 
-    // Agregar isLiked = false (el usuario recién creó el comentario, no le ha dado like aún)
+    // Agregar isLiked = false y replies = []
     const commentWithLikeStatus = {
       ...commentWithUser.toJSON(),
       isLiked: false,
+      replies: [],
     };
 
     res.status(201).json({
       success: true,
-      message: 'Comentario agregado',
+      message: parentCommentId ? 'Respuesta agregada' : 'Comentario agregado',
       data: commentWithLikeStatus,
     });
   } catch (error) {
@@ -667,7 +739,7 @@ export const addComment = async (req, res) => {
 };
 
 /**
- * Obtener comentarios de un contenido
+ * Obtener comentarios de un contenido con respuestas anidadas
  * GET /api/social/comments/:contentType/:contentId
  */
 export const getComments = async (req, res) => {
@@ -678,10 +750,12 @@ export const getComments = async (req, res) => {
 
     const offset = (page - 1) * limit;
 
-    const { count, rows: comments } = await Comment.findAndCountAll({
+    // Obtener solo comentarios principales (sin parentCommentId)
+    const { count, rows: mainComments } = await Comment.findAndCountAll({
       where: {
         contentType,
         contentId,
+        parentCommentId: null, // Solo comentarios principales
       },
       include: [{
         model: User,
@@ -693,24 +767,61 @@ export const getComments = async (req, res) => {
       offset: parseInt(offset),
     });
 
-    // Agregar campo isLiked a cada comentario
-    const commentsWithLikeStatus = await Promise.all(
-      comments.map(async (comment) => {
-        let isLiked = false;
+    // Para cada comentario principal, obtener sus respuestas
+    const commentsWithReplies = await Promise.all(
+      mainComments.map(async (comment) => {
+        // Obtener respuestas del comentario
+        const replies = await Comment.findAll({
+          where: {
+            parentCommentId: comment.id,
+          },
+          include: [{
+            model: User,
+            as: 'user',
+            attributes: ['id', 'name', 'email', 'avatar', 'username'],
+          }],
+          order: [['createdAt', 'ASC']], // Respuestas en orden cronológico
+        });
 
+        // Verificar si el usuario dio like al comentario
+        let isLiked = false;
         if (userId) {
-          const like = await CommentLike.findOne({
+          const like = await Like.findOne({
             where: {
-              commentId: comment.id,
+              contentType: 'comment',
+              contentId: comment.id,
               userId: userId,
             },
           });
           isLiked = !!like;
         }
 
+        // Procesar respuestas con isLiked
+        const repliesWithLikes = await Promise.all(
+          replies.map(async (reply) => {
+            let replyIsLiked = false;
+            if (userId) {
+              const replyLike = await Like.findOne({
+                where: {
+                  contentType: 'comment',
+                  contentId: reply.id,
+                  userId: userId,
+                },
+              });
+              replyIsLiked = !!replyLike;
+            }
+
+            return {
+              ...reply.toJSON(),
+              isLiked: replyIsLiked,
+            };
+          })
+        );
+
         return {
           ...comment.toJSON(),
           isLiked,
+          replies: repliesWithLikes,
         };
       })
     );
@@ -718,7 +829,7 @@ export const getComments = async (req, res) => {
     res.json({
       success: true,
       data: {
-        comments: commentsWithLikeStatus,
+        comments: commentsWithReplies,
         pagination: {
           total: count,
           page: parseInt(page),

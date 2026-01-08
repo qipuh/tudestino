@@ -51,13 +51,14 @@ export const getPostComments = async (contentId, contentType = 'reel') => {
   }
 };
 
-// Add a comment to a reel/post
-export const addComment = async (contentId, commentText, contentType = 'reel') => {
+// Add a comment or reply to a reel/post
+export const addComment = async (contentId, commentText, contentType = 'reel', parentCommentId = null) => {
   try {
     const response = await api.post('/social/comments', {
       contentType,
       contentId,
-      text: commentText
+      text: commentText,
+      parentCommentId
     });
     return response.data;
   } catch (error) {
@@ -69,7 +70,10 @@ export const addComment = async (contentId, commentText, contentType = 'reel') =
 // Toggle like on a comment
 export const toggleCommentLike = async (commentId) => {
   try {
-    const response = await api.post(`/social/comments/${commentId}/like`);
+    const response = await api.post('/social/like', {
+      contentType: 'comment',
+      contentId: commentId
+    });
     return response.data;
   } catch (error) {
     console.error('Error toggling comment like:', error);

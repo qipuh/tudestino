@@ -192,11 +192,13 @@ class BusinessController {
   /**
    * Buscar negocios
    * GET /api/businesses/search
+   * Query params: type, businessType, status, q, page, limit
    */
   async searchBusinesses(req, res) {
     try {
       const filters = {
-        businessType: req.query.type,
+        // Aceptar tanto 'type' como 'businessType' para flexibilidad
+        businessType: req.query.type || req.query.businessType,
         status: req.query.status || 'active',
         search: req.query.q
       };

@@ -70,9 +70,13 @@ function HomePage() {
 
   const fetchTourBusinesses = async () => {
     try {
-      const response = await api.get('/businesses?businessType=tour&limit=8');
-      console.log('🏢 Tour businesses data:', response.data);
-      setTourBusinesses(response.data || []);
+      const response = await api.get('/businesses/search?businessType=tour&limit=8');
+      console.log('🏢 Tour businesses response:', response);
+
+      // La respuesta tiene estructura: { success: true, data: { businesses: [...], pagination: {...} } }
+      const businessesData = response.data?.businesses || response.businesses || [];
+      console.log('🏢 Tour businesses data:', businessesData);
+      setTourBusinesses(businessesData);
     } catch (error) {
       console.error('Error fetching tour businesses:', error);
       setTourBusinesses([]);

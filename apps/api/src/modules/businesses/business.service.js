@@ -2,6 +2,7 @@ import Business from './business.model.js';
 import BusinessService from './business-service.model.js';
 import BusinessSocialPost from './business-social-post.model.js';
 import { v4 as uuidv4 } from 'uuid';
+import { Op } from 'sequelize';
 
 class BusinessServiceClass {
   /**

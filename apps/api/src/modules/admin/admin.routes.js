@@ -5,7 +5,9 @@ import {
   getRecentUsers,
   getAllUsers,
   updateUserStatus,
-  deleteUser
+  deleteUser,
+  getWhatsAppConfig,
+  setWhatsAppConfig
 } from './admin.controller.js';
 
 const router = express.Router();
@@ -22,5 +24,9 @@ router.get('/users', getAllUsers);
 router.get('/users/recent', getRecentUsers);
 router.patch('/users/:userId/status', updateUserStatus);
 router.delete('/users/:userId', deleteUser);
+
+// Configuration management
+router.get('/config/whatsapp', getWhatsAppConfig);
+router.post('/config/whatsapp', setWhatsAppConfig);
 
 export default router;

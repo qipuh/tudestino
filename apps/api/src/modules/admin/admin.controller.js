@@ -74,3 +74,36 @@ export const deleteUser = asyncHandler(async (req, res) => {
     message: result.message
   });
 });
+
+/**
+ * Get WhatsApp API configuration
+ */
+export const getWhatsAppConfig = asyncHandler(async (req, res) => {
+  const token = await adminService.getWhatsAppConfig();
+
+  res.json({
+    success: true,
+    token: token || ''
+  });
+});
+
+/**
+ * Set WhatsApp API configuration
+ */
+export const setWhatsAppConfig = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+
+  if (!token || !token.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: 'El token es requerido'
+    });
+  }
+
+  await adminService.setWhatsAppConfig(token.trim());
+
+  res.json({
+    success: true,
+    message: 'Configuración de WhatsApp guardada correctamente'
+  });
+});

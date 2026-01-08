@@ -3,7 +3,7 @@ import { createContext, useContext, useState } from 'react';
 const SidebarContext = createContext();
 
 export function SidebarProvider({ children }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Iniciar cerrado
   const [sidebarVisible, setSidebarVisible] = useState(true); // Controls if sidebar is rendered - changed to true by default
 
   const toggleSidebar = () => {

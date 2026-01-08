@@ -1,6 +1,7 @@
 import User from '../users/user.model-mysql.js';
 import Property from '../properties/property.model.js';
 import Booking from '../bookings/booking.model.js';
+import Config from './config.model.js';
 
 class AdminService {
   /**
@@ -169,6 +170,48 @@ class AdminService {
       return { message: 'User deleted successfully' };
     } catch (error) {
       console.error('Error deleting user:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get WhatsApp API configuration
+   */
+  async getWhatsAppConfig() {
+    try {
+      const config = await Config.findOne({
+        where: { key: 'whatsapp_api_token' }
+      });
+
+      return config ? config.value : null;
+    } catch (error) {
+      console.error('Error getting WhatsApp config:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Set WhatsApp API configuration
+   */
+  async setWhatsAppConfig(token) {
+    try {
+      const [config, created] = await Config.findOrCreate({
+        where: { key: 'whatsapp_api_token' },
+        defaults: {
+          key: 'whatsapp_api_token',
+          value: token,
+          description: 'Token de autenticación para WhatsApp API (Factiliza)',
+          isEncrypted: false
+        }
+      });
+
+      if (!created) {
+        await config.update({ value: token });
+      }
+
+      return config;
+    } catch (error) {
+      console.error('Error setting WhatsApp config:', error);
       throw error;
     }
   }

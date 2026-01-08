@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Send, Minimize2, Maximize2, MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 
 function FloatingChatBubble({ recipient, onClose }) {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [isMinimized, setIsMinimized] = useState(false);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
@@ -21,21 +23,14 @@ function FloatingChatBubble({ recipient, onClose }) {
     e.preventDefault();
     if (!message.trim()) return;
 
-    // Agregar mensaje localmente (temporal - luego conectar con API)
-    const newMessage = {
-      id: Date.now(),
-      text: message,
-      senderId: user.id,
-      recipientId: recipient.id,
-      createdAt: new Date().toISOString(),
-      isOwn: true,
-    };
+    // Redirigir a la página de mensajes completa con el usuario
+    navigate(`/messages?user=${recipient.id}`);
+    onClose();
+  };
 
-    setMessages([...messages, newMessage]);
-    setMessage('');
-
-    // TODO: Enviar mensaje al backend
-    // await sendMessage(recipient.id, message);
+  const handleOpenFullChat = () => {
+    navigate(`/messages?user=${recipient.id}`);
+    onClose();
   };
 
   if (isMinimized) {
@@ -56,7 +51,7 @@ function FloatingChatBubble({ recipient, onClose }) {
     <div className="fixed bottom-4 right-4 z-50 w-96 h-[500px] bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden border border-gray-200">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary to-primary-dark text-white p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 cursor-pointer" onClick={handleOpenFullChat}>
           {recipient.avatar ? (
             <img
               src={recipient.avatar}
@@ -70,7 +65,7 @@ function FloatingChatBubble({ recipient, onClose }) {
           )}
           <div>
             <h3 className="font-semibold">{recipient.name}</h3>
-            <p className="text-xs text-white/80">En línea</p>
+            <p className="text-xs text-white/80">Click para abrir chat completo</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -92,64 +87,32 @@ function FloatingChatBubble({ recipient, onClose }) {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-3">
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
-            <MessageCircle size={48} className="mb-2" />
-            <p className="text-sm">Inicia la conversación</p>
-            <p className="text-xs">Envía un mensaje a {recipient.name}</p>
+      <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-br from-primary/5 to-white flex items-center justify-center">
+        <div className="text-center max-w-xs">
+          <div className="bg-white rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center shadow-lg">
+            <MessageCircle size={40} className="text-primary" />
           </div>
-        ) : (
-          messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.isOwn ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[75%] rounded-2xl px-4 py-2 ${
-                  msg.isOwn
-                    ? 'bg-gradient-to-r from-primary to-primary-dark text-white rounded-br-none'
-                    : 'bg-white text-gray-900 rounded-bl-none'
-                }`}
-              >
-                <p className="text-sm">{msg.text}</p>
-                <p
-                  className={`text-xs mt-1 ${
-                    msg.isOwn ? 'text-white/70' : 'text-gray-500'
-                  }`}
-                >
-                  {new Date(msg.createdAt).toLocaleTimeString('es-ES', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
-              </div>
-            </div>
-          ))
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input Area */}
-      <form onSubmit={handleSendMessage} className="p-4 bg-white border-t">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder={`Mensaje a ${recipient.name}...`}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
-            autoFocus
-          />
+          <h3 className="text-lg font-bold text-gray-900 mb-2">
+            Chatea con {recipient.name}
+          </h3>
+          <p className="text-sm text-gray-600 mb-6">
+            Abre el chat completo para enviar y recibir mensajes en tiempo real
+          </p>
           <button
-            type="submit"
-            disabled={!message.trim()}
-            className="bg-gradient-to-r from-primary to-primary-dark text-white p-2 rounded-full hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            onClick={handleOpenFullChat}
+            className="w-full bg-gradient-to-r from-primary to-primary-dark text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg transition-all transform hover:scale-105"
           >
-            <Send size={20} />
+            Abrir Chat Completo
           </button>
         </div>
-      </form>
+      </div>
+
+      {/* Footer */}
+      <div className="p-4 bg-white border-t">
+        <p className="text-xs text-center text-gray-500">
+          Usa el chat completo para una mejor experiencia de mensajería
+        </p>
+      </div>
     </div>
   );
 }

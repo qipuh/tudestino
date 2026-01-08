@@ -11,7 +11,6 @@ import AccountPage from '@modules/auth/pages/AccountPage';
 import AccountDashboard from '@modules/account/pages/AccountDashboard';
 import AccountBusinesses from '@modules/account/pages/AccountBusinesses';
 import AccountProfile from '@modules/account/pages/AccountProfile';
-import AccountSocial from '@modules/account/pages/AccountSocial';
 import AccountFavorites from '@modules/account/pages/AccountFavorites';
 import NotificationsPage from '@modules/notifications/pages/NotificationsPage';
 import BookingsPage from '@modules/bookings/pages/BookingsPage';
@@ -51,6 +50,7 @@ import EditEvent from '@modules/events/pages/EditEvent';
 import EventDetailPage from '@modules/events/pages/EventDetailPage';
 import MyEventsPage from '@modules/events/pages/MyEventsPage';
 import EventCheckoutPage from '@modules/events/pages/EventCheckoutPage';
+import AdminPage from '@modules/admin/pages/AdminPage';
 import useAuthStore from './store/authStore';
 
 function App() {
@@ -77,7 +77,6 @@ function App() {
         <Route path="account" element={<AccountDashboard />} />
         <Route path="account/businesses" element={<AccountBusinesses />} />
         <Route path="account/profile" element={<AccountProfile />} />
-        <Route path="account/social" element={<AccountSocial />} />
         <Route path="account/events" element={<MyEventsPage />} />
         <Route path="account/favorites" element={<AccountFavorites />} />
 
@@ -141,6 +140,9 @@ function App() {
         <Route path="events/checkout" element={<EventCheckoutPage />} />
         <Route path="events/:id" element={<EventDetailPage />} />
         <Route path="events/:id/edit" element={<EditEvent />} />
+
+        {/* Admin Routes */}
+        <Route path="admin" element={<AdminPage />} />
 
         {/* Username Route (must be last to avoid conflicts) */}
         <Route path=":username" element={<UsernameProfilePage />} />

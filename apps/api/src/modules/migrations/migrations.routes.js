@@ -371,5 +371,87 @@ router.post('/fix-ticket-isfree-column', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/migrations/create-configs-table
+ * Crea la tabla de configuraciones del sistema
+ */
+router.post('/create-configs-table', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+
+    // Verificar si la tabla ya existe
+    const tables = await queryInterface.showAllTables();
+
+    if (tables.includes('configs')) {
+      return res.json({
+        success: true,
+        message: 'La tabla configs ya existe',
+        alreadyExists: true
+      });
+    }
+
+    // Crear la tabla
+    await queryInterface.createTable('configs', {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+        allowNull: false
+      },
+      key: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+        unique: true,
+        comment: 'Clave única de configuración (ej: whatsapp_api_token)'
+      },
+      value: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Valor de la configuración'
+      },
+      description: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        comment: 'Descripción de para qué sirve esta configuración'
+      },
+      isEncrypted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        comment: 'Si el valor está encriptado o no'
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
+      }
+    });
+
+    // Insertar configuración inicial de WhatsApp API
+    await sequelize.query(`
+      INSERT INTO configs (id, \`key\`, value, description, isEncrypted) VALUES
+      (UUID(), 'whatsapp_api_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMDciLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJjb25zdWx0b3IifQ.Fo5bYXz8TYd5l2FJi4HiqC_ifZDhPhukEb0Ln_CN9Oo', 'Token de autenticación para WhatsApp API (Factiliza)', FALSE)
+      ON DUPLICATE KEY UPDATE value = VALUES(value)
+    `);
+
+    res.json({
+      success: true,
+      message: 'Tabla configs creada exitosamente con configuración inicial de WhatsApp',
+      alreadyExists: false
+    });
+  } catch (error) {
+    console.error('Error creando tabla configs:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creando tabla configs',
+      error: error.message
+    });
+  }
+});
+
 export default router;
 

@@ -308,6 +308,21 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
     }, 0);
   };
 
+  const handleEmojiSelect = (emoji) => {
+    const cursorPos = captionInputRef.current?.selectionStart || caption.length;
+    const textBefore = caption.substring(0, cursorPos);
+    const textAfter = caption.substring(cursorPos);
+    setCaption(textBefore + emoji + textAfter);
+    setShowEmojiPicker(false);
+
+    // Set cursor position after emoji
+    setTimeout(() => {
+      captionInputRef.current?.focus();
+      const newPos = textBefore.length + emoji.length;
+      captionInputRef.current?.setSelectionRange(newPos, newPos);
+    }, 0);
+  };
+
   const resetForm = () => {
     setCaption('');
     setLocation('');
@@ -475,12 +490,41 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
                 </span>
                 <button
                   type="button"
-                  className="text-gray-400 hover:text-gray-600"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="text-gray-400 hover:text-gray-600 transition"
                   disabled={uploading}
                 >
                   <Smile size={20} />
                 </button>
               </div>
+
+              {/* Emoji Picker Dropdown */}
+              {showEmojiPicker && (
+                <div className="absolute z-10 right-0 mt-1 bg-white border-2 border-gray-200 rounded-xl shadow-lg p-3 w-80">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-700">Emojis</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowEmojiPicker(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-8 gap-1 max-h-48 overflow-y-auto">
+                    {commonEmojis.map((emoji, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => handleEmojiSelect(emoji)}
+                        className="p-2 text-2xl hover:bg-gray-100 rounded transition"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Location */}

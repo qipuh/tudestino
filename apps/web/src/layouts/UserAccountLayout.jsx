@@ -18,8 +18,7 @@ function UserAccountLayout({ children, activeMenu }) {
 
   const allMenuItems = [
     { to: '/account', label: 'Mi Cuenta', icon: User, key: 'account', exact: true },
-    { to: '/account/profile', label: 'Mi Perfil de Viajero', icon: User, key: 'profile' },
-    { to: '/account/social', label: 'Muro Social', icon: MessageSquare, key: 'social' },
+    { to: '/account/profile', label: 'Mi Perfil', icon: User, key: 'profile' },
     { to: '/account/businesses', label: 'Mis Negocios', icon: Briefcase, key: 'businesses', roles: ['business_owner', 'admin'] },
     { to: '/bookings', label: 'Mis Reservas', icon: Calendar, key: 'bookings' },
     { to: '/account/events', label: 'Mis Eventos', icon: Ticket, key: 'events' },
@@ -77,18 +76,18 @@ function UserAccountLayout({ children, activeMenu }) {
                     href={`/${user.username}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-sm text-white/90 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition"
+                    className="flex items-center gap-2 text-sm font-semibold text-white bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition shadow-lg hover:shadow-xl border border-white/30"
                   >
-                    <ExternalLink size={14} />
-                    Ir a perfil
+                    <ExternalLink size={16} />
+                    Ver Mi Perfil Social
                   </a>
                 ) : (
                   <Link
                     to="/account/profile"
-                    className="flex items-center gap-1 text-sm text-yellow-300 bg-yellow-600/20 px-3 py-1.5 rounded-lg transition hover:bg-yellow-600/30"
+                    className="flex items-center gap-2 text-sm font-semibold text-white bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-lg transition shadow-lg hover:shadow-xl"
                   >
-                    <Settings size={14} />
-                    Configura tu URL
+                    <Settings size={16} />
+                    Configura tu Perfil
                   </Link>
                 )}
               </div>

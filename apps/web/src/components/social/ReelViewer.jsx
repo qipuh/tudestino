@@ -284,10 +284,10 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
       {/* Backdrop */}
       <div className="fixed inset-0 bg-black bg-opacity-75 z-50" onClick={onClose} />
 
-      {/* Modal container */}
+      {/* Modal container - Changed to vertical layout */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
         <div
-          className="bg-white rounded-lg overflow-hidden flex max-w-7xl w-full mx-auto relative"
+          className="bg-white rounded-lg overflow-hidden flex flex-col max-w-4xl w-full mx-auto relative"
           style={{ maxHeight: '90vh' }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -303,7 +303,7 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
           {hasPrevious && (
             <button
               onClick={handlePrevious}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
+              className="absolute left-2 top-1/3 -translate-y-1/2 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
             >
               <ChevronLeft size={24} />
             </button>
@@ -313,18 +313,18 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
           {hasNext && (
             <button
               onClick={handleNext}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
+              className="absolute right-2 top-1/3 -translate-y-1/2 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
             >
               <ChevronRight size={24} />
             </button>
           )}
 
-          {/* Video Section - Left side */}
-          <div className="relative bg-black flex-1 flex items-center justify-center">
+          {/* Video Section - Top */}
+          <div className="relative bg-black flex items-center justify-center" style={{ maxHeight: '50vh' }}>
             {reel.videoUrl || reel.video_url ? (
               <video
                 src={getImageUrl(reel.videoUrl || reel.video_url, 'social')}
-                className="max-w-full max-h-[90vh] object-contain"
+                className="max-w-full max-h-[50vh] object-contain"
                 controls
                 autoPlay
                 loop
@@ -340,8 +340,8 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
             )}
           </div>
 
-          {/* Content Section - Right side */}
-          <div className="w-full md:w-[400px] flex-shrink-0 flex flex-col bg-white">
+          {/* Content Section - Bottom (Comments and interactions) */}
+          <div className="flex-1 flex flex-col bg-white overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <Link to={`/profile/${reel.user?.id}`} onClick={onClose} className="flex items-center gap-3 hover:opacity-80">

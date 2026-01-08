@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Send, Bookmark, Play, ChevronLeft, ChevronRight, MoreHorizontal, MapPin, X } from 'lucide-react';
+import { Heart, MessageCircle, Send, Bookmark, Play, ChevronLeft, ChevronRight, MapPin, X } from 'lucide-react';
 import FollowButton from './FollowButton';
 import { togglePostLike, getPostComments, addComment, toggleCommentLike } from '../../services/reelsService';
 import { getImageUrl } from '../../services/api';
@@ -281,29 +281,31 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
 
   return (
     <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black bg-opacity-75 z-50" onClick={onClose} />
+      {/* Backdrop - Only on mobile */}
+      <div className="md:hidden fixed inset-0 bg-black bg-opacity-75 z-50" onClick={onClose} />
 
-      {/* Modal container - Changed to vertical layout */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      {/* Desktop: Sidebar (non-blocking), Mobile: Centered modal */}
+      <div
+        className="fixed md:top-0 md:right-0 md:bottom-0 md:w-[600px] z-50
+                   max-md:inset-0 max-md:flex max-md:items-center max-md:justify-center max-md:p-4"
+      >
         <div
-          className="bg-white rounded-lg overflow-hidden flex flex-col max-w-4xl w-full mx-auto relative"
+          className="bg-white rounded-lg md:rounded-none overflow-hidden flex flex-col md:h-full relative shadow-2xl w-full"
           style={{ maxHeight: '90vh' }}
-          onClick={(e) => e.stopPropagation()}
         >
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute -top-10 right-0 text-white hover:text-gray-300 z-10"
+            className="absolute top-4 right-4 md:top-2 md:right-2 text-white md:text-gray-600 hover:text-gray-300 md:hover:text-gray-900 z-10 bg-black md:bg-white bg-opacity-50 md:bg-opacity-90 rounded-full p-2"
           >
-            <X size={32} />
+            <X size={24} />
           </button>
 
           {/* Previous button */}
           {hasPrevious && (
             <button
               onClick={handlePrevious}
-              className="absolute left-2 top-1/3 -translate-y-1/2 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
             >
               <ChevronLeft size={24} />
             </button>
@@ -313,18 +315,18 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
           {hasNext && (
             <button
               onClick={handleNext}
-              className="absolute right-2 top-1/3 -translate-y-1/2 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
             >
               <ChevronRight size={24} />
             </button>
           )}
 
-          {/* Video Section - Top */}
-          <div className="relative bg-black flex items-center justify-center" style={{ maxHeight: '50vh' }}>
+          {/* Video Section - Top on mobile, Full width on desktop */}
+          <div className="relative bg-black flex items-center justify-center w-full md:w-full" style={{ maxHeight: '50vh' }}>
             {reel.videoUrl || reel.video_url ? (
               <video
                 src={getImageUrl(reel.videoUrl || reel.video_url, 'social')}
-                className="max-w-full max-h-[50vh] object-contain"
+                className="max-w-full max-h-[50vh] md:max-h-[40vh] w-full object-contain"
                 controls
                 autoPlay
                 loop
@@ -340,8 +342,8 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
             )}
           </div>
 
-          {/* Content Section - Bottom (Comments and interactions) */}
-          <div className="flex-1 flex flex-col bg-white overflow-hidden">
+          {/* Content Section - Bottom on mobile, Below video on desktop */}
+          <div className="flex-1 w-full flex flex-col bg-white overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <Link to={`/profile/${reel.user?.id}`} onClick={onClose} className="flex items-center gap-3 hover:opacity-80">

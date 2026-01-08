@@ -208,10 +208,10 @@ function ReelsSidebar({ isOpen, onToggle }) {
         </button>
       )}
 
-      {/* Overlay Background */}
+      {/* Overlay Background - SOLO EN MOBILE */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity duration-300"
+          className="md:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity duration-300"
           onClick={onToggle}
         />
       )}

@@ -8,6 +8,8 @@ import BookingsManagement from '@modules/bookings/BookingsManagement';
 import VerificationManagement from '@modules/verification/VerificationManagement';
 import AccommodationTypes from '@modules/accommodation-types/AccommodationTypes';
 import PromotionsManagement from '@modules/promotions/PromotionsManagement';
+import SlidersManagement from '@modules/sliders/SlidersManagement';
+import AttractionsManagement from '@modules/attractions/AttractionsManagement';
 import LoginPage from './pages/LoginPage';
 import useAuthStore from './store/authStore';
 
@@ -48,6 +50,8 @@ function App() {
         <Route path="verification" element={<VerificationManagement />} />
         <Route path="accommodation-types" element={<AccommodationTypes />} />
         <Route path="promotions" element={<PromotionsManagement />} />
+        <Route path="sliders" element={<SlidersManagement />} />
+        <Route path="attractions" element={<AttractionsManagement />} />
       </Route>
     </Routes>
   );

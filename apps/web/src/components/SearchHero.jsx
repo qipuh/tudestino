@@ -73,8 +73,8 @@ function SearchHero() {
   const today = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="relative bg-gradient-to-br from-primary via-primary-dark to-secondary py-8 md:py-16 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="relative bg-primary px-4 flex items-center" style={{ height: '50vh', minHeight: '400px' }}>
+      <div className="max-w-4xl mx-auto w-full">
         {/* Título principal */}
         <div className="text-center mb-6 md:mb-8">
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-3 md:mb-4 px-4">

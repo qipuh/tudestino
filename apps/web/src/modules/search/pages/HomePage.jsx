@@ -10,6 +10,8 @@ function HomePage() {
   const [businesses, setBusinesses] = useState([]);
   const [tours, setTours] = useState([]);
   const [tourBusinesses, setTourBusinesses] = useState([]);
+  const [attractions, setAttractions] = useState([]);
+  const [selectedAttractionCategory, setSelectedAttractionCategory] = useState('all');
   const [loading, setLoading] = useState(true);
   const { sidebarOpen, toggleSidebar, setSidebarVisible } = useSidebar();
 
@@ -23,6 +25,7 @@ function HomePage() {
     fetchBusinesses();
     fetchTours();
     fetchTourBusinesses();
+    fetchAttractions();
   }, []);
 
   const fetchBusinesses = async () => {
@@ -83,6 +86,26 @@ function HomePage() {
     }
   };
 
+  const fetchAttractions = async (category = 'all') => {
+    try {
+      const url = category === 'all' ? '/attractions?limit=12' : `/attractions?category=${category}&limit=12`;
+      const response = await api.get(url);
+      console.log('🏞️ Attractions response:', response);
+
+      const attractionsData = response.data?.attractions || response.attractions || response.data || [];
+      console.log('🏞️ Attractions data:', attractionsData);
+      setAttractions(attractionsData);
+    } catch (error) {
+      console.error('Error fetching attractions:', error);
+      setAttractions([]);
+    }
+  };
+
+  const handleAttractionCategoryChange = (category) => {
+    setSelectedAttractionCategory(category);
+    fetchAttractions(category);
+  };
+
   if (loading) {
     return (
       <>
@@ -111,9 +134,9 @@ function HomePage() {
   const categories = [
     { name: 'Alojamientos', icon: Building2, type: 'hotel', link: '/search?category=hotel' },
     { name: 'Restaurantes', icon: Home, type: 'restaurant', link: '/search?category=restaurant' },
-    { name: 'Eventos', icon: Castle, type: 'event', link: '/events' }, // Fixed: apunta a la página de eventos
+    { name: 'Eventos', icon: Castle, type: 'event', link: '/events' },
     { name: 'Entretenimiento', icon: TreePine, type: 'entertainment', link: '/search?category=entertainment' },
-    { name: 'Todo', icon: Home, type: 'all', link: '/search?category=all' },
+    { name: 'Información Turística', icon: MapPin, type: 'attractions', link: '#atractivos' },
   ];
 
   // Agrupar por tipo
@@ -446,6 +469,137 @@ function HomePage() {
                         <span className="text-xs sm:text-sm text-gray-600">
                           ({business.reviewCount || 0})
                         </span>
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Atractivos Turísticos */}
+        {attractions.length > 0 && (
+          <section id="atractivos" className="mb-16 scroll-mt-20">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <MapPin className="text-primary" size={24} />
+                <h2 className="text-xl sm:text-2xl font-bold text-primary-dark">Atractivos Turísticos</h2>
+                <span className="text-xs sm:text-sm text-gray-500">({attractions.length})</span>
+              </div>
+            </div>
+
+            {/* Category Filters */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              <button
+                onClick={() => handleAttractionCategoryChange('all')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedAttractionCategory === 'all'
+                    ? 'bg-primary text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🌎 Todos
+              </button>
+              <button
+                onClick={() => handleAttractionCategoryChange('naturaleza')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedAttractionCategory === 'naturaleza'
+                    ? 'bg-primary text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🌿 Naturaleza
+              </button>
+              <button
+                onClick={() => handleAttractionCategoryChange('cultura')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedAttractionCategory === 'cultura'
+                    ? 'bg-primary text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🏛️ Cultura
+              </button>
+              <button
+                onClick={() => handleAttractionCategoryChange('aventura')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedAttractionCategory === 'aventura'
+                    ? 'bg-primary text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                ⛰️ Aventura
+              </button>
+              <button
+                onClick={() => handleAttractionCategoryChange('gastronomia')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedAttractionCategory === 'gastronomia'
+                    ? 'bg-primary text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🍴 Gastronomía
+              </button>
+              <button
+                onClick={() => handleAttractionCategoryChange('urbano')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedAttractionCategory === 'urbano'
+                    ? 'bg-primary text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🏙️ Urbano
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {attractions.map((attraction) => (
+                <Link
+                  key={attraction.id}
+                  to={`/attractions/${attraction.id}`}
+                  className="group bg-white border border-gray-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="h-48 sm:h-56 bg-gradient-to-br from-green-500 to-blue-600 relative overflow-hidden">
+                    {attraction.coverImage ? (
+                      <img
+                        src={getImageUrl(attraction.coverImage, 'attractions')}
+                        alt={attraction.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white">
+                        <MapPin size={48} />
+                      </div>
+                    )}
+                    <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-gray-800">
+                      {attraction.category === 'naturaleza' && '🌿 Naturaleza'}
+                      {attraction.category === 'cultura' && '🏛️ Cultura'}
+                      {attraction.category === 'aventura' && '⛰️ Aventura'}
+                      {attraction.category === 'gastronomia' && '🍴 Gastronomía'}
+                      {attraction.category === 'urbano' && '🏙️ Urbano'}
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-base sm:text-lg line-clamp-1 group-hover:text-primary transition-colors">
+                      {attraction.title}
+                    </h3>
+                    {attraction.description && (
+                      <p className="text-xs sm:text-sm text-gray-600 mt-2 line-clamp-2">
+                        {attraction.description}
+                      </p>
+                    )}
+                    {attraction.city && (
+                      <div className="flex items-center gap-1 text-xs sm:text-sm text-gray-600 mt-3">
+                        <MapPin size={14} className="text-primary flex-shrink-0" />
+                        <span className="truncate">
+                          {attraction.city}{attraction.region ? `, ${attraction.region}` : ''}
+                        </span>
+                      </div>
+                    )}
+                    {attraction.views > 0 && (
+                      <div className="flex items-center gap-1 text-xs text-gray-500 mt-2">
+                        <span>👁️ {attraction.views} vistas</span>
                       </div>
                     )}
                   </div>

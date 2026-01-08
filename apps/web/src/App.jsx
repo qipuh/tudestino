@@ -50,6 +50,7 @@ import EditEvent from '@modules/events/pages/EditEvent';
 import EventDetailPage from '@modules/events/pages/EventDetailPage';
 import MyEventsPage from '@modules/events/pages/MyEventsPage';
 import EventCheckoutPage from '@modules/events/pages/EventCheckoutPage';
+import AttractionDetail from '@modules/attractions/pages/AttractionDetail';
 import AdminPage from '@modules/admin/pages/AdminPage';
 import useAuthStore from './store/authStore';
 
@@ -140,6 +141,9 @@ function App() {
         <Route path="events/checkout" element={<EventCheckoutPage />} />
         <Route path="events/:id" element={<EventDetailPage />} />
         <Route path="events/:id/edit" element={<EditEvent />} />
+
+        {/* Attractions Routes */}
+        <Route path="attractions/:id" element={<AttractionDetail />} />
 
         {/* Admin Routes */}
         <Route path="admin" element={<AdminPage />} />

@@ -13,7 +13,9 @@ import {
   LogOut,
   User,
   ChevronLeft,
-  Bell
+  Bell,
+  Image,
+  MapPin
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 
@@ -31,6 +33,8 @@ function AdminLayout() {
     { path: '/verification', icon: CheckCircle, label: 'Verificaciones' },
     { path: '/accommodation-types', icon: Settings, label: 'Tipos de Alojamiento' },
     { path: '/promotions', icon: Tag, label: 'Promociones' },
+    { path: '/sliders', icon: Image, label: 'Sliders' },
+    { path: '/attractions', icon: MapPin, label: 'Atractivos Turísticos' },
   ];
 
   const handleLogout = () => {

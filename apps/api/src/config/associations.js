@@ -18,6 +18,9 @@ import UserSocialPost from '../modules/social/user-social-post.model.js';
 import ServiceReview from '../modules/reviews/service-review.model.js';
 import Country from '../modules/countries/country.model.js';
 import Tour from '../modules/tours/tour.model.js';
+import Attraction from '../modules/attractions/attraction.model.js';
+import AttractionImage from '../modules/attractions/attraction-image.model.js';
+import AttractionTag from '../modules/attractions/attraction-tag.model.js';
 
 export const setupAssociations = () => {
   // User - Property (Host relationship)
@@ -153,5 +156,19 @@ export const setupAssociations = () => {
 
   // Note: Tour associations are defined in tour.model.js
 
-  console.log('✅ Model associations configured (including Business module)');
+  // ==================== ATTRACTIONS MODULE ASSOCIATIONS ====================
+
+  // Attraction - AttractionImage
+  Attraction.hasMany(AttractionImage, { foreignKey: 'attractionId', as: 'images' });
+  AttractionImage.belongsTo(Attraction, { foreignKey: 'attractionId', as: 'attraction' });
+
+  // Attraction - AttractionTag
+  Attraction.hasMany(AttractionTag, { foreignKey: 'attractionId', as: 'tags' });
+  AttractionTag.belongsTo(Attraction, { foreignKey: 'attractionId', as: 'attraction' });
+
+  // User - Attraction (Creator relationship)
+  User.hasMany(Attraction, { foreignKey: 'createdBy', as: 'attractions' });
+  Attraction.belongsTo(User, { foreignKey: 'createdBy', as: 'creator' });
+
+  console.log('✅ Model associations configured (including Business module and Attractions)');
 };

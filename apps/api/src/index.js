@@ -28,6 +28,8 @@ import businessesRoutes from './modules/businesses/index.js';
 import toursRoutes from './modules/tours/tour.routes.js';
 import uploadRoutes from './modules/upload/upload.routes.js';
 import countriesRoutes from './modules/countries/countries.routes.js';
+import slidersRoutes from './modules/sliders/slider.routes.js';
+import attractionsRoutes from './modules/attractions/attraction.routes.js';
 
 const app = express();
 const server = createServer(app);
@@ -74,6 +76,8 @@ app.use('/api/businesses', businessesRoutes);
 app.use('/api/tours', toursRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/countries', countriesRoutes);
+app.use('/api/sliders', slidersRoutes);
+app.use('/api/attractions', attractionsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

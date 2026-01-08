@@ -268,7 +268,8 @@
       "Bash(node scripts/create-test-tour.js:*)",
       "Bash(node scripts/create-tour-business.js:*)",
       "Bash(mkdir:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []

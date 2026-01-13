@@ -891,9 +891,11 @@ function ProfilePage({ userIdProp }) {
                     />
                   ) : (
                     <video
-                      src={getImageUrl(reel.videoUrl, 'social')}
+                      src={`${getImageUrl(reel.videoUrl, 'social')}#t=0.1`}
                       className="w-full h-full object-cover"
                       preload="metadata"
+                      muted
+                      playsInline
                     />
                   )}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center">
@@ -926,9 +928,11 @@ function ProfilePage({ userIdProp }) {
                 >
                   {/* Use video element for thumbnail - shows first frame */}
                   <video
-                    src={getImageUrl(reel.videoUrl, 'social')}
+                    src={`${getImageUrl(reel.videoUrl, 'social')}#t=0.1`}
                     className="w-full h-full object-cover"
                     preload="metadata"
+                    muted
+                    playsInline
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center">
                     <Play size={48} className="text-white opacity-0 group-hover:opacity-100 transition" />

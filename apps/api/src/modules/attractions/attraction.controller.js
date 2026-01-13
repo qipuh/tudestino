@@ -180,11 +180,35 @@ class AttractionController {
 
       // Calcular distancia si hay marcadores
       let distance = null;
-      if (hasDistanceMarkers && startPoint && endPoint) {
+      let parsedStartPoint = null;
+      let parsedEndPoint = null;
+
+      // Parsear startPoint y endPoint solo si son strings no vacías
+      if (startPoint && startPoint.trim() !== '') {
         try {
-          const start = JSON.parse(startPoint);
-          const end = JSON.parse(endPoint);
-          distance = this.calculateDistance(start.lat, start.lng, end.lat, end.lng);
+          parsedStartPoint = JSON.parse(startPoint);
+        } catch (e) {
+          console.error('Error parsing startPoint:', e);
+        }
+      }
+
+      if (endPoint && endPoint.trim() !== '') {
+        try {
+          parsedEndPoint = JSON.parse(endPoint);
+        } catch (e) {
+          console.error('Error parsing endPoint:', e);
+        }
+      }
+
+      // Calcular distancia si hay marcadores válidos
+      if (hasDistanceMarkers === 'true' && parsedStartPoint && parsedEndPoint) {
+        try {
+          distance = this.calculateDistance(
+            parsedStartPoint.lat,
+            parsedStartPoint.lng,
+            parsedEndPoint.lat,
+            parsedEndPoint.lng
+          );
         } catch (e) {
           console.error('Error calculating distance:', e);
         }
@@ -203,8 +227,8 @@ class AttractionController {
         region,
         country,
         hasDistanceMarkers: hasDistanceMarkers === 'true',
-        startPoint: startPoint ? JSON.parse(startPoint) : null,
-        endPoint: endPoint ? JSON.parse(endPoint) : null,
+        startPoint: parsedStartPoint,
+        endPoint: parsedEndPoint,
         distance,
         whatToDo,
         recommendations,
@@ -262,11 +286,35 @@ class AttractionController {
 
       // Calcular distancia si hay marcadores
       let distance = attraction.distance;
-      if (hasDistanceMarkers === 'true' && startPoint && endPoint) {
+      let parsedStartPoint = attraction.startPoint;
+      let parsedEndPoint = attraction.endPoint;
+
+      // Parsear startPoint y endPoint solo si son strings no vacías
+      if (startPoint && startPoint.trim() !== '') {
         try {
-          const start = JSON.parse(startPoint);
-          const end = JSON.parse(endPoint);
-          distance = this.calculateDistance(start.lat, start.lng, end.lat, end.lng);
+          parsedStartPoint = JSON.parse(startPoint);
+        } catch (e) {
+          console.error('Error parsing startPoint:', e);
+        }
+      }
+
+      if (endPoint && endPoint.trim() !== '') {
+        try {
+          parsedEndPoint = JSON.parse(endPoint);
+        } catch (e) {
+          console.error('Error parsing endPoint:', e);
+        }
+      }
+
+      // Calcular distancia si hay marcadores válidos
+      if (hasDistanceMarkers === 'true' && parsedStartPoint && parsedEndPoint) {
+        try {
+          distance = this.calculateDistance(
+            parsedStartPoint.lat,
+            parsedStartPoint.lng,
+            parsedEndPoint.lat,
+            parsedEndPoint.lng
+          );
         } catch (e) {
           console.error('Error calculating distance:', e);
         }
@@ -284,8 +332,8 @@ class AttractionController {
         region: region !== undefined ? region : attraction.region,
         country: country !== undefined ? country : attraction.country,
         hasDistanceMarkers: hasDistanceMarkers !== undefined ? hasDistanceMarkers === 'true' : attraction.hasDistanceMarkers,
-        startPoint: startPoint ? JSON.parse(startPoint) : attraction.startPoint,
-        endPoint: endPoint ? JSON.parse(endPoint) : attraction.endPoint,
+        startPoint: parsedStartPoint,
+        endPoint: parsedEndPoint,
         distance,
         whatToDo: whatToDo !== undefined ? whatToDo : attraction.whatToDo,
         recommendations: recommendations !== undefined ? recommendations : attraction.recommendations,

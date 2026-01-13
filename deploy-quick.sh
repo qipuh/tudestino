@@ -28,23 +28,23 @@ fi
 cd $PROJECT_DIR
 
 # 1. Pull últimos cambios
-echo -e "${GREEN}[1/7] Obteniendo últimos cambios...${NC}"
+echo -e "${GREEN}[1/8] Obteniendo últimos cambios...${NC}"
 git pull origin main
 
 # 2. Instalar dependencias
-echo -e "${GREEN}[2/7] Instalando dependencias...${NC}"
+echo -e "${GREEN}[2/8] Instalando dependencias...${NC}"
 npm install
 
 # 3. Build Web
-echo -e "${GREEN}[3/7] Construyendo Web Frontend...${NC}"
+echo -e "${GREEN}[3/8] Construyendo Web Frontend...${NC}"
 npm run build:web
 
 # 4. Build Admin
-echo -e "${GREEN}[4/7] Construyendo Admin Frontend...${NC}"
+echo -e "${GREEN}[4/8] Construyendo Admin Frontend...${NC}"
 npm run build:admin
 
 # 5. Verificar archivos .env
-echo -e "${GREEN}[5/7] Verificando archivos .env...${NC}"
+echo -e "${GREEN}[5/8] Verificando archivos .env...${NC}"
 if [ ! -f "apps/api/.env" ]; then
     echo -e "${YELLOW}Advertencia: apps/api/.env no existe. Copiando desde .env.production${NC}"
     cp apps/api/.env.production apps/api/.env
@@ -61,8 +61,18 @@ if [ ! -f "apps/admin/.env" ]; then
     cp apps/admin/.env.production apps/admin/.env
 fi
 
-# 6. Reiniciar PM2
-echo -e "${GREEN}[6/7] Reiniciando aplicación con PM2...${NC}"
+# 6. Crear directorios de uploads
+echo -e "${GREEN}[6/8] Verificando directorios de uploads...${NC}"
+mkdir -p apps/api/uploads/sliders
+mkdir -p apps/api/uploads/attractions
+mkdir -p apps/api/uploads/social
+mkdir -p apps/api/uploads/users
+mkdir -p apps/api/uploads/events
+chmod -R 755 apps/api/uploads
+echo "Directorios de uploads verificados"
+
+# 7. Reiniciar PM2
+echo -e "${GREEN}[7/8] Reiniciando aplicación con PM2...${NC}"
 if pm2 list | grep -q "tudestino-api"; then
     echo "Reiniciando aplicación existente..."
     pm2 restart tudestino-api
@@ -72,8 +82,8 @@ else
     pm2 save
 fi
 
-# 7. Verificar estado
-echo -e "${GREEN}[7/7] Verificando estado...${NC}"
+# 8. Verificar estado
+echo -e "${GREEN}[8/8] Verificando estado...${NC}"
 pm2 status
 
 echo ""

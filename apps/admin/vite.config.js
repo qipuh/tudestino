@@ -4,7 +4,7 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/admin/',
+  base: '/', // Admin se sirve desde el subdominio raíz (admin.tudestino.pe)
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

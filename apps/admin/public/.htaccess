@@ -1,13 +1,13 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /admin/
+  RewriteBase /
 
   # Si el archivo o directorio existe, servirlo directamente
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
 
   # Redirigir todas las solicitudes a index.html
-  RewriteRule . /admin/index.html [L]
+  RewriteRule . /index.html [L]
 </IfModule>
 
 # Configuración de cache para assets

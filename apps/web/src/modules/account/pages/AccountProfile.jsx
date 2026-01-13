@@ -140,8 +140,10 @@ function AccountProfile() {
                 </label>
                 <input
                   type="text"
+                  value={user?.name || ''}
                   placeholder="Tu nombre"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  readOnly
                 />
               </div>
               <div>
@@ -150,8 +152,10 @@ function AccountProfile() {
                 </label>
                 <input
                   type="text"
+                  value=""
                   placeholder="Tu apellido"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  readOnly
                 />
               </div>
             </div>
@@ -163,8 +167,10 @@ function AccountProfile() {
               </label>
               <input
                 type="email"
+                value={user?.email || ''}
                 placeholder="tu@email.com"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-gray-50"
+                readOnly
               />
             </div>
 
@@ -175,8 +181,10 @@ function AccountProfile() {
               </label>
               <input
                 type="tel"
+                value={user?.phone || ''}
                 placeholder="+51 999 999 999"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                readOnly
               />
             </div>
 
@@ -187,7 +195,9 @@ function AccountProfile() {
               </label>
               <input
                 type="date"
+                value={user?.dateOfBirth || ''}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                readOnly
               />
             </div>
 
@@ -198,8 +208,10 @@ function AccountProfile() {
               </label>
               <input
                 type="text"
+                value={user?.location || ''}
                 placeholder="Lima, Perú"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                readOnly
               />
             </div>
 
@@ -209,8 +221,10 @@ function AccountProfile() {
               </label>
               <textarea
                 rows={4}
+                value={user?.bio || ''}
                 placeholder="Cuéntanos sobre tus intereses y preferencias de viaje..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                readOnly
               />
             </div>
           </div>

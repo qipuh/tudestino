@@ -655,13 +655,6 @@ function ProfilePage({ userIdProp }) {
                       <Edit size={16} />
                       Editar perfil
                     </button>
-                    <Link
-                      to="/feed"
-                      className="px-5 py-2 text-sm font-medium bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg hover:scale-105 flex items-center gap-2 transition-all shadow-md"
-                    >
-                      <PlusCircle size={16} />
-                      Crear
-                    </Link>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">

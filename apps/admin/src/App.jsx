@@ -35,6 +35,8 @@ function App() {
     checkAuth();
   }, [checkAuth]);
 
+  const { isAuthenticated } = useAuthStore();
+
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
@@ -53,6 +55,8 @@ function App() {
         <Route path="sliders" element={<SlidersManagement />} />
         <Route path="attractions" element={<AttractionsManagement />} />
       </Route>
+      {/* Catch-all route para rutas no encontradas */}
+      <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} replace />} />
     </Routes>
   );
 }

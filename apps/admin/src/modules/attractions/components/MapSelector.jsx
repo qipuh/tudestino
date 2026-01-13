@@ -1,5 +1,26 @@
-import { useState } from 'react';
-import { MapPin, Navigation, Ruler, ExternalLink } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { MapPin, Ruler, ExternalLink, MousePointer } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix Leaflet default marker icons
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Component to handle map clicks
+function MapClickHandler({ onLocationSelect }) {
+  useMapEvents({
+    click: (e) => {
+      onLocationSelect(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
 
 function MapSelector({ location = {}, distanceMarkers = {}, onChange }) {
   const [lat, setLat] = useState(location.latitude || '');
@@ -7,6 +28,11 @@ function MapSelector({ location = {}, distanceMarkers = {}, onChange }) {
   const [hasMarkers, setHasMarkers] = useState(distanceMarkers.enabled || false);
   const [startPoint, setStartPoint] = useState(distanceMarkers.startPoint || { lat: '', lng: '', name: '' });
   const [endPoint, setEndPoint] = useState(distanceMarkers.endPoint || { lat: '', lng: '', name: '' });
+  const mapRef = useRef(null);
+
+  // Default center (Cajamarca, Peru)
+  const defaultCenter = [-7.1633, -78.5142];
+  const center = (lat && lng) ? [parseFloat(lat), parseFloat(lng)] : defaultCenter;
 
   const handleLocationChange = (newLat, newLng) => {
     setLat(newLat);
@@ -15,6 +41,12 @@ function MapSelector({ location = {}, distanceMarkers = {}, onChange }) {
       location: { latitude: newLat, longitude: newLng },
       distanceMarkers: hasMarkers ? { enabled: true, startPoint, endPoint } : { enabled: false },
     });
+  };
+
+  const handleMapClick = (clickLat, clickLng) => {
+    const roundedLat = clickLat.toFixed(6);
+    const roundedLng = clickLng.toFixed(6);
+    handleLocationChange(roundedLat, roundedLng);
   };
 
   const handleMarkersToggle = (enabled) => {
@@ -88,7 +120,7 @@ function MapSelector({ location = {}, distanceMarkers = {}, onChange }) {
               step="0.0000001"
               value={lat}
               onChange={(e) => handleLocationChange(e.target.value, lng)}
-              placeholder="-12.0464"
+              placeholder="-7.1633"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -99,7 +131,7 @@ function MapSelector({ location = {}, distanceMarkers = {}, onChange }) {
               step="0.0000001"
               value={lng}
               onChange={(e) => handleLocationChange(lat, e.target.value)}
-              placeholder="-77.0428"
+              placeholder="-78.5142"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -118,15 +150,39 @@ function MapSelector({ location = {}, distanceMarkers = {}, onChange }) {
           </a>
         )}
 
-        {/* Map Placeholder - Ready for Leaflet integration */}
-        <div className="mt-4 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-          <Navigation size={40} className="mx-auto text-gray-400 mb-2" />
-          <p className="text-gray-500 text-sm">
-            Mapa interactivo próximamente
-          </p>
-          <p className="text-gray-400 text-xs mt-1">
-            Por ahora, ingresa las coordenadas manualmente
-          </p>
+        {/* Interactive Map */}
+        <div className="mt-4 rounded-lg overflow-hidden border-2 border-gray-300">
+          <div className="bg-blue-50 px-3 py-2 border-b border-blue-200 flex items-center gap-2 text-sm text-blue-700">
+            <MousePointer size={16} />
+            <span>Haz clic en el mapa para establecer la ubicación</span>
+          </div>
+          <div style={{ height: '400px', width: '100%' }}>
+            <MapContainer
+              center={center}
+              zoom={lat && lng ? 14 : 11}
+              style={{ height: '100%', width: '100%' }}
+              ref={mapRef}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <MapClickHandler onLocationSelect={handleMapClick} />
+              {lat && lng && (
+                <Marker position={[parseFloat(lat), parseFloat(lng)]}>
+                  <Popup>
+                    <div className="text-sm">
+                      <p className="font-semibold">Ubicación seleccionada</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Lat: {lat}<br />
+                        Lng: {lng}
+                      </p>
+                    </div>
+                  </Popup>
+                </Marker>
+              )}
+            </MapContainer>
+          </div>
         </div>
       </div>
 
@@ -173,7 +229,7 @@ function MapSelector({ location = {}, distanceMarkers = {}, onChange }) {
                       step="0.0000001"
                       value={startPoint.lat}
                       onChange={(e) => handleStartPointChange('lat', e.target.value)}
-                      placeholder="-12.0464"
+                      placeholder="-7.1633"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     />
                   </div>
@@ -184,7 +240,7 @@ function MapSelector({ location = {}, distanceMarkers = {}, onChange }) {
                       step="0.0000001"
                       value={startPoint.lng}
                       onChange={(e) => handleStartPointChange('lng', e.target.value)}
-                      placeholder="-77.0428"
+                      placeholder="-78.5142"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     />
                   </div>
@@ -217,7 +273,7 @@ function MapSelector({ location = {}, distanceMarkers = {}, onChange }) {
                       step="0.0000001"
                       value={endPoint.lat}
                       onChange={(e) => handleEndPointChange('lat', e.target.value)}
-                      placeholder="-12.0464"
+                      placeholder="-7.1633"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     />
                   </div>
@@ -228,7 +284,7 @@ function MapSelector({ location = {}, distanceMarkers = {}, onChange }) {
                       step="0.0000001"
                       value={endPoint.lng}
                       onChange={(e) => handleEndPointChange('lng', e.target.value)}
-                      placeholder="-77.0428"
+                      placeholder="-78.5142"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     />
                   </div>

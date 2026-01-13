@@ -269,7 +269,10 @@
       "Bash(node scripts/create-tour-business.js:*)",
       "Bash(mkdir:*)",
       "Bash(cp:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(flutter devices:*)",
+      "Bash(sshpass -p '3@monitoSS' ssh -o StrictHostKeyChecking=no root@161.132.38.151 \"cd /var/www/tudestino && pwd\")",
+      "Bash(sshpass -p \"3@monitoSS\" ssh -o StrictHostKeyChecking=no root@161.132.38.151 \"cd /var/www/tudestino && pwd && git status --short\")"
     ],
     "deny": [],
     "ask": []

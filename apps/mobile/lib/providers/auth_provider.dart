@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/user.dart';
 import '../core/services/api_service.dart';
+import '../core/utils/storage_helper.dart';
 
 class AuthProvider with ChangeNotifier {
   final ApiService _apiService;
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   User? _user;
   String? _token;
@@ -21,7 +20,8 @@ class AuthProvider with ChangeNotifier {
   bool get isAuthenticated => _user != null && _token != null;
 
   Future<void> initialize() async {
-    _token = await _storage.read(key: 'auth_token');
+    await StorageHelper.init();
+    _token = await StorageHelper.read('auth_token');
     if (_token != null) {
       await loadUser();
     }
@@ -44,7 +44,7 @@ class AuthProvider with ChangeNotifier {
       if (response.data['success']) {
         _token = response.data['data']['token'];
         _user = User.fromJson(response.data['data']['user']);
-        await _storage.write(key: 'auth_token', value: _token);
+        await StorageHelper.write('auth_token', _token!);
         _isLoading = false;
         notifyListeners();
         return true;
@@ -86,7 +86,7 @@ class AuthProvider with ChangeNotifier {
       if (response.data['success']) {
         _token = response.data['data']['token'];
         _user = User.fromJson(response.data['data']['user']);
-        await _storage.write(key: 'auth_token', value: _token);
+        await StorageHelper.write('auth_token', _token!);
         _isLoading = false;
         notifyListeners();
         return true;
@@ -120,7 +120,7 @@ class AuthProvider with ChangeNotifier {
   Future<void> logout() async {
     _user = null;
     _token = null;
-    await _storage.delete(key: 'auth_token');
+    await StorageHelper.delete('auth_token');
     notifyListeners();
   }
 

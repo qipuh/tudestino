@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/property.dart';
+import '../models/attraction.dart';
+import '../models/tour.dart';
 import '../core/services/api_service.dart';
 
 class PropertiesProvider with ChangeNotifier {
@@ -8,6 +10,8 @@ class PropertiesProvider with ChangeNotifier {
   List<Property> _properties = [];
   List<Property> _searchResults = [];
   Property? _selectedProperty;
+  List<Attraction> _attractions = [];
+  List<Tour> _tours = [];
   bool _isLoading = false;
   String? _error;
 
@@ -16,6 +20,8 @@ class PropertiesProvider with ChangeNotifier {
   List<Property> get properties => _properties;
   List<Property> get searchResults => _searchResults;
   Property? get selectedProperty => _selectedProperty;
+  List<Attraction> get attractions => _attractions;
+  List<Tour> get tours => _tours;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -127,5 +133,39 @@ class PropertiesProvider with ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  // Load attractions
+  Future<void> loadAttractions({int limit = 6}) async {
+    try {
+      final response = await _apiService.get('/attractions?limit=$limit');
+
+      if (response.data['success']) {
+        final attractionsData = response.data['data']['attractions'] ?? [];
+        _attractions = (attractionsData as List)
+            .map((json) => Attraction.fromJson(json))
+            .toList();
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error al cargar atractivos: $e');
+    }
+  }
+
+  // Load tours
+  Future<void> loadTours({int limit = 8}) async {
+    try {
+      final response = await _apiService.get('/tours/search?limit=$limit');
+
+      if (response.data['success']) {
+        final toursData = response.data['data']['tours'] ?? [];
+        _tours = (toursData as List)
+            .map((json) => Tour.fromJson(json))
+            .toList();
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error al cargar tours: $e');
+    }
   }
 }

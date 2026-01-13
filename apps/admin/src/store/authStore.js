@@ -10,7 +10,8 @@ const useAuthStore = create((set) => ({
   login: async (email, password) => {
     try {
       const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, { email, password });
-      const { token, user } = response.data;
+      // El interceptor ya devuelve response.data, no necesitamos .data nuevamente
+      const { token, user } = response;
 
       // Verificar que el usuario sea admin
       if (user.role !== 'admin') {
@@ -21,6 +22,7 @@ const useAuthStore = create((set) => ({
       }
 
       localStorage.setItem('admin_token', token);
+      localStorage.setItem('admin_user', JSON.stringify(user));
       set({ admin: user, isAuthenticated: true });
 
       return { success: true };
@@ -34,6 +36,7 @@ const useAuthStore = create((set) => ({
 
   logout: () => {
     localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
     set({ admin: null, isAuthenticated: false });
   },
 
@@ -46,9 +49,11 @@ const useAuthStore = create((set) => ({
 
     try {
       const response = await api.get(API_ENDPOINTS.AUTH.ME);
-      set({ admin: response.data, isAuthenticated: true, isLoading: false });
+      // El interceptor ya devuelve response.data
+      set({ admin: response, isAuthenticated: true, isLoading: false });
     } catch (error) {
       localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
       set({ admin: null, isAuthenticated: false, isLoading: false });
     }
   },

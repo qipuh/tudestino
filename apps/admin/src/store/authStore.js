@@ -10,8 +10,8 @@ const useAuthStore = create((set) => ({
   login: async (email, password) => {
     try {
       const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, { email, password });
-      // El interceptor ya devuelve response.data, no necesitamos .data nuevamente
-      const { token, user } = response;
+      // El interceptor devuelve response.data que contiene { success, data: { token, user } }
+      const { token, user } = response.data;
 
       // Verificar que el usuario sea admin
       if (user.role !== 'admin') {

@@ -14,7 +14,7 @@ async function checkAdminUsers() {
     console.log('Verificando usuarios administradores...');
 
     const [results] = await sequelize.query(
-      "SELECT id, email, role, firstName, lastName FROM users WHERE role = 'admin' LIMIT 10"
+      "SELECT id, email, role, name, first_name, last_name FROM users WHERE role = 'admin' LIMIT 10"
     );
 
     console.log('\nUsuarios administradores encontrados:');
@@ -24,7 +24,7 @@ async function checkAdminUsers() {
       results.forEach(user => {
         console.log(`\nID: ${user.id}`);
         console.log(`Email: ${user.email}`);
-        console.log(`Nombre: ${user.firstName} ${user.lastName}`);
+        console.log(`Nombre: ${user.name || user.first_name + ' ' + user.last_name}`);
         console.log(`Role: ${user.role}`);
       });
     }

@@ -56,7 +56,7 @@ async function fixUserFollowsTable() {
 
         await sequelize.query(`
           ALTER TABLE userfollows
-          MODIFY COLUMN id INT AUTO_INCREMENT PRIMARY KEY;
+          MODIFY COLUMN id INT AUTO_INCREMENT;
         `);
 
         console.log('✅ AUTO_INCREMENT agregado exitosamente\n');

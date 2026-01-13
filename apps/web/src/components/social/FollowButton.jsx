@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { UserPlus, UserMinus } from 'lucide-react';
 import { followUser, unfollowUser } from '../../services/socialService';
+import { useNavigate } from 'react-router-dom';
 
 function FollowButton({ userId, initialIsFollowing = false, onFollowChange }) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleToggleFollow = async () => {
     setLoading(true);
@@ -22,7 +24,18 @@ function FollowButton({ userId, initialIsFollowing = false, onFollowChange }) {
         onFollowChange(!isFollowing);
       }
     } catch (error) {
-      alert('Error: ' + error.message);
+      // Manejar error 401 (no autenticado)
+      if (error.response?.status === 401) {
+        const shouldRedirect = window.confirm(
+          'Debes iniciar sesión para seguir a otros usuarios.\n\n¿Deseas ir a la página de inicio de sesión?'
+        );
+        if (shouldRedirect) {
+          navigate('/login', { state: { from: window.location.pathname } });
+        }
+      } else {
+        // Otros errores
+        alert('Error: ' + (error.response?.data?.message || error.message || 'No se pudo completar la acción'));
+      }
     } finally {
       setLoading(false);
     }

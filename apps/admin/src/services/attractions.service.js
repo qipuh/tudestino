@@ -6,7 +6,8 @@ export const attractionsService = {
    */
   getAll: async (params) => {
     const response = await api.get('/attractions/admin/all', { params });
-    return response.data;
+    // El interceptor ya desenvuelve response.data, entonces response = { success, data }
+    return response;
   },
 
   /**
@@ -14,7 +15,7 @@ export const attractionsService = {
    */
   getById: async (id) => {
     const response = await api.get(`/attractions/${id}`);
-    return response.data;
+    return response;
   },
 
   /**
@@ -26,7 +27,7 @@ export const attractionsService = {
         'Content-Type': 'multipart/form-data',
       },
     });
-    return response.data;
+    return response;
   },
 
   /**
@@ -38,7 +39,7 @@ export const attractionsService = {
         'Content-Type': 'multipart/form-data',
       },
     });
-    return response.data;
+    return response;
   },
 
   /**
@@ -46,7 +47,7 @@ export const attractionsService = {
    */
   delete: async (id) => {
     const response = await api.delete(`/attractions/${id}`);
-    return response.data;
+    return response;
   },
 
   /**
@@ -58,7 +59,7 @@ export const attractionsService = {
         'Content-Type': 'multipart/form-data',
       },
     });
-    return response.data;
+    return response;
   },
 
   /**
@@ -66,7 +67,7 @@ export const attractionsService = {
    */
   deleteImage: async (id, imageId) => {
     const response = await api.delete(`/attractions/${id}/gallery/${imageId}`);
-    return response.data;
+    return response;
   },
 
   /**
@@ -74,7 +75,7 @@ export const attractionsService = {
    */
   addTag: async (id, tagData) => {
     const response = await api.post(`/attractions/${id}/tags`, tagData);
-    return response.data;
+    return response;
   },
 
   /**
@@ -82,6 +83,6 @@ export const attractionsService = {
    */
   removeTag: async (id, tagId) => {
     const response = await api.delete(`/attractions/${id}/tags/${tagId}`);
-    return response.data;
+    return response;
   },
 };

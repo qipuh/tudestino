@@ -59,10 +59,14 @@ function BusinessServices() {
     console.log('[BusinessServices] Rooms state changed:', rooms);
   }, [rooms]);
 
-  // Redirigir a página de menú si es restaurante
+  // Redirigir a páginas especializadas según el tipo de negocio
   useEffect(() => {
-    if (business && business.businessType === 'restaurant') {
-      navigate(`/business/${id}/menu`);
+    if (business) {
+      if (business.businessType === 'restaurant') {
+        navigate(`/business/${id}/menu`);
+      } else if (business.businessType === 'tours') {
+        navigate(`/business/${id}/tours`);
+      }
     }
   }, [business, id, navigate]);
 

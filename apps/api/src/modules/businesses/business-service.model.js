@@ -28,7 +28,6 @@ const BusinessService = sequelize.define('BusinessService', {
       'bar',
       'club',
       'spa',
-      'tour',
       'transport',
       'other'
     ),

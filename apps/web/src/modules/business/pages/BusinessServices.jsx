@@ -82,8 +82,23 @@ function BusinessServices() {
   };
 
   const resetForm = () => {
+    // Determinar el tipo de servicio por defecto basado en el tipo de negocio
+    let defaultServiceType = 'other';
+    if (business) {
+      const businessTypeToServiceType = {
+        'hotel': 'property',
+        'restaurant': 'restaurant',
+        'entertainment': 'entertainment',
+        'events': 'events',
+        'tours': 'tours',
+        'transport': 'transport',
+        'spa': 'spa'
+      };
+      defaultServiceType = businessTypeToServiceType[business.businessType] || 'other';
+    }
+
     setFormData({
-      serviceType: 'property',
+      serviceType: defaultServiceType,
       name: '',
       description: '',
       status: 'active',
@@ -503,27 +518,48 @@ function BusinessServices() {
                       Tipo de Servicio *
                     </label>
                     <div className="grid grid-cols-2 gap-3">
-                      {serviceTypes.map((type) => (
-                        <label
-                          key={type.value}
-                          className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition ${
-                            formData.serviceType === type.value
-                              ? 'border-primary bg-primary bg-opacity-5'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="serviceType"
-                            value={type.value}
-                            checked={formData.serviceType === type.value}
-                            onChange={handleChange}
-                            className="sr-only"
-                          />
-                          <span className="text-2xl">{type.icon}</span>
-                          <span className="text-sm font-medium">{type.label}</span>
-                        </label>
-                      ))}
+                      {serviceTypes
+                        .filter((type) => {
+                          // Mapeo de tipos de negocio a tipos de servicio permitidos
+                          const allowedServiceTypes = {
+                            'hotel': ['property', 'other'],
+                            'restaurant': ['restaurant', 'other'],
+                            'entertainment': ['entertainment', 'other'],
+                            'events': ['events', 'other'],
+                            'tours': ['tours', 'other'],
+                            'transport': ['transport', 'other'],
+                            'spa': ['spa', 'other']
+                          };
+
+                          // Si el negocio tiene un tipo específico, filtrar servicios permitidos
+                          if (business && allowedServiceTypes[business.businessType]) {
+                            return allowedServiceTypes[business.businessType].includes(type.value);
+                          }
+
+                          // Si no hay restricción, mostrar todos
+                          return true;
+                        })
+                        .map((type) => (
+                          <label
+                            key={type.value}
+                            className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition ${
+                              formData.serviceType === type.value
+                                ? 'border-primary bg-primary bg-opacity-5'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="serviceType"
+                              value={type.value}
+                              checked={formData.serviceType === type.value}
+                              onChange={handleChange}
+                              className="sr-only"
+                            />
+                            <span className="text-2xl">{type.icon}</span>
+                            <span className="text-sm font-medium">{type.label}</span>
+                          </label>
+                        ))}
                     </div>
                   </div>
 
@@ -538,7 +574,14 @@ function BusinessServices() {
                       value={formData.name}
                       onChange={handleChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                      placeholder="Ej: Habitación Doble Superior"
+                      placeholder={
+                        business?.businessType === 'tours' ? 'Ej: City Tour - Recorrido por el centro histórico' :
+                        business?.businessType === 'hotel' ? 'Ej: Habitación Doble Superior' :
+                        business?.businessType === 'restaurant' ? 'Ej: Menú Ejecutivo' :
+                        business?.businessType === 'spa' ? 'Ej: Masaje Relajante 60 min' :
+                        business?.businessType === 'transport' ? 'Ej: Traslado Aeropuerto - Hotel' :
+                        'Ej: Nombre del servicio'
+                      }
                       required
                     />
                   </div>
@@ -601,6 +644,169 @@ function BusinessServices() {
                       Configuración específica del servicio en formato JSON
                     </p>
                   </div>
+
+                  {/* Tours-specific fields */}
+                  {formData.serviceType === 'tours' && (
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                      <h4 className="text-sm font-medium mb-3">🗺️ Detalles del Tour</h4>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm text-gray-700 mb-1">Duración</label>
+                          <input
+                            type="text"
+                            name="settings.duration"
+                            value={formData.settings?.duration || ''}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                            placeholder="Ej: 4 horas, Día completo, 3 días 2 noches"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm text-gray-700 mb-1">Precio por persona (S/.)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            name="settings.pricePerPerson"
+                            value={formData.settings?.pricePerPerson || ''}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                            placeholder="Ej: 150.00"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm text-gray-700 mb-1">Capacidad mínima</label>
+                          <input
+                            type="number"
+                            min="1"
+                            name="settings.minCapacity"
+                            value={formData.settings?.minCapacity || ''}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                            placeholder="Ej: 2"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm text-gray-700 mb-1">Capacidad máxima</label>
+                          <input
+                            type="number"
+                            min="1"
+                            name="settings.maxCapacity"
+                            value={formData.settings?.maxCapacity || ''}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                            placeholder="Ej: 15"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm text-gray-700 mb-1">Dificultad</label>
+                          <select
+                            name="settings.difficulty"
+                            value={formData.settings?.difficulty || 'moderate'}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                          >
+                            <option value="easy">Fácil</option>
+                            <option value="moderate">Moderada</option>
+                            <option value="challenging">Desafiante</option>
+                            <option value="difficult">Difícil</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm text-gray-700 mb-1">Idiomas disponibles</label>
+                          <input
+                            type="text"
+                            name="settings.languages"
+                            value={Array.isArray(formData.settings?.languages) ? (formData.settings.languages || []).join(', ') : (formData.settings?.languages || '')}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              const arr = raw.split(',').map(s => s.trim()).filter(Boolean);
+                              setFormData({
+                                ...formData,
+                                settings: {
+                                  ...formData.settings,
+                                  languages: arr,
+                                }
+                              });
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                            placeholder="Español, Inglés, Francés"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="block text-sm text-gray-700 mb-1">Qué incluye (separado por comas)</label>
+                          <input
+                            type="text"
+                            name="settings.includes"
+                            value={Array.isArray(formData.settings?.includes) ? (formData.settings.includes || []).join(', ') : (formData.settings?.includes || '')}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              const arr = raw.split(',').map(s => s.trim()).filter(Boolean);
+                              setFormData({
+                                ...formData,
+                                settings: {
+                                  ...formData.settings,
+                                  includes: arr,
+                                }
+                              });
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                            placeholder="Transporte, Guía turístico, Almuerzo, Entradas"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="block text-sm text-gray-700 mb-1">No incluye (separado por comas)</label>
+                          <input
+                            type="text"
+                            name="settings.notIncludes"
+                            value={Array.isArray(formData.settings?.notIncludes) ? (formData.settings.notIncludes || []).join(', ') : (formData.settings?.notIncludes || '')}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              const arr = raw.split(',').map(s => s.trim()).filter(Boolean);
+                              setFormData({
+                                ...formData,
+                                settings: {
+                                  ...formData.settings,
+                                  notIncludes: arr,
+                                }
+                              });
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                            placeholder="Propinas, Bebidas alcohólicas, Seguro personal"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="block text-sm text-gray-700 mb-1">Qué llevar / Recomendaciones (separado por comas)</label>
+                          <input
+                            type="text"
+                            name="settings.recommendations"
+                            value={Array.isArray(formData.settings?.recommendations) ? (formData.settings.recommendations || []).join(', ') : (formData.settings?.recommendations || '')}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              const arr = raw.split(',').map(s => s.trim()).filter(Boolean);
+                              setFormData({
+                                ...formData,
+                                settings: {
+                                  ...formData.settings,
+                                  recommendations: arr,
+                                }
+                              });
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                            placeholder="Ropa cómoda, Bloqueador solar, Agua, Cámara fotográfica"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Property-specific fields (habitaciones) */}
                   {formData.serviceType === 'property' && (

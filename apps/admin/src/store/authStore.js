@@ -49,8 +49,8 @@ const useAuthStore = create((set) => ({
 
     try {
       const response = await api.get(API_ENDPOINTS.AUTH.ME);
-      // El interceptor ya devuelve response.data
-      set({ admin: response, isAuthenticated: true, isLoading: false });
+      // El interceptor devuelve response.data que contiene { success, data: user }
+      set({ admin: response.data, isAuthenticated: true, isLoading: false });
     } catch (error) {
       localStorage.removeItem('admin_token');
       localStorage.removeItem('admin_user');

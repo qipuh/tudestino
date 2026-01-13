@@ -199,21 +199,28 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
         submitFormData.append('coverImage', coverImageFile);
       }
 
-      // Add gallery images (only new ones)
-      const newGalleryImages = galleryImages.filter(img => img.isNew && img.file);
-      newGalleryImages.forEach((img, index) => {
-        submitFormData.append('galleryImages', img.file);
-      });
-
       // Add tagged places
       if (taggedPlaces.length > 0) {
         submitFormData.append('taggedPlaces', JSON.stringify(taggedPlaces));
       }
 
+      let attractionId;
       if (attraction) {
         await attractionsService.update(attraction.id, submitFormData);
+        attractionId = attraction.id;
       } else {
-        await attractionsService.create(submitFormData);
+        const response = await attractionsService.create(submitFormData);
+        attractionId = response.data.id;
+      }
+
+      // Upload gallery images separately if there are new ones
+      const newGalleryImages = galleryImages.filter(img => img.isNew && img.file);
+      if (newGalleryImages.length > 0) {
+        const galleryFormData = new FormData();
+        newGalleryImages.forEach((img) => {
+          galleryFormData.append('images', img.file);
+        });
+        await attractionsService.uploadGallery(attractionId, galleryFormData);
       }
 
       onSuccess();

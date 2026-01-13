@@ -6,7 +6,10 @@ import '../../providers/properties_provider.dart';
 import '../../providers/social_provider.dart';
 import '../../models/property.dart';
 import '../../models/social_post.dart';
+import '../../models/attraction.dart';
+import '../../models/tour.dart';
 import 'package:intl/intl.dart';
+import '../../core/utils/url_helper.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,10 +25,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<PropertiesProvider>(context, listen: false)
-          .loadFeaturedProperties();
-      Provider.of<SocialProvider>(context, listen: false)
-          .loadFeed();
+      final propertiesProvider =
+          Provider.of<PropertiesProvider>(context, listen: false);
+      propertiesProvider.loadFeaturedProperties();
+      propertiesProvider.loadAttractions();
+      propertiesProvider.loadTours();
+      Provider.of<SocialProvider>(context, listen: false).loadFeed();
     });
   }
 
@@ -195,6 +200,88 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+          // Atractivos Turísticos Section
+          if (propertiesProvider.attractions.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.place, color: theme.primaryColor),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Atractivos Turísticos',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 220,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: propertiesProvider.attractions.length,
+                  itemBuilder: (context, index) {
+                    final attraction = propertiesProvider.attractions[index];
+                    return _buildAttractionCard(attraction, theme);
+                  },
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          ],
+
+          // Tours Section
+          if (propertiesProvider.tours.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.tour, color: theme.primaryColor),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Tours y Excursiones',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 240,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: propertiesProvider.tours.length,
+                  itemBuilder: (context, index) {
+                    final tour = propertiesProvider.tours[index];
+                    return _buildTourCard(tour, theme);
+                  },
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          ],
 
           // Section Title
           SliverToBoxAdapter(
@@ -421,6 +508,200 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: theme.textTheme.bodySmall,
                         ),
                       ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAttractionCard(Attraction attraction, ThemeData theme) {
+    return Container(
+      width: 280,
+      margin: const EdgeInsets.only(right: 16),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: InkWell(
+          onTap: () {
+            // TODO: Navigate to attraction detail
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image with category badge
+              Stack(
+                children: [
+                  CachedNetworkImage(
+                    imageUrl: UrlHelper.getFullImageUrl(attraction.coverImage),
+                    height: 140,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      color: Colors.grey[300],
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.image_not_supported),
+                    ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${attraction.categoryEmoji} ${attraction.categoryLabel}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      attraction.title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            '${attraction.city}, ${attraction.region}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTourCard(Tour tour, ThemeData theme) {
+    return Container(
+      width: 260,
+      margin: const EdgeInsets.only(right: 16),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: InkWell(
+          onTap: () {
+            // TODO: Navigate to tour detail
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Tour image
+              CachedNetworkImage(
+                imageUrl: tour.coverImage != null
+                    ? UrlHelper.getFullImageUrl(tour.coverImage!)
+                    : tour.business?.logo != null
+                        ? UrlHelper.getFullImageUrl(tour.business!.logo!)
+                        : '',
+                height: 140,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: Colors.grey[300],
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.tour),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tour.name,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.schedule, size: 14, color: Colors.grey[600]),
+                        const SizedBox(width: 4),
+                        Text(
+                          tour.duration,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (tour.business != null) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.business, size: 14, color: Colors.grey[600]),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              tour.business!.name,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    Text(
+                      tour.formattedPrice,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.primaryColor,
+                      ),
                     ),
                   ],
                 ),

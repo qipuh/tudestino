@@ -87,7 +87,10 @@ function AttractionsManagement() {
   const getImageUrl = (imageUrl) => {
     if (!imageUrl) return '';
     if (imageUrl.startsWith('http')) return imageUrl;
-    return `${API_URL.replace('/api', '')}/uploads/attractions/${imageUrl}`;
+    // Construir URL base desde API_URL (ej: https://api.tudestino.pe/api -> https://tudestino.pe)
+    const apiUrl = API_URL || '';
+    const baseUrl = apiUrl.replace(/\/api\/?$/, '').replace('api.', '');
+    return `${baseUrl}/uploads/attractions/${imageUrl}`;
   };
 
   const filteredAttractions = attractions.filter(attraction => {

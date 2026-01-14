@@ -26,6 +26,7 @@ mkdir -p apps/api/uploads/attractions
 mkdir -p apps/api/uploads/social
 mkdir -p apps/api/uploads/users
 mkdir -p apps/api/uploads/events
+mkdir -p apps/api/uploads/tours
 
 # Establecer permisos correctos
 echo "Estableciendo permisos..."

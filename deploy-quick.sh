@@ -68,6 +68,7 @@ mkdir -p apps/api/uploads/attractions
 mkdir -p apps/api/uploads/social
 mkdir -p apps/api/uploads/users
 mkdir -p apps/api/uploads/events
+mkdir -p apps/api/uploads/tours
 chmod -R 755 apps/api/uploads
 echo "Directorios de uploads verificados"
 

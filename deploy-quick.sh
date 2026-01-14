@@ -61,7 +61,7 @@ if [ ! -f "apps/admin/.env" ]; then
     cp apps/admin/.env.production apps/admin/.env
 fi
 
-# 6. Crear directorios de uploads
+# 6. Crear directorios de uploads y symlinks
 echo -e "${GREEN}[6/8] Verificando directorios de uploads...${NC}"
 mkdir -p apps/api/uploads/sliders
 mkdir -p apps/api/uploads/attractions
@@ -70,7 +70,26 @@ mkdir -p apps/api/uploads/users
 mkdir -p apps/api/uploads/events
 mkdir -p apps/api/uploads/tours
 chmod -R 755 apps/api/uploads
-echo "Directorios de uploads verificados"
+
+# Crear directorio de symlinks si no existe
+mkdir -p uploads
+
+# Crear symlinks para servir archivos estáticos via Nginx
+cd uploads
+ln -sf /var/www/tudestino/apps/api/uploads/sliders sliders 2>/dev/null || true
+ln -sf /var/www/tudestino/apps/api/uploads/attractions attractions 2>/dev/null || true
+ln -sf /var/www/tudestino/apps/api/uploads/social social 2>/dev/null || true
+ln -sf /var/www/tudestino/apps/api/uploads/users users 2>/dev/null || true
+ln -sf /var/www/tudestino/apps/api/uploads/events events 2>/dev/null || true
+ln -sf /var/www/tudestino/apps/api/uploads/tours tours 2>/dev/null || true
+ln -sf /var/www/tudestino/apps/api/uploads/avatars avatars 2>/dev/null || true
+ln -sf /var/www/tudestino/apps/api/uploads/business business 2>/dev/null || true
+ln -sf /var/www/tudestino/apps/api/uploads/menu menu 2>/dev/null || true
+ln -sf /var/www/tudestino/apps/api/uploads/posts posts 2>/dev/null || true
+ln -sf /var/www/tudestino/apps/api/uploads/rooms rooms 2>/dev/null || true
+cd ..
+
+echo "Directorios de uploads y symlinks verificados"
 
 # 7. Reiniciar PM2
 echo -e "${GREEN}[7/8] Reiniciando aplicación con PM2...${NC}"

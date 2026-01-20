@@ -12,16 +12,16 @@ export const useBusinessProperty = () => {
     setLoading(true);
     setError(null);
     try {
-      console.log('[useBusinessProperty] Fetching property for business:', businessId);
       const response = await api.get(`/businesses/${businessId}/properties`);
-      console.log('[useBusinessProperty] Property response:', response);
-      console.log('[useBusinessProperty] Rooms found:', response.data?.rooms?.length || 0);
       setProperty(response.data);
       setRooms(response.data?.rooms || []);
       return { success: true, data: response.data };
     } catch (err) {
-      console.error('[useBusinessProperty] Error fetching property:', err);
-      const errorMsg = err.response?.data?.message || 'Error al cargar habitaciones';
+      // 404 es esperado cuando el negocio no tiene propiedades configuradas
+      if (err.response?.status !== 404) {
+        console.error('[useBusinessProperty] Error fetching property:', err);
+      }
+      const errorMsg = err.response?.data?.message || 'Este negocio no tiene una propiedad configurada';
       setError(errorMsg);
       setProperty(null);
       setRooms([]);

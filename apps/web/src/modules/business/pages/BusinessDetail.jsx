@@ -6,6 +6,8 @@ import { MapPin, Star, Clock, Phone, Mail, Globe, ChevronLeft, ArrowLeft, Messag
 import api, { getImageUrl } from '../../../services/api';
 import ReservationModal from '../components/ReservationModal';
 import BookingFlow from '../../bookings/components/BookingFlow';
+import ReelsSidebar from '../../../components/social/ReelsSidebar';
+import { useSidebar } from '../../../contexts/SidebarContext';
 
 const businessTypeIcons = {
   hotel: '🏨',
@@ -19,13 +21,25 @@ const businessTypeIcons = {
 };
 
 const MENU_CATEGORIES = {
-  appetizers: { label: 'Entradas', icon: '🥗' },
-  main_courses: { label: 'Platos Principales', icon: '🍽️' },
-  desserts: { label: 'Postres', icon: '🍰' },
-  beverages: { label: 'Bebidas', icon: '🥤' },
-  alcoholic: { label: 'Bebidas Alcohólicas', icon: '🍷' },
-  breakfast: { label: 'Desayunos', icon: '🍳' },
-  specials: { label: 'Especialidades', icon: '⭐' },
+  restaurant: {
+    appetizers: { label: 'Entradas', icon: '🥗' },
+    main_courses: { label: 'Platos Principales', icon: '🍽️' },
+    desserts: { label: 'Postres', icon: '🍰' },
+    beverages: { label: 'Bebidas', icon: '🥤' },
+    alcoholic: { label: 'Bebidas Alcohólicas', icon: '🍷' },
+    breakfast: { label: 'Desayunos', icon: '🍳' },
+    specials: { label: 'Especialidades', icon: '⭐' },
+  },
+  entertainment: {
+    drinks: { label: 'Bebidas', icon: '🍹' },
+    cocktails: { label: 'Cócteles', icon: '🍸' },
+    beer: { label: 'Cervezas', icon: '🍺' },
+    wine: { label: 'Vinos', icon: '🍷' },
+    spirits: { label: 'Licores', icon: '🥃' },
+    snacks: { label: 'Bocadillos', icon: '🍿' },
+    packages: { label: 'Paquetes/Combos', icon: '🎉' },
+    specials: { label: 'Especialidades', icon: '⭐' },
+  }
 };
 
 const statusColors = {
@@ -59,6 +73,7 @@ function BusinessDetail({ businessIdProp }) {
   const { id: urlId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { sidebarOpen, toggleSidebar, setSidebarVisible } = useSidebar();
   const { business, loading, error, fetchBusiness, deleteBusiness } = useBusiness();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -77,6 +92,12 @@ function BusinessDetail({ businessIdProp }) {
   // Usar businessIdProp si está disponible, de lo contrario usar el ID de la URL
   const id = businessIdProp || urlId;
 
+  // Enable sidebar when BusinessDetail mounts, disable when unmounts
+  useEffect(() => {
+    setSidebarVisible(true);
+    return () => setSidebarVisible(false);
+  }, [setSidebarVisible]);
+
   useEffect(() => {
     if (id) {
       loadBusiness();
@@ -86,7 +107,7 @@ function BusinessDetail({ businessIdProp }) {
   useEffect(() => {
     if (business) {
       // Set default tab based on business type
-      if (business.businessType === 'restaurant') {
+      if (business.businessType === 'restaurant' || business.businessType === 'entertainment') {
         setActiveTab('menu');
         loadMenu();
       } else if (business.businessType === 'hotel') {
@@ -135,7 +156,10 @@ function BusinessDetail({ businessIdProp }) {
         }
       }
     } catch (error) {
-      console.error('Error loading property:', error);
+      // 404 es esperado cuando el negocio no tiene propiedades configuradas
+      if (error.response?.status !== 404) {
+        console.error('Error loading property:', error);
+      }
       setProperty(null);
       setRooms([]);
     } finally {
@@ -176,16 +200,25 @@ function BusinessDetail({ businessIdProp }) {
       setFollowLoading(true);
 
       if (isFollowing) {
-        await api.delete(`/businesses/${id}/follow`);
+        console.log('🔄 Dejando de seguir negocio:', id);
+        const response = await api.delete(`/businesses/${id}/follow`);
+        console.log('✅ Response unfollow:', response);
+        setIsFollowing(false);
       } else {
-        await api.post(`/businesses/${id}/follow`);
+        console.log('🔄 Siguiendo negocio:', id);
+        const response = await api.post(`/businesses/${id}/follow`);
+        console.log('✅ Response follow:', response);
+        setIsFollowing(true);
       }
 
       await loadBusiness();
-      await checkFollowStatus();
     } catch (error) {
-      console.error('Error toggling follow:', error);
-      alert(error.response?.data?.message || 'Error al actualizar seguimiento');
+      console.error('❌ Error toggling follow:', error);
+      console.error('❌ Error response:', error.response?.data);
+      const errorMsg = error.response?.data?.message || 'Error al actualizar seguimiento';
+      alert(errorMsg);
+      // Restaurar el estado anterior en caso de error
+      await checkFollowStatus();
     } finally {
       setFollowLoading(false);
     }
@@ -379,13 +412,17 @@ function BusinessDetail({ businessIdProp }) {
                           disabled={followLoading}
                           className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-lg flex items-center gap-2 ${
                             isFollowing
-                              ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              ? 'bg-green-100 text-green-700 hover:bg-green-200'
                               : 'text-black hover:opacity-90'
                           } ${followLoading ? 'opacity-50' : ''}`}
                           style={!isFollowing ? { backgroundColor: '#ffb649' } : {}}
                         >
-                          <Heart size={16} className={isFollowing ? 'fill-current' : ''} />
-                          {isFollowing ? 'Dejar de seguir' : 'Seguir'}
+                          {isFollowing ? (
+                            <MessageCircle size={16} />
+                          ) : (
+                            <Heart size={16} />
+                          )}
+                          {isFollowing ? 'Siguiendo' : 'Seguir'}
                         </button>
                       </div>
                     </div>
@@ -516,13 +553,17 @@ function BusinessDetail({ businessIdProp }) {
                             disabled={followLoading}
                             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-lg flex items-center gap-1.5 ${
                               isFollowing
-                                ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                ? 'bg-green-100 text-green-700 hover:bg-green-200'
                                 : 'text-black hover:opacity-90'
                             } ${followLoading ? 'opacity-50' : ''}`}
                             style={!isFollowing ? { backgroundColor: '#ffb649' } : {}}
                           >
-                            <Heart size={14} className={isFollowing ? 'fill-current' : ''} />
-                            {isFollowing ? 'Dejar de seguir' : 'Seguir'}
+                            {isFollowing ? (
+                              <MessageCircle size={14} />
+                            ) : (
+                              <Heart size={14} />
+                            )}
+                            {isFollowing ? 'Siguiendo' : 'Seguir'}
                           </button>
                         </div>
                       </div>
@@ -651,13 +692,17 @@ function BusinessDetail({ businessIdProp }) {
                       disabled={followLoading}
                       className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-lg flex items-center gap-2 ${
                         isFollowing
-                          ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          ? 'bg-green-100 text-green-700 hover:bg-green-200'
                           : 'text-black hover:opacity-90'
                       } ${followLoading ? 'opacity-50' : ''}`}
                       style={!isFollowing ? { backgroundColor: '#ffb649' } : {}}
                     >
-                      <Heart size={16} className={isFollowing ? 'fill-current' : ''} />
-                      {isFollowing ? 'Dejar de seguir' : 'Seguir'}
+                      {isFollowing ? (
+                        <MessageCircle size={16} />
+                      ) : (
+                        <Heart size={16} />
+                      )}
+                      {isFollowing ? 'Siguiendo' : 'Seguir'}
                     </button>
                   </div>
                 </div>
@@ -683,7 +728,7 @@ function BusinessDetail({ businessIdProp }) {
                   Habitaciones
                 </button>
               )}
-              {business.businessType === 'restaurant' && (
+              {(business.businessType === 'restaurant' || business.businessType === 'entertainment') && (
                 <button
                   onClick={() => setActiveTab('menu')}
                   className={`px-4 py-3 text-sm font-medium border-b-2 transition flex items-center gap-2 ${
@@ -693,7 +738,7 @@ function BusinessDetail({ businessIdProp }) {
                   }`}
                 >
                   <UtensilsCrossed size={18} />
-                  Menú
+                  {business.businessType === 'entertainment' ? 'Carta' : 'Menú'}
                 </button>
               )}
               <button
@@ -854,22 +899,22 @@ function BusinessDetail({ businessIdProp }) {
                 </div>
 
                 {/* Redes Sociales */}
-                {business.socialMedia && Object.values(business.socialMedia).some(v => v) && (
+                {(business.socialMedia || business.socialMediaLinks) && Object.values(business.socialMedia || business.socialMediaLinks).some(v => v) && (
                   <div className="mt-6 pt-6 border-t">
                     <h4 className="text-sm font-semibold mb-3 text-gray-700">Redes Sociales</h4>
                     <div className="flex gap-3">
-                      {business.socialMedia.facebook && (
-                        <a href={business.socialMedia.facebook} target="_blank" rel="noopener noreferrer" className="text-2xl hover:scale-110 transition">
+                      {(business.socialMedia?.facebook || business.socialMediaLinks?.facebook) && (
+                        <a href={business.socialMedia?.facebook || business.socialMediaLinks?.facebook} target="_blank" rel="noopener noreferrer" className="text-2xl hover:scale-110 transition">
                           📘
                         </a>
                       )}
-                      {business.socialMedia.instagram && (
-                        <a href={business.socialMedia.instagram} target="_blank" rel="noopener noreferrer" className="text-2xl hover:scale-110 transition">
+                      {(business.socialMedia?.instagram || business.socialMediaLinks?.instagram) && (
+                        <a href={business.socialMedia?.instagram || business.socialMediaLinks?.instagram} target="_blank" rel="noopener noreferrer" className="text-2xl hover:scale-110 transition">
                           📷
                         </a>
                       )}
-                      {business.socialMedia.twitter && (
-                        <a href={business.socialMedia.twitter} target="_blank" rel="noopener noreferrer" className="text-2xl hover:scale-110 transition">
+                      {(business.socialMedia?.twitter || business.socialMediaLinks?.twitter) && (
+                        <a href={business.socialMedia?.twitter || business.socialMediaLinks?.twitter} target="_blank" rel="noopener noreferrer" className="text-2xl hover:scale-110 transition">
                           🐦
                         </a>
                       )}
@@ -963,7 +1008,7 @@ function BusinessDetail({ businessIdProp }) {
           )}
 
           {/* TAB: Menú (Solo para restaurantes) */}
-          {activeTab === 'menu' && business.businessType === 'restaurant' && (
+          {activeTab === 'menu' && (business.businessType === 'restaurant' || business.businessType === 'entertainment') && (
             <div>
               {loadingMenu ? (
                 <div className="text-center py-12">
@@ -1168,12 +1213,12 @@ function BusinessDetail({ businessIdProp }) {
             >
               Editar Información
             </Link>
-            {business.businessType === 'restaurant' && (
+            {(business.businessType === 'restaurant' || business.businessType === 'entertainment') && (
               <Link
                 to={`/business/${business.id}/menu`}
                 className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
               >
-                🍽️ Gestionar Menú y Fotos
+                {business.businessType === 'entertainment' ? '🍹 Gestionar Carta y Fotos' : '🍽️ Gestionar Menú y Fotos'}
               </Link>
             )}
             <Link
@@ -1295,13 +1340,13 @@ function BusinessDetail({ businessIdProp }) {
           </div>
 
           {/* Social Media */}
-          {business.socialMedia && Object.values(business.socialMedia).some(v => v) && (
+          {(business.socialMedia || business.socialMediaLinks) && Object.values(business.socialMedia || business.socialMediaLinks).some(v => v) && (
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-bold mb-4">Redes Sociales</h2>
               <div className="space-y-3">
-                {business.socialMedia.facebook && (
+                {(business.socialMedia?.facebook || business.socialMediaLinks?.facebook) && (
                   <a
-                    href={business.socialMedia.facebook}
+                    href={business.socialMedia?.facebook || business.socialMediaLinks?.facebook}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-3 text-gray-700 hover:text-primary"
@@ -1310,9 +1355,9 @@ function BusinessDetail({ businessIdProp }) {
                     <span>Facebook</span>
                   </a>
                 )}
-                {business.socialMedia.instagram && (
+                {(business.socialMedia?.instagram || business.socialMediaLinks?.instagram) && (
                   <a
-                    href={business.socialMedia.instagram}
+                    href={business.socialMedia?.instagram || business.socialMediaLinks?.instagram}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-3 text-gray-700 hover:text-primary"
@@ -1321,9 +1366,9 @@ function BusinessDetail({ businessIdProp }) {
                     <span>Instagram</span>
                   </a>
                 )}
-                {business.socialMedia.twitter && (
+                {(business.socialMedia?.twitter || business.socialMediaLinks?.twitter) && (
                   <a
-                    href={business.socialMedia.twitter}
+                    href={business.socialMedia?.twitter || business.socialMediaLinks?.twitter}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-3 text-gray-700 hover:text-primary"
@@ -1425,6 +1470,14 @@ function BusinessDetail({ businessIdProp }) {
           </div>
         </div>
       )}
+
+      {/* Reels Sidebar - Filtrado por negocio */}
+      <ReelsSidebar
+        isOpen={sidebarOpen}
+        onToggle={toggleSidebar}
+        businessId={id}
+        filterByBusiness={true}
+      />
     </div>
   );
 }

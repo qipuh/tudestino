@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { X, Play, Heart, MessageCircle, ChevronUp, ChevronDown, Video, Sparkles } from 'lucide-react';
+import { X, Play, Heart, MessageCircle, ChevronUp, ChevronDown, Video, Sparkles, Image as ImageIcon, Grid3x3 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import api, { getImageUrl } from '../../services/api';
 import ReelViewer from './ReelViewer';
 
-function ReelsSidebar({ isOpen, onToggle }) {
+function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, businessId, filterByBusiness = false }) {
   const { user: currentUser } = useAuthStore();
+  const [activeTab, setActiveTab] = useState('reels'); // 'reels' | 'posts'
   const [reels, setReels] = useState([]);
+  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentReelIndex, setCurrentReelIndex] = useState(0);
   const [selectedReel, setSelectedReel] = useState(null);
@@ -16,8 +18,12 @@ function ReelsSidebar({ isOpen, onToggle }) {
   const isDraggingRef = useRef(false);
 
   useEffect(() => {
-    loadReels();
-  }, [currentUser]);
+    if (activeTab === 'reels') {
+      loadReels();
+    } else {
+      loadPosts();
+    }
+  }, [currentUser, userId, filterByUser, businessId, filterByBusiness, activeTab]);
 
   // Touch/Swipe events for navigation
   useEffect(() => {
@@ -77,23 +83,91 @@ function ReelsSidebar({ isOpen, onToggle }) {
   const loadReels = async () => {
     try {
       setLoading(true);
-      console.log('🎬 ReelsSidebar: Cargando reels...');
-      const response = await api.get('/social/reels/feed');
+
+      let endpoint = '/social/reels/feed';
+
+      // Si está filtrado por usuario, usar el endpoint de reels de usuario
+      if (filterByUser && userId) {
+        endpoint = `/social/users/${userId}/reels`;
+        console.log('🎬 ReelsSidebar: Cargando reels de usuario:', userId);
+      }
+      // Si está filtrado por negocio, usar el endpoint de posts de negocio con tipo reel
+      else if (filterByBusiness && businessId) {
+        endpoint = `/businesses/${businessId}/posts?type=reel`;
+        console.log('🎬 ReelsSidebar: Cargando reels de negocio:', businessId);
+      } else {
+        console.log('🎬 ReelsSidebar: Cargando reels del feed general');
+      }
+
+      const response = await api.get(endpoint);
       console.log('🎬 ReelsSidebar: Response completo:', response);
       const reelsData = response.data || response;
       console.log('🎬 ReelsSidebar: Reels data:', reelsData);
 
       // Extraer el array de reels correctamente
-      const reelsArray = Array.isArray(reelsData) ? reelsData : (reelsData.reels || []);
+      // Para business posts, viene como { posts: [...] }
+      // Para user reels, viene como { reels: [...] }
+      // Para feed, puede venir directamente como array
+      let reelsArray = [];
+      if (filterByBusiness) {
+        reelsArray = Array.isArray(reelsData) ? reelsData : (reelsData.posts || []);
+      } else {
+        reelsArray = Array.isArray(reelsData) ? reelsData : (reelsData.reels || []);
+      }
+
       console.log('🎬 ReelsSidebar: Reels array:', reelsArray);
       console.log('🎬 ReelsSidebar: Es array?', Array.isArray(reelsArray));
 
-      const orderedReels = smartOrderReels(reelsArray);
+      // Solo aplicar el smart ordering si es el feed general
+      const orderedReels = (filterByUser || filterByBusiness)
+        ? reelsArray
+        : smartOrderReels(reelsArray);
+
       console.log('🎬 ReelsSidebar: Reels ordenados:', orderedReels);
       setReels(orderedReels);
     } catch (error) {
       console.error('❌ Error loading reels:', error);
       setReels([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadPosts = async () => {
+    try {
+      setLoading(true);
+
+      let endpoint = '/social/feed';
+
+      // Si está filtrado por usuario, usar el endpoint de posts de usuario
+      if (filterByUser && userId) {
+        endpoint = `/social/users/${userId}/posts`;
+        console.log('📸 ReelsSidebar: Cargando posts de usuario:', userId);
+      }
+      // Si está filtrado por negocio, usar el endpoint de posts de negocio con tipo post
+      else if (filterByBusiness && businessId) {
+        endpoint = `/businesses/${businessId}/posts?type=post`;
+        console.log('📸 ReelsSidebar: Cargando posts de negocio:', businessId);
+      } else {
+        console.log('📸 ReelsSidebar: Cargando posts del feed general');
+      }
+
+      const response = await api.get(endpoint);
+      const postsData = response.data || response;
+
+      // Extraer el array de posts correctamente
+      let postsArray = [];
+      if (filterByBusiness) {
+        postsArray = Array.isArray(postsData) ? postsData : (postsData.posts || []);
+      } else {
+        postsArray = Array.isArray(postsData) ? postsData : (postsData.posts || []);
+      }
+
+      console.log('📸 ReelsSidebar: Posts array:', postsArray);
+      setPosts(postsArray);
+    } catch (error) {
+      console.error('❌ Error loading posts:', error);
+      setPosts([]);
     } finally {
       setLoading(false);
     }
@@ -168,6 +242,8 @@ function ReelsSidebar({ isOpen, onToggle }) {
   };
 
   const currentReel = reels[currentReelIndex];
+  const currentContent = activeTab === 'reels' ? reels : posts;
+  const totalCount = activeTab === 'reels' ? reels.length : posts.length;
 
   return (
     <>
@@ -176,19 +252,19 @@ function ReelsSidebar({ isOpen, onToggle }) {
         <button
           onClick={onToggle}
           className="fixed bottom-6 right-6 z-50 group"
-          title="Ver Reels"
+          title="Ver Contenido"
         >
           {/* Pulsating outer ring */}
           <div className="absolute inset-0 rounded-full animate-ping opacity-75" style={{ backgroundColor: '#ffb548' }}></div>
 
           {/* Main button */}
           <div className="relative text-white p-4 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-110" style={{ backgroundColor: '#002c91' }}>
-            <Video size={28} className="animate-pulse" />
+            <Grid3x3 size={28} className="animate-pulse" />
 
-            {/* Badge with reel count */}
-            {reels.length > 0 && (
+            {/* Badge with content count */}
+            {(reels.length + posts.length) > 0 && (
               <div className="absolute -top-1 -right-1 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center border-2 border-white" style={{ backgroundColor: '#ffb548' }}>
-                {reels.length > 99 ? '99+' : reels.length}
+                {(reels.length + posts.length) > 99 ? '99+' : (reels.length + posts.length)}
               </div>
             )}
 
@@ -199,7 +275,7 @@ function ReelsSidebar({ isOpen, onToggle }) {
           {/* Tooltip */}
           <div className="absolute bottom-full right-0 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
             <div className="text-white text-xs font-medium px-3 py-2 rounded-lg whitespace-nowrap shadow-xl" style={{ backgroundColor: '#002c91' }}>
-              ¡Descubre Reels! 🎬
+              ¡Descubre Contenido! 📸
               <div className="absolute top-full right-4 -mt-1">
                 <div className="border-4 border-transparent" style={{ borderTopColor: '#002c91' }}></div>
               </div>
@@ -227,15 +303,61 @@ function ReelsSidebar({ isOpen, onToggle }) {
         }}
       >
         <div className="h-full bg-white shadow-2xl flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <div className="flex items-center gap-2">
-              <Video size={24} className="text-primary" />
-              <h2 className="text-lg font-bold text-gray-900">Reels</h2>
-              {reels.length > 0 && (
-                <span className="text-xs text-gray-500">({reels.length})</span>
-              )}
+          {/* Header with Tabs */}
+          <div className="border-b border-gray-200">
+            <div className="flex items-center justify-between p-4 pb-0">
+              <div className="flex items-center gap-2">
+                <Grid3x3 size={24} className="text-primary" />
+                <h2 className="text-lg font-bold text-gray-900">Contenido</h2>
+              </div>
+              <button
+                onClick={onToggle}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                aria-label="Cerrar"
+              >
+                <X size={20} />
+              </button>
             </div>
+
+            {/* Tabs */}
+            <div className="flex gap-0 px-4 pt-2">
+              <button
+                onClick={() => setActiveTab('posts')}
+                className={`flex-1 flex items-center justify-center gap-2 pb-3 border-b-2 transition-colors ${
+                  activeTab === 'posts'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <ImageIcon size={18} />
+                <span className="font-medium text-sm">Posts</span>
+                {posts.length > 0 && (
+                  <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
+                    {posts.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('reels')}
+                className={`flex-1 flex items-center justify-center gap-2 pb-3 border-b-2 transition-colors ${
+                  activeTab === 'reels'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Video size={18} />
+                <span className="font-medium text-sm">Reels</span>
+                {reels.length > 0 && (
+                  <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
+                    {reels.length}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Content placeholder for removed button */}
+          <div className="hidden">
             <button
               onClick={onToggle}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -251,13 +373,74 @@ function ReelsSidebar({ isOpen, onToggle }) {
               <div className="flex items-center justify-center h-full">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
               </div>
+            ) : activeTab === 'posts' ? (
+              // Posts Grid View
+              posts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center px-6">
+                  <ImageIcon size={64} className="text-gray-300 mb-4" />
+                  <p className="text-gray-600 font-medium text-lg">No hay posts disponibles</p>
+                  <p className="text-sm text-gray-400 mt-2">¡Sé el primero en crear uno!</p>
+                </div>
+              ) : (
+                <div className="h-full overflow-y-auto p-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    {posts.map((post, index) => {
+                      const firstMedia = post.media?.[0] || (post.images?.[0] ? { url: post.images[0], type: 'image' } : null);
+                      const isVideo = firstMedia?.type === 'video';
+
+                      return (
+                        <div key={post.id || index} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden group cursor-pointer">
+                          {/* Media */}
+                          {isVideo ? (
+                            <video
+                              src={getImageUrl(firstMedia.url, 'social')}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : firstMedia ? (
+                            <img
+                              src={getImageUrl(firstMedia.url, 'social')}
+                              alt={post.caption || post.content}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                              <ImageIcon size={32} className="text-gray-400" />
+                            </div>
+                          )}
+
+                          {/* Multi-media indicator */}
+                          {post.media?.length > 1 && (
+                            <div className="absolute top-2 right-2">
+                              <Grid3x3 size={16} className="text-white drop-shadow-lg" />
+                            </div>
+                          )}
+
+                          {/* Hover overlay with stats */}
+                          <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 text-white text-sm">
+                            <div className="flex items-center gap-1">
+                              <Heart size={16} fill="white" />
+                              <span>{post.likesCount || 0}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MessageCircle size={16} fill="white" />
+                              <span>{post.commentsCount || 0}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )
             ) : reels.length === 0 ? (
+              // Reels Empty State
               <div className="flex flex-col items-center justify-center h-full text-center px-6">
                 <Video size={64} className="text-gray-300 mb-4" />
                 <p className="text-gray-600 font-medium text-lg">No hay reels disponibles</p>
                 <p className="text-sm text-gray-400 mt-2">¡Sé el primero en crear uno!</p>
               </div>
             ) : (
+              // Reels Viewer
               <div className="h-full flex flex-col p-4">
                 {/* Navigation Arrow Up */}
                 {currentReelIndex > 0 && (

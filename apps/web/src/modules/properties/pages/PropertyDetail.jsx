@@ -4,6 +4,8 @@ import { MapPin, Users, Bed, Bath, Star, Calendar, DollarSign, MessageCircle, He
 import BookingFlow from '../../bookings/components/BookingFlow';
 import api, { getImageUrl } from '../../../services/api';
 import useAuthStore from '../../../store/authStore';
+import ReelsSidebar from '../../../components/social/ReelsSidebar';
+import { useSidebar } from '../../../contexts/SidebarContext';
 
 const AMENITY_ICONS = {
   wifi: { icon: '📶', name: 'WiFi' },
@@ -26,6 +28,7 @@ function PropertyDetail({ propertyIdProp }) {
   const { id: urlId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { sidebarOpen, toggleSidebar, setSidebarVisible } = useSidebar();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -36,6 +39,12 @@ function PropertyDetail({ propertyIdProp }) {
 
   // Usar propertyIdProp si está disponible, de lo contrario usar el ID de la URL
   const id = propertyIdProp || urlId;
+
+  // Enable sidebar when PropertyDetail mounts, disable when unmounts
+  useEffect(() => {
+    setSidebarVisible(true);
+    return () => setSidebarVisible(false);
+  }, [setSidebarVisible]);
 
   useEffect(() => {
     if (id) {
@@ -698,6 +707,9 @@ function PropertyDetail({ propertyIdProp }) {
           </div>
         </div>
       </div>
+
+      {/* Reels Sidebar */}
+      <ReelsSidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
     </div>
   );
 }

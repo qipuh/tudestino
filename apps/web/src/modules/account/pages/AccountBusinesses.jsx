@@ -17,15 +17,13 @@ function AccountBusinesses() {
   };
 
   const handleDelete = async (businessId) => {
-    if (deleteConfirm !== businessId) {
-      setDeleteConfirm(businessId);
-      setTimeout(() => setDeleteConfirm(null), 3000);
-      return;
-    }
-
     const result = await deleteBusiness(businessId);
     if (result.success) {
       loadBusinesses();
+      setDeleteConfirm(null);
+    } else {
+      // Mostrar el error si la eliminación falla
+      alert(result.error || 'Error al eliminar el negocio');
       setDeleteConfirm(null);
     }
   };
@@ -97,7 +95,15 @@ function AccountBusinesses() {
                 <BusinessCard
                   key={business.id}
                   business={business}
-                  onDelete={deleteConfirm === business.id ? handleDelete : () => setDeleteConfirm(business.id)}
+                  onDelete={() => {
+                    if (deleteConfirm === business.id) {
+                      handleDelete(business.id);
+                    } else {
+                      setDeleteConfirm(business.id);
+                      setTimeout(() => setDeleteConfirm(null), 3000);
+                    }
+                  }}
+                  deleteConfirmActive={deleteConfirm === business.id}
                 />
               ))}
             </div>

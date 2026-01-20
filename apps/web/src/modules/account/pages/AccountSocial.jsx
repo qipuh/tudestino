@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import UserAccountLayout from '../../../layouts/UserAccountLayout';
 import { MessageSquare, Users, Image, Video } from 'lucide-react';
+import CreateContentSidebar from '../../social/components/CreateContentSidebar';
 
 function AccountSocial() {
+  const [showCreateSidebar, setShowCreateSidebar] = useState(false);
+
   return (
     <UserAccountLayout activeMenu="social">
       <div className="max-w-4xl">
@@ -21,15 +25,23 @@ function AccountSocial() {
             <input
               type="text"
               placeholder="¿Qué estás pensando?"
-              className="flex-1 px-4 py-3 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
+              onClick={() => setShowCreateSidebar(true)}
+              className="flex-1 px-4 py-3 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+              readOnly
             />
           </div>
           <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
-            <button className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
+            <button
+              onClick={() => setShowCreateSidebar(true)}
+              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+            >
               <Image size={20} className="text-blue-500" />
               <span className="text-sm font-medium">Foto</span>
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
+            <button
+              onClick={() => setShowCreateSidebar(true)}
+              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+            >
               <Video size={20} className="text-green-500" />
               <span className="text-sm font-medium">Video</span>
             </button>
@@ -45,11 +57,20 @@ function AccountSocial() {
           <p className="text-gray-600 mb-4">
             Comienza a compartir tus experiencias de viaje y conecta con otros viajeros
           </p>
-          <button className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition">
+          <button
+            onClick={() => setShowCreateSidebar(true)}
+            className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition"
+          >
             Crear primera publicación
           </button>
         </div>
       </div>
+
+      {/* Create Content Sidebar */}
+      <CreateContentSidebar
+        isOpen={showCreateSidebar}
+        onClose={() => setShowCreateSidebar(false)}
+      />
     </UserAccountLayout>
   );
 }

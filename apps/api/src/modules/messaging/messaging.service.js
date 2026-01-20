@@ -166,25 +166,42 @@ export const markMessagesAsRead = async (conversationId, userId) => {
 
 // Obtener conversación por ID con validación de acceso
 export const getConversationById = async (conversationId, userId) => {
+  console.log('🔍 getConversationById:', { conversationId, userId });
+
   const conversation = await Conversation.findByPk(conversationId);
 
   if (!conversation) {
+    console.log('❌ Conversación no encontrada:', conversationId);
     throw new Error('Conversación no encontrada');
   }
 
+  console.log('✅ Conversación encontrada:', conversation.toJSON());
+
   if (conversation.user1Id !== userId && conversation.user2Id !== userId) {
+    console.log('❌ Usuario no tiene acceso a esta conversación');
     throw new Error('No tienes acceso a esta conversación');
   }
 
   const convData = conversation.toJSON();
   const otherUserId = conversation.user1Id === userId ? conversation.user2Id : conversation.user1Id;
 
+  console.log('🔍 Buscando otro usuario:', otherUserId);
+
   const otherUser = await User.findByPk(otherUserId, {
     attributes: ['id', 'name', 'email', 'avatar'],
   });
 
-  convData.otherUser = otherUser;
+  if (!otherUser) {
+    console.log('⚠️ Otro usuario no encontrado:', otherUserId);
+    // Continuar sin el otro usuario en lugar de fallar
+    convData.otherUser = null;
+  } else {
+    console.log('✅ Otro usuario encontrado:', otherUser.toJSON());
+    convData.otherUser = otherUser;
+  }
+
   convData.unreadCount = conversation.user1Id === userId ? conversation.unreadCountUser1 : conversation.unreadCountUser2;
 
+  console.log('✅ Datos de conversación preparados');
   return convData;
 };

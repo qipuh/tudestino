@@ -66,6 +66,10 @@ export const setupAssociations = () => {
   User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
   Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+  // User - Notification (Actor relationship)
+  User.hasMany(Notification, { foreignKey: 'actorId', as: 'actedNotifications' });
+  Notification.belongsTo(User, { foreignKey: 'actorId', as: 'actor' });
+
   // User - UserFollow (Followers)
   User.hasMany(UserFollow, { foreignKey: 'followingId', as: 'followers' });
   UserFollow.belongsTo(User, { foreignKey: 'followerId', as: 'follower' });

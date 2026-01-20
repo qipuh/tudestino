@@ -25,10 +25,21 @@ const useMessagingStore = create((set, get) => ({
   getOrCreateConversation: async (otherUserId, bookingId = null) => {
     set({ loading: true, error: null });
     try {
+      console.log('💬 Store: Calling getOrCreateConversation with:', { otherUserId, bookingId });
       const conversation = await messagingService.getOrCreateConversation(otherUserId, bookingId);
+      console.log('✅ Store: Conversation received:', conversation);
       set({ currentConversation: conversation, loading: false });
+
+      // Cargar mensajes de la conversación
+      if (conversation && conversation.id) {
+        console.log('📨 Store: Loading messages for conversation:', conversation.id);
+        await get().fetchMessages(conversation.id);
+      }
+
       return conversation;
     } catch (error) {
+      console.error('❌ Store: Error in getOrCreateConversation:', error);
+      console.error('❌ Store: Error response:', error.response?.data);
       set({ error: error.message, loading: false });
       throw error;
     }
@@ -40,12 +51,6 @@ const useMessagingStore = create((set, get) => ({
     try {
       const messages = await messagingService.getMessages(conversationId);
       set({ messages, loading: false });
-
-      // Marcar como leídos
-      await messagingService.markAsRead(conversationId);
-
-      // Actualizar contador de no leídos
-      get().fetchConversations();
     } catch (error) {
       set({ error: error.message, loading: false });
     }
@@ -54,7 +59,9 @@ const useMessagingStore = create((set, get) => ({
   // Enviar un mensaje
   sendMessage: async (conversationId, content) => {
     try {
+      console.log('📨 Store: Sending message:', { conversationId, content: content.substring(0, 50) });
       const message = await messagingService.sendMessage(conversationId, content);
+      console.log('✅ Store: Message sent:', message);
 
       // Agregar mensaje a la lista
       set((state) => ({
@@ -66,6 +73,8 @@ const useMessagingStore = create((set, get) => ({
 
       return message;
     } catch (error) {
+      console.error('❌ Store: Error sending message:', error);
+      console.error('❌ Store: Error response:', error.response?.data);
       set({ error: error.message });
       throw error;
     }
@@ -90,6 +99,18 @@ const useMessagingStore = create((set, get) => ({
   // Establecer conversación actual
   setCurrentConversation: (conversation) => {
     set({ currentConversation: conversation, messages: [] });
+  },
+
+  // Marcar mensajes como leídos
+  markAsRead: async (conversationId) => {
+    try {
+      await messagingService.markAsRead(conversationId);
+
+      // Actualizar conversaciones para reflejar contador de no leídos
+      get().fetchConversations();
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+    }
   },
 
   // Limpiar error

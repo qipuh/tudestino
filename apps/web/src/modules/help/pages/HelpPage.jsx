@@ -180,7 +180,7 @@ function HelpPage() {
     {
       icon: Phone,
       title: 'Teléfono',
-      description: '+1 (555) 123-4567',
+      description: '+51 935 191 262',
       action: 'Llamar ahora',
       color: 'bg-purple-500'
     }
@@ -205,7 +205,7 @@ function HelpPage() {
       <div className="bg-gradient-to-r from-primary to-primary-dark text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <HelpCircle size={64} className="mx-auto mb-6" />
-          <h1 className="text-4xl font-bold mb-4">Centro de Ayuda</h1>
+          <h1 className="text-4xl font-bold mb-4" style={{ color: '#ffb547' }}>Centro de Ayuda</h1>
           <p className="text-xl opacity-90 mb-8">
             ¿En qué podemos ayudarte hoy?
           </p>

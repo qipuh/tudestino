@@ -8,8 +8,14 @@ import api from '../../../services/api';
 /**
  * Sidebar para crear publicaciones y reels
  * Similar a Instagram/TikTok
+ * @param {boolean} isOpen - Estado del sidebar
+ * @param {function} onClose - Callback para cerrar el sidebar
+ * @param {string} type - Tipo de contenido ('post' | 'reel')
+ * @param {function} onSuccess - Callback cuando se crea exitosamente
+ * @param {string} businessId - ID del negocio (opcional, para posts de negocios)
+ * @param {function} customSubmit - Función de submit personalizada (opcional)
  */
-function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
+function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess, businessId, customSubmit }) {
   const { user } = useAuthStore();
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
@@ -217,6 +223,7 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
     console.log('📝 ContentType:', contentType);
     console.log('📝 Caption:', caption);
     console.log('📁 Archivos seleccionados:', selectedFiles.length);
+    console.log('🏢 BusinessId:', businessId || 'N/A (usuario personal)');
 
     setUploading(true);
     setUploadProgress(0);
@@ -249,11 +256,18 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess }) {
         });
       }, 200);
 
-      // Crear publicación
-      console.log('📡 Llamando a:', contentType === 'reel' ? 'createReel()' : 'createPost()');
-      const response = contentType === 'reel'
-        ? await createReel(formData)
-        : await createPost(formData);
+      // Crear publicación usando customSubmit si está disponible (para negocios)
+      // o usando los endpoints normales de usuario
+      let response;
+      if (customSubmit) {
+        console.log('📡 Usando customSubmit (business post)');
+        response = await customSubmit(formData);
+      } else {
+        console.log('📡 Llamando a:', contentType === 'reel' ? 'createReel()' : 'createPost()');
+        response = contentType === 'reel'
+          ? await createReel(formData)
+          : await createPost(formData);
+      }
 
       clearInterval(progressInterval);
       setUploadProgress(100);

@@ -27,9 +27,9 @@ const statusLabels = {
   inactive: 'Inactivo',
 };
 
-function BusinessCard({ business, onDelete }) {
+function BusinessCard({ business, onDelete, deleteConfirmActive }) {
   return (
-    <div className="border rounded-lg p-6 hover:shadow-lg transition bg-white">
+    <div className={`border rounded-lg p-6 hover:shadow-lg transition bg-white ${deleteConfirmActive ? 'ring-2 ring-red-500' : ''}`}>
       <div className="flex items-center justify-between mb-4">
         <span className="text-4xl">
           {businessTypeIcons[business.businessType] || businessTypeIcons.other}
@@ -83,10 +83,19 @@ function BusinessCard({ business, onDelete }) {
       {onDelete && (
         <button
           onClick={() => onDelete(business.id)}
-          className="w-full mt-2 text-red-600 hover:text-red-800 text-sm font-medium py-2"
+          className={`w-full mt-2 text-sm font-medium py-2 rounded-lg transition ${
+            deleteConfirmActive
+              ? 'bg-red-600 text-white hover:bg-red-700'
+              : 'text-red-600 hover:text-red-800 hover:bg-red-50'
+          }`}
         >
-          Eliminar negocio
+          {deleteConfirmActive ? '⚠️ Confirmar eliminación' : 'Eliminar negocio'}
         </button>
+      )}
+      {deleteConfirmActive && (
+        <p className="text-xs text-red-600 text-center mt-1">
+          Haz clic nuevamente para confirmar (3 segundos)
+        </p>
       )}
     </div>
   );

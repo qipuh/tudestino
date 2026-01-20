@@ -52,6 +52,14 @@ import MyEventsPage from '@modules/events/pages/MyEventsPage';
 import EventCheckoutPage from '@modules/events/pages/EventCheckoutPage';
 import AttractionDetail from '@modules/attractions/pages/AttractionDetail';
 import AdminPage from '@modules/admin/pages/AdminPage';
+import AboutPage from '@modules/legal/pages/AboutPage';
+import TermsPage from '@modules/legal/pages/TermsPage';
+import PrivacyPage from '@modules/legal/pages/PrivacyPage';
+import CancellationPage from '@modules/legal/pages/CancellationPage';
+import ContactPage from '@modules/legal/pages/ContactPage';
+import BlogPage from '@modules/legal/pages/BlogPage';
+import BusinessResourcesPage from '@modules/legal/pages/BusinessResourcesPage';
+import PricingPage from '@modules/legal/pages/PricingPage';
 import useAuthStore from './store/authStore';
 
 function App() {
@@ -147,6 +155,16 @@ function App() {
 
         {/* Admin Routes */}
         <Route path="admin" element={<AdminPage />} />
+
+        {/* Legal & Static Pages */}
+        <Route path="about" element={<AboutPage />} />
+        <Route path="terms" element={<TermsPage />} />
+        <Route path="privacy" element={<PrivacyPage />} />
+        <Route path="cancellation" element={<CancellationPage />} />
+        <Route path="contact" element={<ContactPage />} />
+        <Route path="blog" element={<BlogPage />} />
+        <Route path="business-resources" element={<BusinessResourcesPage />} />
+        <Route path="pricing" element={<PricingPage />} />
 
         {/* Username Route (must be last to avoid conflicts) */}
         <Route path=":username" element={<UsernameProfilePage />} />

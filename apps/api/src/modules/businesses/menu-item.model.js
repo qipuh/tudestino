@@ -25,13 +25,22 @@ const MenuItem = sequelize.define('MenuItem', {
   },
   category: {
     type: DataTypes.ENUM(
+      // Restaurant categories
       'appetizers',
       'main_courses',
       'desserts',
       'beverages',
       'alcoholic',
       'breakfast',
-      'specials'
+      'specials',
+      // Entertainment categories
+      'drinks',
+      'cocktails',
+      'beer',
+      'wine',
+      'spirits',
+      'snacks',
+      'packages'
     ),
     allowNull: false,
     defaultValue: 'main_courses',

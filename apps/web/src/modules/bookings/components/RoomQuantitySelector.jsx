@@ -80,7 +80,7 @@ function RoomQuantitySelector({ rooms, selectedRooms, onRoomsChange, maxGuests }
           <div className="bg-white rounded-lg p-3 text-center">
             <p className="text-gray-600 text-xs mb-1">Total/noche</p>
             <p className="font-bold text-primary text-lg">
-              ${totalPrice.toFixed(2)}
+              S/ {totalPrice.toFixed(2)}
             </p>
           </div>
         </div>
@@ -143,7 +143,7 @@ function RoomQuantitySelector({ rooms, selectedRooms, onRoomsChange, maxGuests }
                       {/* Precio */}
                       <div className="text-right flex-shrink-0">
                         <div className="text-xl font-bold text-gray-900">
-                          ${price.toFixed(2)}
+                          S/ {price.toFixed(2)}
                         </div>
                         <div className="text-xs text-gray-600">/noche</div>
                       </div>

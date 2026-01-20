@@ -15,6 +15,8 @@ import ReelViewer from '../../../components/social/ReelViewer';
 import FloatingChatBubble from '../../../components/messaging/FloatingChatBubble';
 import CreateContentSidebar from '../../social/components/CreateContentSidebar';
 import PostCard from '../../social/components/PostCard';
+import ReelsSidebar from '../../../components/social/ReelsSidebar';
+import { useSidebar } from '../../../contexts/SidebarContext';
 
 // Datos de ejemplo para Host Demo
 const DEMO_POSTS = [
@@ -95,6 +97,7 @@ function ProfilePage({ userIdProp }) {
   const [followersData, setFollowersData] = useState({ followers: [], loading: false });
   const [followingData, setFollowingData] = useState({ following: [], loading: false });
   const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [showFollowingModal, setShowFollowingModal] = useState(false);
   const [likedPosts, setLikedPosts] = useState(() => {
     const saved = localStorage.getItem('likedPosts');
     return saved ? new Set(JSON.parse(saved)) : new Set();
@@ -140,9 +143,16 @@ function ProfilePage({ userIdProp }) {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const avatarInputRef = useRef(null);
+  const { sidebarOpen, toggleSidebar, setSidebarVisible } = useSidebar();
 
   const isOwnProfile = !userId || (currentUser && userId === currentUser.id);
   const isHost = profile?.role === 'host';
+
+  // Enable sidebar when ProfilePage mounts, disable when unmounts
+  useEffect(() => {
+    setSidebarVisible(true);
+    return () => setSidebarVisible(false);
+  }, [setSidebarVisible]);
 
   // Función para obtener el nombre de la propiedad
   const getPropertyName = (property) => {
@@ -195,6 +205,20 @@ function ProfilePage({ userIdProp }) {
     setRealPosts([]);
     setRealReels([]);
   }, [userId]);
+
+  // Load followers when modal opens
+  useEffect(() => {
+    if (showFollowersModal && profile?.id) {
+      loadFollowers();
+    }
+  }, [showFollowersModal, profile?.id]);
+
+  // Load following when modal opens
+  useEffect(() => {
+    if (showFollowingModal && profile?.id) {
+      loadFollowing();
+    }
+  }, [showFollowingModal, profile?.id]);
 
   // Guardar likes en localStorage
   useEffect(() => {
@@ -689,7 +713,10 @@ function ProfilePage({ userIdProp }) {
                     </div>
                   </div>
                 </button>
-                <button className="group hover:scale-105 transition-transform">
+                <button
+                  onClick={() => setShowFollowingModal(true)}
+                  className="group hover:scale-105 transition-transform"
+                >
                   <div className="flex items-center gap-2">
                     <UserCheck size={16} className="text-primary group-hover:scale-110 transition-transform" />
                     <div className="text-left">
@@ -843,13 +870,13 @@ function ProfilePage({ userIdProp }) {
                   {isOwnProfile ? 'Comparte tus experiencias de viaje y conecta con otros viajeros' : 'Este usuario no ha compartido publicaciones aún'}
                 </p>
                 {isOwnProfile && (
-                  <Link
-                    to="/feed"
+                  <button
+                    onClick={() => setShowCreateSidebar(true)}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all shadow-md font-medium"
                   >
                     <PlusCircle size={18} />
                     Crear primera publicación
-                  </Link>
+                  </button>
                 )}
               </div>
             )}
@@ -1120,10 +1147,163 @@ function ProfilePage({ userIdProp }) {
                     {isOwnProfile ? 'Comparte contenido para conseguir seguidores' : 'Este usuario aún no tiene seguidores'}
                   </p>
                 </div>
-              ) : (
+              ) : followersData.loading ? (
                 <div className="text-center py-12">
                   <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-primary/20 border-t-primary mb-3"></div>
                   <p className="text-gray-600 font-medium">Cargando seguidores...</p>
+                </div>
+              ) : followersData.followers.length > 0 ? (
+                <div className="space-y-3">
+                  {followersData.followers.map((follower) => (
+                    <div key={follower.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/30 overflow-hidden flex-shrink-0">
+                          {follower.avatar ? (
+                            <img
+                              src={getImageUrl(follower.avatar, 'social')}
+                              alt={follower.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-lg font-bold text-primary">
+                              {follower.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <Link
+                            to={`/profile/${follower.id}`}
+                            onClick={() => setShowFollowersModal(false)}
+                            className="font-semibold text-gray-900 hover:text-primary transition-colors truncate block"
+                          >
+                            {follower.name}
+                          </Link>
+                          {follower.username && (
+                            <p className="text-sm text-gray-500 truncate">@{follower.username}</p>
+                          )}
+                        </div>
+                      </div>
+                      {follower.id !== currentUser?.id && (
+                        <FollowButton
+                          userId={follower.id}
+                          initialIsFollowing={follower.isFollowing}
+                          onFollowChange={() => {
+                            // Actualizar el estado local
+                            setFollowersData({
+                              ...followersData,
+                              followers: followersData.followers.map(f =>
+                                f.id === follower.id ? { ...f, isFollowing: !f.isFollowing } : f
+                              )
+                            });
+                          }}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
+                    <Users size={32} className="text-gray-400" />
+                  </div>
+                  <p className="text-gray-600 font-medium">No se pudieron cargar los seguidores</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Following Modal Enhanced */}
+      {showFollowingModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={() => setShowFollowingModal(false)}>
+          <div className="bg-white rounded-2xl max-w-md w-full max-h-[32rem] overflow-hidden shadow-2xl transform transition-all animate-slideUp" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-gradient-to-r from-primary/5 to-transparent border-b p-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <UserCheck size={20} className="text-primary" />
+                <h3 className="font-bold text-lg text-gray-900">Siguiendo</h3>
+              </div>
+              <button
+                onClick={() => setShowFollowingModal(false)}
+                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors text-gray-600 hover:text-gray-900"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-5 overflow-y-auto max-h-[26rem]">
+              {profile.followingCount === 0 ? (
+                <div className="text-center py-12">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
+                    <UserCheck size={32} className="text-gray-400" />
+                  </div>
+                  <p className="text-gray-600 font-medium">No sigues a nadie aún</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {isOwnProfile ? 'Descubre usuarios interesantes y síguelos' : 'Este usuario no sigue a nadie aún'}
+                  </p>
+                </div>
+              ) : followingData.loading ? (
+                <div className="text-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-primary/20 border-t-primary mb-3"></div>
+                  <p className="text-gray-600 font-medium">Cargando...</p>
+                </div>
+              ) : followingData.following.length > 0 ? (
+                <div className="space-y-3">
+                  {followingData.following.map((following) => (
+                    <div key={following.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/30 overflow-hidden flex-shrink-0">
+                          {following.avatar ? (
+                            <img
+                              src={getImageUrl(following.avatar, 'social')}
+                              alt={following.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-lg font-bold text-primary">
+                              {following.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <Link
+                            to={`/profile/${following.id}`}
+                            onClick={() => setShowFollowingModal(false)}
+                            className="font-semibold text-gray-900 hover:text-primary transition-colors truncate block"
+                          >
+                            {following.name}
+                          </Link>
+                          {following.username && (
+                            <p className="text-sm text-gray-500 truncate">@{following.username}</p>
+                          )}
+                        </div>
+                      </div>
+                      {following.id !== currentUser?.id && (
+                        <FollowButton
+                          userId={following.id}
+                          initialIsFollowing={true}
+                          onFollowChange={() => {
+                            // Actualizar el estado local
+                            setFollowingData({
+                              ...followingData,
+                              following: followingData.following.filter(f => f.id !== following.id)
+                            });
+                            // Actualizar el contador en el perfil
+                            setProfile({
+                              ...profile,
+                              followingCount: profile.followingCount - 1
+                            });
+                          }}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
+                    <UserCheck size={32} className="text-gray-400" />
+                  </div>
+                  <p className="text-gray-600 font-medium">No se pudo cargar la lista</p>
                 </div>
               )}
             </div>
@@ -1280,6 +1460,14 @@ function ProfilePage({ userIdProp }) {
           </div>
         </div>
       )}
+
+      {/* Reels Sidebar - Filtrado por usuario */}
+      <ReelsSidebar
+        isOpen={sidebarOpen}
+        onToggle={toggleSidebar}
+        userId={userId || currentUser?.id}
+        filterByUser={true}
+      />
     </div>
   );
 }

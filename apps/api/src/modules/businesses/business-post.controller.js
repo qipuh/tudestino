@@ -9,7 +9,29 @@ class BusinessPostController {
     try {
       const { businessId } = req.params;
       const ownerId = req.user.id;
-      const postData = req.body;
+      const { caption, location, type } = req.body;
+
+      // Validar que haya archivos
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Se requiere al menos un archivo (imagen o video)'
+        });
+      }
+
+      // Construir array de media con información de cada archivo
+      const media = req.files.map(file => ({
+        url: `/uploads/social/${file.filename}`,
+        type: file.mimetype.startsWith('image/') ? 'image' : 'video',
+        thumbnail: file.mimetype.startsWith('video/') ? `/uploads/social/thumbnails/${file.filename}.jpg` : null,
+      }));
+
+      const postData = {
+        caption,
+        location: location || null,
+        type: type || 'post',
+        media
+      };
 
       const post = await businessPostService.createPost(businessId, ownerId, postData);
 

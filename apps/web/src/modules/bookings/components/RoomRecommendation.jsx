@@ -86,13 +86,12 @@ function RoomRecommendation({ recommendations, onSelectRecommendation }) {
                       </span>
                     </div>
                     <div className="flex items-center gap-1 text-primary">
-                      <DollarSign size={16} />
                       <span className="text-sm font-semibold">
-                        ${recommendation.totalPrice.toFixed(2)}/noche
+                        S/ {recommendation.totalPrice.toFixed(2)}/noche
                       </span>
                     </div>
                     <span className="text-xs text-gray-500">
-                      (${recommendation.pricePerPerson.toFixed(2)}/persona)
+                      (S/ {recommendation.pricePerPerson.toFixed(2)}/persona)
                     </span>
                   </div>
 
@@ -143,7 +142,7 @@ function RoomRecommendation({ recommendations, onSelectRecommendation }) {
                                 </p>
                               </div>
                               <span className="text-sm font-semibold text-primary">
-                                ${parseFloat(detail.room.pricePerNight).toFixed(2)}
+                                S/ {parseFloat(detail.room.pricePerNight).toFixed(2)}
                               </span>
                             </div>
 

@@ -4,19 +4,33 @@ import { Plus, Edit2, Trash2, Upload, Clock, Image as ImageIcon } from 'lucide-r
 import useBusiness from '../hooks/useBusiness';
 import api, { getImageUrl } from '../../../services/api';
 
-const MENU_CATEGORIES = [
-  { value: 'appetizers', label: 'Entradas', icon: '🥗' },
-  { value: 'main_courses', label: 'Platos Principales', icon: '🍽️' },
-  { value: 'desserts', label: 'Postres', icon: '🍰' },
-  { value: 'beverages', label: 'Bebidas', icon: '🥤' },
-  { value: 'alcoholic', label: 'Bebidas Alcohólicas', icon: '🍷' },
-  { value: 'breakfast', label: 'Desayunos', icon: '🍳' },
-  { value: 'specials', label: 'Especialidades', icon: '⭐' },
-];
+const MENU_CATEGORIES = {
+  restaurant: [
+    { value: 'appetizers', label: 'Entradas', icon: '🥗' },
+    { value: 'main_courses', label: 'Platos Principales', icon: '🍽️' },
+    { value: 'desserts', label: 'Postres', icon: '🍰' },
+    { value: 'beverages', label: 'Bebidas', icon: '🥤' },
+    { value: 'alcoholic', label: 'Bebidas Alcohólicas', icon: '🍷' },
+    { value: 'breakfast', label: 'Desayunos', icon: '🍳' },
+    { value: 'specials', label: 'Especialidades', icon: '⭐' },
+  ],
+  entertainment: [
+    { value: 'drinks', label: 'Bebidas', icon: '🍹' },
+    { value: 'cocktails', label: 'Cócteles', icon: '🍸' },
+    { value: 'beer', label: 'Cervezas', icon: '🍺' },
+    { value: 'wine', label: 'Vinos', icon: '🍷' },
+    { value: 'spirits', label: 'Licores', icon: '🥃' },
+    { value: 'snacks', label: 'Bocadillos', icon: '🍿' },
+    { value: 'packages', label: 'Paquetes/Combos', icon: '🎉' },
+    { value: 'specials', label: 'Especialidades', icon: '⭐' },
+  ]
+};
 
 function RestaurantMenu() {
   const { id } = useParams();
   const { business, fetchBusiness } = useBusiness();
+  const businessType = business?.businessType || 'restaurant';
+  const categories = MENU_CATEGORIES[businessType] || MENU_CATEGORIES.restaurant;
   const [activeTab, setActiveTab] = useState('menu'); // menu, photos, schedule
   const [menuItems, setMenuItems] = useState([]);
   const [photos, setPhotos] = useState([]);
@@ -24,10 +38,14 @@ function RestaurantMenu() {
   const [showItemModal, setShowItemModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const getDefaultCategory = () => {
+    return businessType === 'entertainment' ? 'drinks' : 'main_courses';
+  };
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    category: 'main_courses',
+    category: getDefaultCategory(),
     price: '',
     isAvailable: true,
     isSpecial: false,
@@ -84,7 +102,7 @@ function RestaurantMenu() {
       setFormData({
         name: '',
         description: '',
-        category: 'main_courses',
+        category: getDefaultCategory(),
         price: '',
         isAvailable: true,
         isSpecial: false,
@@ -259,7 +277,7 @@ function RestaurantMenu() {
     }
   };
 
-  const groupedMenuItems = MENU_CATEGORIES.reduce((acc, category) => {
+  const groupedMenuItems = categories.reduce((acc, category) => {
     acc[category.value] = menuItems.filter(item => item.category === category.value);
     return acc;
   }, {});
@@ -296,10 +314,10 @@ function RestaurantMenu() {
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Menú de {business.name}
+                {businessType === 'entertainment' ? 'Carta' : 'Menú'} de {business.name}
               </h1>
               <p className="text-gray-600 mt-1">
-                Gestiona tu menú, fotos y horarios
+                Gestiona {businessType === 'entertainment' ? 'tu carta de bebidas y productos' : 'tu menú'}, fotos y horarios
               </p>
             </div>
           </div>
@@ -317,7 +335,7 @@ function RestaurantMenu() {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                🍽️ Menú
+                {businessType === 'entertainment' ? '🍹 Carta' : '🍽️ Menú'}
               </button>
               <button
                 onClick={() => setActiveTab('photos')}
@@ -372,7 +390,7 @@ function RestaurantMenu() {
                 )}
 
                 {/* Menu by Categories */}
-                {MENU_CATEGORIES.map(category => {
+                {categories.map(category => {
                   const items = groupedMenuItems[category.value] || [];
                   if (items.length === 0) return null;
 
@@ -589,7 +607,7 @@ function RestaurantMenu() {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
                       required
                     >
-                      {MENU_CATEGORIES.map(cat => (
+                      {categories.map(cat => (
                         <option key={cat.value} value={cat.value}>
                           {cat.icon} {cat.label}
                         </option>

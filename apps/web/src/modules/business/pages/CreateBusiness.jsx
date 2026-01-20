@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
@@ -20,6 +20,19 @@ function MapClickHandler({ onLocationSelect }) {
       onLocationSelect(e.latlng);
     },
   });
+  return null;
+}
+
+// Componente para actualizar la vista del mapa cuando cambia el marcador
+function MapUpdater({ center }) {
+  const map = useMapEvents({});
+
+  useEffect(() => {
+    if (center) {
+      map.setView(center, 15);
+    }
+  }, [center, map]);
+
   return null;
 }
 
@@ -45,8 +58,7 @@ function CreateBusiness() {
       street: '',
       city: '',
       state: '',
-      country: 'Perú',
-      zipCode: '',
+      country: '',
       latitude: null,
       longitude: null,
     },
@@ -64,26 +76,205 @@ function CreateBusiness() {
   const [mapMarker, setMapMarker] = useState(null);
   const [showMap, setShowMap] = useState(false);
 
-  // Actualizar marcador cuando cambien las coordenadas manualmente
-  useEffect(() => {
-    if (formData.address.latitude && formData.address.longitude) {
-      setMapMarker({
-        lat: parseFloat(formData.address.latitude),
-        lng: parseFloat(formData.address.longitude)
-      });
-    }
-  }, [formData.address.latitude, formData.address.longitude]);
+  // Estados para búsqueda de ubicación
+  const [locationQuery, setLocationQuery] = useState('');
+  const [locationSuggestions, setLocationSuggestions] = useState([]);
+  const [loadingLocations, setLoadingLocations] = useState(false);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const locationInputRef = useRef(null);
 
-  const handleMapClick = (latlng) => {
-    setMapMarker(latlng);
+  // Buscar ubicaciones usando Nominatim (OpenStreetMap)
+  const searchLocations = async (query) => {
+    if (!query || query.length < 3) {
+      setLocationSuggestions([]);
+      setShowLocationSuggestions(false);
+      return;
+    }
+
+    setLoadingLocations(true);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`
+      );
+      const data = await response.json();
+
+      const suggestions = data.map(item => ({
+        name: item.display_name,
+        city: item.address?.city || item.address?.town || item.address?.village,
+        state: item.address?.state || item.address?.region,
+        country: item.address?.country,
+        latitude: parseFloat(item.lat),
+        longitude: parseFloat(item.lon),
+      }));
+
+      setLocationSuggestions(suggestions);
+      setShowLocationSuggestions(suggestions.length > 0);
+    } catch (error) {
+      console.error('Error searching locations:', error);
+      setLocationSuggestions([]);
+      setShowLocationSuggestions(false);
+    } finally {
+      setLoadingLocations(false);
+    }
+  };
+
+  // Debounce para buscar ubicaciones
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchLocations(locationQuery);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [locationQuery]);
+
+  // Cerrar sugerencias al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (locationInputRef.current && !locationInputRef.current.contains(event.target)) {
+        setShowLocationSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Geocodificar dirección específica cuando cambie
+  useEffect(() => {
+    // Solo ejecutar en el paso 2
+    if (step !== 2) return;
+
+    const geocodeAddress = async () => {
+      const { street, city, state, country } = formData.address;
+
+      // Solo geocodificar si hay dirección específica Y ya hay una ciudad seleccionada
+      if (!street || street.length < 5 || !city) {
+        return;
+      }
+
+      // Construir query completo con dirección, ciudad, estado y país
+      const fullAddress = [street, city, state, country]
+        .filter(Boolean)
+        .join(', ');
+
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1&addressdetails=1`
+        );
+        const data = await response.json();
+
+        if (data && data.length > 0) {
+          const location = data[0];
+          const newLat = parseFloat(location.lat);
+          const newLng = parseFloat(location.lon);
+
+          // Actualizar coordenadas y marcador
+          setFormData(prev => ({
+            ...prev,
+            address: {
+              ...prev.address,
+              latitude: newLat,
+              longitude: newLng,
+            }
+          }));
+
+          setMapMarker({
+            lat: newLat,
+            lng: newLng
+          });
+        }
+      } catch (error) {
+        console.error('Error geocoding address:', error);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      geocodeAddress();
+    }, 800); // Debounce más largo para la dirección específica
+
+    return () => clearTimeout(timeoutId);
+  }, [step, formData.address.street, formData.address.city, formData.address.state, formData.address.country]);
+
+  // Manejar selección de ubicación de la lista de sugerencias
+  const handleSelectLocation = (location) => {
     setFormData(prev => ({
       ...prev,
       address: {
         ...prev.address,
-        latitude: latlng.lat.toFixed(6),
-        longitude: latlng.lng.toFixed(6)
+        city: location.city || '',
+        state: location.state || '',
+        country: location.country || '',
+        latitude: location.latitude,
+        longitude: location.longitude,
       }
     }));
+
+    // Actualizar marcador en el mapa
+    setMapMarker({
+      lat: location.latitude,
+      lng: location.longitude
+    });
+
+    setLocationQuery(location.name);
+    setShowLocationSuggestions(false);
+  };
+
+  const handleMapClick = async (latlng) => {
+    setMapMarker(latlng);
+
+    // Geocodificación inversa para obtener la dirección del punto seleccionado
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}&addressdetails=1`
+      );
+      const data = await response.json();
+
+      if (data && data.address) {
+        const address = data.address;
+
+        // Construir la dirección de la calle a partir de los componentes disponibles
+        const streetParts = [
+          address.road,
+          address.house_number,
+        ].filter(Boolean);
+
+        const streetAddress = streetParts.length > 0 ? streetParts.join(' ') : '';
+
+        setFormData(prev => ({
+          ...prev,
+          address: {
+            ...prev.address,
+            street: streetAddress || prev.address.street,
+            city: address.city || address.town || address.village || prev.address.city,
+            state: address.state || address.region || prev.address.state,
+            country: address.country || prev.address.country,
+            latitude: latlng.lat,
+            longitude: latlng.lng
+          }
+        }));
+
+        // Actualizar el query de ubicación si cambió la ciudad
+        if (address.city || address.town || address.village) {
+          const locationName = [
+            address.city || address.town || address.village,
+            address.state || address.region,
+            address.country
+          ].filter(Boolean).join(', ');
+          setLocationQuery(locationName);
+        }
+      }
+    } catch (error) {
+      console.error('Error en geocodificación inversa:', error);
+      // Si falla, solo actualizar las coordenadas
+      setFormData(prev => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          latitude: latlng.lat,
+          longitude: latlng.lng
+        }
+      }));
+    }
   };
 
   const handleChange = (e) => {
@@ -135,6 +326,13 @@ function CreateBusiness() {
     e.preventDefault();
     setError('');
 
+    // Solo permitir submit en el paso 3
+    if (step < 3) {
+      // Si no estamos en el paso 3, avanzar al siguiente paso
+      nextStep();
+      return;
+    }
+
     // Validaciones
     if (!formData.name.trim()) {
       setError('El nombre del negocio es requerido');
@@ -177,6 +375,12 @@ function CreateBusiness() {
     if (step === 1) {
       if (!formData.name || !formData.businessType) {
         setError('Completa todos los campos requeridos');
+        return;
+      }
+    }
+    if (step === 2) {
+      if (!formData.address.city) {
+        setError('Debes seleccionar una ubicación antes de continuar');
         return;
       }
     }
@@ -311,10 +515,23 @@ function CreateBusiness() {
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
+                    maxLength={200}
                     rows="4"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
                     placeholder="Describe tu negocio..."
                   />
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-gray-500">
+                      Describe brevemente tu negocio
+                    </p>
+                    <p className={`text-xs font-medium ${
+                      200 - formData.description.length <= 20
+                        ? 'text-orange-600'
+                        : 'text-gray-500'
+                    }`}>
+                      {200 - formData.description.length} caracteres restantes
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -322,9 +539,75 @@ function CreateBusiness() {
             {/* Step 2: Ubicación */}
             {step === 2 && (
               <div className="space-y-6">
+                {/* Búsqueda de ubicación */}
+                <div className="relative" ref={locationInputRef}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Buscar ubicación *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={locationQuery}
+                      onChange={(e) => setLocationQuery(e.target.value)}
+                      onFocus={() => locationSuggestions.length > 0 && setShowLocationSuggestions(true)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                      placeholder="Ej: Cajamarca, Perú"
+                    />
+                    {loadingLocations && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sugerencias de ubicación */}
+                  {showLocationSuggestions && locationSuggestions.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {locationSuggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => handleSelectLocation(suggestion)}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-start gap-3"
+                        >
+                          <span className="text-xl mt-0.5">📍</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-gray-900 truncate">
+                              {suggestion.name}
+                            </div>
+                            {(suggestion.city || suggestion.country) && (
+                              <div className="text-xs text-gray-500 mt-0.5">
+                                {[suggestion.city, suggestion.country].filter(Boolean).join(', ')}
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Ubicación seleccionada (solo lectura) */}
+                {formData.address.city && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-green-900 mb-2">✓ Ubicación seleccionada</h4>
+                    <div className="text-sm text-green-800 space-y-1">
+                      {formData.address.city && <div>Ciudad: {formData.address.city}</div>}
+                      {formData.address.state && <div>Región: {formData.address.state}</div>}
+                      {formData.address.country && <div>País: {formData.address.country}</div>}
+                      {formData.address.latitude && formData.address.longitude && (
+                        <div className="text-xs text-green-600 mt-2">
+                          Coordenadas: {formData.address.latitude.toFixed(6)}, {formData.address.longitude.toFixed(6)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Dirección adicional opcional */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Dirección
+                    Dirección específica (opcional)
                   </label>
                   <input
                     type="text"
@@ -332,117 +615,24 @@ function CreateBusiness() {
                     value={formData.address.street}
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                    placeholder="Calle, número"
+                    placeholder="Ej: Jr. Lima 123, 2do piso"
                   />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Ciudad *
-                    </label>
-                    <input
-                      type="text"
-                      name="address.city"
-                      value={formData.address.city}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                      placeholder="Cajamarca"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Región/Estado
-                    </label>
-                    <input
-                      type="text"
-                      name="address.state"
-                      value={formData.address.state}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                      placeholder="Cajamarca"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      País
-                    </label>
-                    <input
-                      type="text"
-                      name="address.country"
-                      value={formData.address.country}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                      placeholder="Perú"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Código Postal
-                    </label>
-                    <input
-                      type="text"
-                      name="address.zipCode"
-                      value={formData.address.zipCode}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                      placeholder="06001"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Latitud (opcional)
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      name="address.latitude"
-                      value={formData.address.latitude || ''}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                      placeholder="-7.1619"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Longitud (opcional)
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      name="address.longitude"
-                      value={formData.address.longitude || ''}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                      placeholder="-78.5128"
-                    />
-                  </div>
                 </div>
 
                 {/* Mapa interactivo */}
                 <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
                   <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
                     <h3 className="text-sm font-semibold text-gray-700">
-                      📍 Selecciona la ubicación en el mapa
+                      📍 Ajusta la ubicación en el mapa
                     </h3>
                     <p className="text-xs text-gray-600 mt-1">
-                      Haz clic en el mapa para marcar la ubicación exacta de tu negocio
+                      Haz clic en el mapa para ajustar la ubicación exacta de tu negocio
                     </p>
                   </div>
                   <div className="h-96">
                     <MapContainer
                       center={mapMarker || [-7.1619, -78.5128]}
-                      zoom={13}
+                      zoom={mapMarker ? 15 : 6}
                       style={{ height: '100%', width: '100%' }}
                     >
                       <TileLayer
@@ -450,6 +640,7 @@ function CreateBusiness() {
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                       />
                       <MapClickHandler onLocationSelect={handleMapClick} />
+                      <MapUpdater center={mapMarker ? [mapMarker.lat, mapMarker.lng] : null} />
                       {mapMarker && (
                         <Marker position={[mapMarker.lat, mapMarker.lng]} />
                       )}
@@ -459,7 +650,7 @@ function CreateBusiness() {
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-800">
-                    💡 Las coordenadas se actualizarán automáticamente al hacer clic en el mapa
+                    💡 Primero busca tu ubicación, luego ajusta las coordenadas haciendo clic en el mapa
                   </p>
                 </div>
               </div>

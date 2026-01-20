@@ -24,7 +24,14 @@ const Notification = sequelize.define('Notification', {
       'payment_received',
       'review_received',
       'property_approved',
-      'property_rejected'
+      'property_rejected',
+      'new_follower',
+      'post_liked',
+      'reel_liked',
+      'comment_liked',
+      'comment_received',
+      'post_shared',
+      'user_mentioned'
     ),
     allowNull: false,
   },
@@ -39,7 +46,21 @@ const Notification = sequelize.define('Notification', {
   relatedId: {
     type: DataTypes.UUID,
     allowNull: true,
-    comment: 'ID relacionado (bookingId, messageId, etc.)',
+    comment: 'ID relacionado (bookingId, messageId, postId, etc.)',
+  },
+  actorId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    comment: 'ID del usuario que realizó la acción',
+    references: {
+      model: 'Users',
+      key: 'id',
+    },
+  },
+  metadata: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    comment: 'Datos adicionales (avatar, nombre del actor, etc.)',
   },
   isRead: {
     type: DataTypes.BOOLEAN,
@@ -53,5 +74,17 @@ const Notification = sequelize.define('Notification', {
   tableName: 'Notifications',
   timestamps: true,
 });
+
+// Definir relaciones
+Notification.associate = (models) => {
+  Notification.belongsTo(models.User, {
+    foreignKey: 'userId',
+    as: 'user',
+  });
+  Notification.belongsTo(models.User, {
+    foreignKey: 'actorId',
+    as: 'actor',
+  });
+};
 
 export default Notification;

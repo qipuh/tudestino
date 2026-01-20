@@ -10,7 +10,7 @@ import BusinessLayout from '../components/BusinessLayout';
 const serviceTypes = [
   { value: 'property', label: 'Propiedad / Habitación', icon: '🏠', description: 'Alojamiento, habitaciones' },
   { value: 'restaurant', label: 'Restaurante', icon: '🍽️', description: 'Comidas, menú' },
-  { value: 'entertainment', label: 'Entretenimiento', icon: '🎭', description: 'Shows, actividades' },
+  { value: 'entertainment', label: 'Entretenimiento', icon: '🎭', description: 'Bares, discotecas' },
   { value: 'events', label: 'Eventos', icon: '🎉', description: 'Conferencias, bodas' },
   { value: 'tours', label: 'Tours', icon: '🗺️', description: 'Excursiones, paseos' },
   { value: 'transport', label: 'Transporte', icon: '🚗', description: 'Traslados, alquiler' },
@@ -54,15 +54,10 @@ function BusinessServices() {
     }
   }, [id]);
 
-  // Debug: Detectar cambios en rooms
-  useEffect(() => {
-    console.log('[BusinessServices] Rooms state changed:', rooms);
-  }, [rooms]);
-
   // Redirigir a páginas especializadas según el tipo de negocio
   useEffect(() => {
     if (business) {
-      if (business.businessType === 'restaurant') {
+      if (business.businessType === 'restaurant' || business.businessType === 'entertainment') {
         navigate(`/business/${id}/menu`);
       } else if (business.businessType === 'tours') {
         navigate(`/business/${id}/tours`);
@@ -71,17 +66,11 @@ function BusinessServices() {
   }, [business, id, navigate]);
 
   const loadData = async () => {
-    console.log('[BusinessServices] Loading data for business:', id);
     const businessResult = await fetchBusiness(id);
-    console.log('[BusinessServices] Business result:', businessResult);
     await fetchServices(id);
     // Si es hotel, cargar habitaciones
     if (businessResult?.data?.businessType === 'hotel') {
-      console.log('[BusinessServices] Business is hotel, fetching property...');
-      const propertyResult = await fetchBusinessProperty(id);
-      console.log('[BusinessServices] Property result:', propertyResult);
-    } else {
-      console.log('[BusinessServices] Business type:', businessResult?.data?.businessType, '- Not a hotel');
+      await fetchBusinessProperty(id);
     }
   };
 
@@ -269,10 +258,6 @@ function BusinessServices() {
       </div>
     );
   }
-
-  console.log('[BusinessServices] Render - business type:', business.businessType);
-  console.log('[BusinessServices] Render - rooms count:', rooms.length);
-  console.log('[BusinessServices] Render - rooms:', rooms);
 
   return (
     <BusinessLayout activeMenu="services">

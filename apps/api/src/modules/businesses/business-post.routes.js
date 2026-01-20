@@ -1,6 +1,7 @@
 import express from 'express';
 import businessPostController from './business-post.controller.js';
 import { authenticate } from '../../middleware/auth.middleware.js';
+import { uploadSocial } from '../../middleware/upload.js';
 
 const router = express.Router();
 
@@ -24,8 +25,8 @@ router.use(authenticate);
 // Obtener feed de posts de negocios seguidos
 router.get('/posts/feed', businessPostController.getFeedPosts);
 
-// Crear post para un negocio
-router.post('/:businessId/posts', businessPostController.createPost);
+// Crear post para un negocio (hasta 10 archivos de media)
+router.post('/:businessId/posts', uploadSocial.array('media', 10), businessPostController.createPost);
 
 // Actualizar post
 router.put('/posts/:postId', businessPostController.updatePost);

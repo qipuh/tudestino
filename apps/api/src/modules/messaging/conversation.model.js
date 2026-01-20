@@ -24,6 +24,15 @@ const Conversation = sequelize.define('Conversation', {
       key: 'id',
     },
   },
+  // ID del negocio relacionado (opcional)
+  businessId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'businesses',
+      key: 'id',
+    },
+  },
   // ID de la reserva relacionada (opcional)
   bookingId: {
     type: DataTypes.UUID,

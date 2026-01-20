@@ -8,46 +8,46 @@ function HostLandingPage() {
   const benefits = [
     {
       icon: DollarSign,
-      title: 'Genera ingresos extra',
-      description: 'Monetiza tu espacio cuando no lo uses y genera ingresos adicionales',
-    },
-    {
-      icon: Shield,
-      title: 'Protección total',
-      description: 'Cobertura de daños y protección de host incluida en cada reserva',
-    },
-    {
-      icon: Clock,
-      title: 'Control total',
-      description: 'Tú decides cuándo, cómo y a quién alquilar tu propiedad',
+      title: 'Maximiza tus reservas',
+      description: 'Aumenta tu rentabilidad con un sistema de reservas online que conecta tu hotel, restaurante, tour o evento directamente con clientes en Perú y el mundo',
     },
     {
       icon: TrendingUp,
-      title: 'Alcance global',
-      description: 'Miles de viajeros buscando lugares como el tuyo cada día',
+      title: 'Red social para decisiones inteligentes',
+      description: 'Analiza el comportamiento de tus clientes, las tendencias del mercado turístico peruano y toma decisiones basadas en datos reales de la comunidad',
+    },
+    {
+      icon: Shield,
+      title: 'Pagos seguros y comisiones justas',
+      description: 'Recibe tus pagos de forma segura. Solo cobramos comisión por reservas confirmadas, sin costos ocultos',
     },
     {
       icon: Users,
-      title: 'Comunidad de hosts',
-      description: 'Únete a una comunidad de anfitriones que comparten experiencias',
+      title: 'Visibilidad en el mercado turístico peruano',
+      description: 'Miles de viajeros buscan hoteles, restaurantes, tours y eventos en Perú cada día. Destaca tu negocio donde te están buscando',
+    },
+    {
+      icon: Clock,
+      title: 'Gestión 24/7 desde un solo lugar',
+      description: 'Administra reservas, publica contenido en la red social, actualiza precios y responde consultas desde un panel unificado',
     },
   ];
 
   const steps = [
     {
       number: '1',
-      title: 'Crea tu anuncio',
-      description: 'Describe tu espacio, añade fotos y establece tus precios',
+      title: 'Registra tu negocio turístico',
+      description: 'Hotel, restaurante, agencia de viajes, guía turístico o evento. Crea tu perfil, sube fotos profesionales y configura tu disponibilidad',
     },
     {
       number: '2',
-      title: 'Recibe reservas',
-      description: 'Los viajeros pueden encontrar y reservar tu espacio',
+      title: 'Recibe reservas automáticas',
+      description: 'Los viajeros reservan directamente en tu perfil. Gestiona disponibilidad, precios y confirmaciones en tiempo real',
     },
     {
       number: '3',
-      title: 'Recibe pagos',
-      description: 'Los pagos se procesan de forma segura a través de la plataforma',
+      title: 'Crece con insights de la red social',
+      description: 'Analiza qué buscan los turistas, comparte experiencias, mejora tu servicio y aumenta tus ingresos con datos reales',
     },
   ];
 
@@ -59,33 +59,33 @@ function HostLandingPage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                Pon tu espacio en <span className="text-primary">TuDestino</span>
+                Aumenta las reservas de tu hotel, restaurante o tour en <span className="text-primary">Perú</span>
               </h1>
               <p className="text-xl text-gray-600 mb-8">
-                Comparte tu espacio con viajeros de todo el mundo y genera ingresos extra.
-                Es fácil, seguro y tú tienes el control total.
+                TuDestino.pe conecta tu negocio turístico con miles de viajeros.
+                Sistema de reservas online + red social que te ayuda a tomar mejores decisiones y aumentar tu rentabilidad.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 {user ? (
-                  user.role === 'host' ? (
+                  user.role === 'business_owner' || user.role === 'host' ? (
                     <Link
-                      to="/host/properties"
+                      to="/account/businesses"
                       className="inline-flex items-center justify-center px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition text-lg font-semibold shadow-lg hover:shadow-xl"
                     >
-                      Ver mis propiedades
+                      Ver mis negocios
                     </Link>
                   ) : (
                     <Link
-                      to="/host/properties/register"
+                      to="/business/create"
                       className="inline-flex items-center justify-center px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition text-lg font-semibold shadow-lg hover:shadow-xl"
                     >
-                      Publicar mi propiedad
+                      Publicar mi negocio
                     </Link>
                   )
                 ) : (
                   <>
                     <Link
-                      to="/register?role=host"
+                      to="/register?role=business_owner"
                       className="inline-flex items-center justify-center px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition text-lg font-semibold shadow-lg hover:shadow-xl"
                     >
                       Comenzar
@@ -103,8 +103,8 @@ function HostLandingPage() {
             <div className="relative">
               <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
                 <img
-                  src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80"
-                  alt="Hermosa propiedad"
+                  src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=800&q=80"
+                  alt="Negocio exitoso"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -114,8 +114,8 @@ function HostLandingPage() {
                     <DollarSign className="text-green-600" size={24} />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">$2,500</p>
-                    <p className="text-sm text-gray-600">Promedio mensual</p>
+                    <p className="text-2xl font-bold text-gray-900">+45%</p>
+                    <p className="text-sm text-gray-600">Más reservas en promedio</p>
                   </div>
                 </div>
               </div>
@@ -129,10 +129,10 @@ function HostLandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Por qué ser host en TuDestino
+              ¿Por qué los hoteles, restaurantes y agencias de Perú eligen TuDestino.pe?
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Únete a miles de anfitriones que ya están ganando dinero compartiendo sus espacios
+              Reservas directas + red social = más ingresos y decisiones inteligentes para tu negocio turístico
             </p>
           </div>
 
@@ -161,10 +161,10 @@ function HostLandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Cómo funciona
+              Cómo registrar tu hotel, restaurante o tour en TuDestino.pe
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              En solo 3 pasos podrás empezar a recibir reservas
+              En 3 pasos simples empieza a recibir reservas directas y aumenta tu rentabilidad
             </p>
           </div>
 
@@ -193,34 +193,34 @@ function HostLandingPage() {
       <div className="py-20 bg-gradient-to-r from-primary to-primary-dark text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Home size={64} className="mx-auto mb-6 opacity-90" />
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            ¿Listo para comenzar?
+          <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: '#ffb547' }}>
+            Lleva tu hotel, restaurante o agencia al siguiente nivel
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            Únete a nuestra comunidad de hosts y empieza a generar ingresos hoy mismo
+            Únete a los negocios turísticos en Perú que ya aumentaron sus reservas e ingresos con TuDestino.pe
           </p>
           {user ? (
-            user.role === 'host' ? (
+            user.role === 'business_owner' || user.role === 'host' ? (
               <Link
-                to="/host/properties"
+                to="/account/businesses"
                 className="inline-flex items-center justify-center px-8 py-4 bg-white text-primary rounded-lg hover:bg-gray-100 transition text-lg font-semibold shadow-lg"
               >
-                Gestionar mis propiedades
+                Gestionar mis negocios
               </Link>
             ) : (
               <Link
-                to="/host/properties/register"
+                to="/business/create"
                 className="inline-flex items-center justify-center px-8 py-4 bg-white text-primary rounded-lg hover:bg-gray-100 transition text-lg font-semibold shadow-lg"
               >
-                Publicar mi primera propiedad
+                Publicar mi primer negocio
               </Link>
             )
           ) : (
             <Link
-              to="/register?role=host"
+              to="/register?role=business_owner"
               className="inline-flex items-center justify-center px-8 py-4 bg-white text-primary rounded-lg hover:bg-gray-100 transition text-lg font-semibold shadow-lg"
             >
-              Registrarme como host
+              Registra tu negocio ahora
             </Link>
           )}
         </div>
@@ -238,45 +238,61 @@ function HostLandingPage() {
           <div className="space-y-6">
             <details className="group border border-gray-200 rounded-lg p-6 hover:border-primary transition">
               <summary className="font-semibold text-lg cursor-pointer list-none flex items-center justify-between">
-                ¿Cuánto cuesta publicar mi propiedad?
+                ¿Qué negocios turísticos pueden registrarse en TuDestino.pe?
                 <span className="ml-2 text-2xl group-open:rotate-45 transition-transform">+</span>
               </summary>
               <p className="mt-4 text-gray-600">
-                Publicar tu propiedad en TuDestino es completamente gratis. Solo cobramos una pequeña
-                comisión por cada reserva completada.
+                <strong>Hoteles y hospedajes</strong> en Perú (hostales, lodges, resorts), <strong>restaurantes y cafés</strong>,
+                <strong>agencias de viajes y turismo</strong>, <strong>guías turísticos certificados</strong>,
+                <strong>organizadores de eventos</strong>, tours operadores y cualquier servicio relacionado con turismo en Perú.
+                Publicar es gratis, solo cobras comisión por reservas confirmadas.
               </p>
             </details>
 
             <details className="group border border-gray-200 rounded-lg p-6 hover:border-primary transition">
               <summary className="font-semibold text-lg cursor-pointer list-none flex items-center justify-between">
-                ¿Cuándo recibo los pagos?
+                ¿Cómo aumenta TuDestino.pe mis reservas y rentabilidad?
                 <span className="ml-2 text-2xl group-open:rotate-45 transition-transform">+</span>
               </summary>
               <p className="mt-4 text-gray-600">
-                Los pagos se procesan automáticamente 24 horas después del check-in del huésped y
-                se transfieren a tu cuenta bancaria.
+                Con nuestro <strong>sistema de reservas online</strong> los viajeros reservan directamente tu hotel, tour o restaurante
+                sin intermediarios. Además, nuestra <strong>red social turística</strong> te permite publicar contenido, interactuar con
+                clientes y acceder a datos sobre qué buscan los turistas en Perú, ayudándote a tomar decisiones que aumentan tus ingresos.
               </p>
             </details>
 
             <details className="group border border-gray-200 rounded-lg p-6 hover:border-primary transition">
               <summary className="font-semibold text-lg cursor-pointer list-none flex items-center justify-between">
-                ¿Qué pasa si hay daños en mi propiedad?
+                ¿Cómo funciona la red social para mejorar mi toma de decisiones?
                 <span className="ml-2 text-2xl group-open:rotate-45 transition-transform">+</span>
               </summary>
               <p className="mt-4 text-gray-600">
-                Todas las reservas incluyen protección de host. Si hay daños, puedes reportarlos
-                dentro de las 48 horas posteriores al check-out y te ayudaremos con el proceso.
+                La red social de TuDestino.pe te muestra <strong>tendencias del turismo en Perú</strong>, qué experiencias buscan los viajeros,
+                opiniones reales y comportamiento de tu competencia. Esto te permite ajustar precios, crear ofertas atractivas,
+                mejorar tus servicios y maximizar tu ocupación u ventas basándote en datos reales, no en suposiciones.
               </p>
             </details>
 
             <details className="group border border-gray-200 rounded-lg p-6 hover:border-primary transition">
               <summary className="font-semibold text-lg cursor-pointer list-none flex items-center justify-between">
-                ¿Puedo cancelar una reserva?
+                ¿Cómo recibo los pagos de mis reservas?
                 <span className="ml-2 text-2xl group-open:rotate-45 transition-transform">+</span>
               </summary>
               <p className="mt-4 text-gray-600">
-                Sí, pero recomendamos evitar cancelaciones ya que afectan tu reputación como host.
-                En casos excepcionales, puedes cancelar con al menos 7 días de anticipación.
+                Los pagos de reservas se procesan de forma <strong>100% segura</strong> y se transfieren directamente a tu cuenta bancaria
+                en Perú. Solo pagas comisión por reservas exitosas, sin costos de suscripción ni tarifas ocultas.
+              </p>
+            </details>
+
+            <details className="group border border-gray-200 rounded-lg p-6 hover:border-primary transition">
+              <summary className="font-semibold text-lg cursor-pointer list-none flex items-center justify-between">
+                ¿Necesito experiencia técnica para gestionar mi perfil?
+                <span className="ml-2 text-2xl group-open:rotate-45 transition-transform">+</span>
+              </summary>
+              <p className="mt-4 text-gray-600">
+                No. TuDestino.pe está diseñado para ser <strong>simple e intuitivo</strong>. Desde un solo panel administras reservas,
+                actualizas disponibilidad de habitaciones o tours, publicas en la red social, respondes consultas y ves tus estadísticas.
+                Todo en español y optimizado para negocios en Perú.
               </p>
             </details>
           </div>

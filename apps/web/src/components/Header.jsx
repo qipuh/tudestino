@@ -1,14 +1,36 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Menu, User, Bell, MessageSquare, LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useAuthStore from '../store/authStore';
 import { useSidebar } from '../contexts/SidebarContext';
+import { getUnreadCount } from '../services/notificationService';
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { user, logout } = useAuthStore();
   const { sidebarOpen, sidebarVisible } = useSidebar();
   const navigate = useNavigate();
+
+  // Cargar contador de notificaciones no leídas
+  useEffect(() => {
+    if (user) {
+      loadUnreadCount();
+
+      // Actualizar cada 30 segundos
+      const interval = setInterval(loadUnreadCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const loadUnreadCount = async () => {
+    try {
+      const response = await getUnreadCount();
+      setUnreadCount(response.count || 0);
+    } catch (error) {
+      console.error('Error loading unread count:', error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -46,8 +68,8 @@ function Header() {
           {/* User Menu */}
           <div className="flex items-center gap-4">
             {!user && (
-              <Link to="/business_owner" className="hidden md:block text-sm font-medium hover:bg-gray-100 px-3 py-2 rounded-full">
-                Pon tu espacio en TuDestino
+              <Link to="/host" className="hidden md:block text-sm font-medium hover:bg-gray-100 px-3 py-2 rounded-full">
+                Publica tu negocio
               </Link>
             )}
 
@@ -67,6 +89,11 @@ function Header() {
                   title="Notificaciones"
                 >
                   <Bell size={18} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
                 </Link>
                 <Link
                   to="/messages"
@@ -105,10 +132,17 @@ function Header() {
                       </Link>
                       <Link
                         to="/notifications"
-                        className="block px-4 py-2 text-sm hover:bg-gray-50"
+                        className="block px-4 py-2 text-sm hover:bg-gray-50 relative"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        Notificaciones
+                        <div className="flex items-center justify-between">
+                          Notificaciones
+                          {unreadCount > 0 && (
+                            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                              {unreadCount > 9 ? '9+' : unreadCount}
+                            </span>
+                          )}
+                        </div>
                       </Link>
                       <Link
                         to="/messages"
@@ -157,11 +191,11 @@ function Header() {
                       </Link>
                       <hr className="my-2" />
                       <Link
-                        to="/business_owner"
+                        to="/host"
                         className="block px-4 py-2 text-sm hover:bg-gray-50"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        Pon tu espacio en TuDestino
+                        Publica tu negocio
                       </Link>
                       <Link
                         to="/help"

@@ -30,6 +30,7 @@ import uploadRoutes from './modules/upload/upload.routes.js';
 import countriesRoutes from './modules/countries/countries.routes.js';
 import slidersRoutes from './modules/sliders/slider.routes.js';
 import attractionsRoutes from './modules/attractions/attraction.routes.js';
+import notificationRoutes from './modules/notifications/notification.routes.js';
 
 const app = express();
 const server = createServer(app);
@@ -78,6 +79,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/countries', countriesRoutes);
 app.use('/api/sliders', slidersRoutes);
 app.use('/api/attractions', attractionsRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

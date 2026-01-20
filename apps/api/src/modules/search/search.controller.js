@@ -648,24 +648,76 @@ export const searchAll = async (req, res) => {
       }
     }
 
-    // Buscar en Entertainment (solo si las tablas existen y están sincronizadas)
+    // Buscar en Entertainment desde businesses table
     if (!category || category === 'all' || category === 'entertainment') {
       try {
         const entertainmentWhere = {
-          status: 'active'
+          status: 'active',
+          isActive: true,
+          businessType: 'entertainment'
         };
 
         if (minRating) {
           entertainmentWhere.ratingAverage = { [Op.gte]: parseFloat(minRating) };
         }
 
-        const entertainment = await Entertainment.findAll({
+        const entertainment = await Business.findAll({
           where: entertainmentWhere,
           limit: limitNum,
           offset
         });
 
         results = results.concat(entertainment.map(e => {
+          const data = e.toJSON();
+          const addressData = typeof data.address === 'string' ? JSON.parse(data.address) : data.address;
+          let distance = null;
+
+          if (lat && lng && addressData?.latitude && addressData?.longitude) {
+            distance = calculateDistance(lat, lng, parseFloat(addressData.latitude), parseFloat(addressData.longitude));
+          }
+
+          return {
+            id: data.id,
+            type: 'entertainment',
+            name: data.name,
+            description: data.description,
+            image: data.logo || data.coverImage,
+            location: {
+              city: addressData?.city,
+              state: addressData?.state,
+              country: addressData?.country,
+              latitude: addressData?.latitude,
+              longitude: addressData?.longitude
+            },
+            rating: data.ratingAverage || 0,
+            reviewCount: data.reviewCount || 0,
+            distance: distance ? Math.round(distance * 10) / 10 : null,
+            url: `/businesses/${data.id}`
+          };
+        }));
+      } catch (error) {
+        console.error('Error fetching entertainment:', error.message);
+      }
+    }
+
+    // Also search legacy Entertainment table if it exists
+    if (!category || category === 'all' || category === 'entertainment') {
+      try {
+        const legacyEntertainmentWhere = {
+          status: 'active'
+        };
+
+        if (minRating) {
+          legacyEntertainmentWhere.ratingAverage = { [Op.gte]: parseFloat(minRating) };
+        }
+
+        const legacyEntertainment = await Entertainment.findAll({
+          where: legacyEntertainmentWhere,
+          limit: limitNum,
+          offset
+        });
+
+        results = results.concat(legacyEntertainment.map(e => {
           const data = e.toJSON();
           let distance = null;
 
@@ -691,7 +743,7 @@ export const searchAll = async (req, res) => {
           };
         }));
       } catch (error) {
-        console.error('Error fetching entertainment:', error.message);
+        console.error('Error fetching legacy entertainment:', error.message);
       }
     }
 

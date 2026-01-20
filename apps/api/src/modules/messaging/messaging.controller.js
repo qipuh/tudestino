@@ -24,30 +24,42 @@ export const getOrCreateConversation = async (req, res) => {
     const userId = req.user.id;
     const { otherUserId, bookingId } = req.body;
 
+    console.log('📝 getOrCreateConversation called:', { userId, otherUserId, bookingId });
+
     if (!otherUserId) {
+      console.log('❌ otherUserId is missing');
       return res.status(400).json({
         success: false,
         message: 'otherUserId es requerido',
       });
     }
 
+    console.log('🔄 Creating/finding conversation...');
     const conversation = await messagingService.getOrCreateConversation(
       userId,
       otherUserId,
       bookingId
     );
 
+    console.log('✅ Conversation created/found:', conversation.id);
+
     // Obtener la conversación con datos del otro usuario
+    console.log('🔄 Getting conversation data...');
     const conversationData = await messagingService.getConversationById(conversation.id, userId);
+
+    console.log('✅ Conversation data retrieved');
 
     res.json({
       success: true,
       data: conversationData,
     });
   } catch (error) {
+    console.error('❌ Error in getOrCreateConversation:', error);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({
       success: false,
       message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
@@ -112,10 +124,13 @@ export const sendMessage = async (req, res) => {
       data: message,
     });
   } catch (error) {
-    console.error('❌ Error al enviar mensaje:', error.message);
+    console.error('❌ Error al enviar mensaje:', error);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error stack:', error.stack);
     res.status(400).json({
       success: false,
       message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

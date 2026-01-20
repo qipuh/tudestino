@@ -66,7 +66,7 @@ function MessagesPage() {
       getOrCreateConversation(otherUserId, bookingId || null)
         .then((conv) => {
           setCurrentConversation(conv);
-          fetchMessages(conv.id);
+          // Los mensajes ya se cargan automáticamente en getOrCreateConversation
         });
     }
   }, [searchParams]);

@@ -37,17 +37,105 @@ CREATE TABLE IF NOT EXISTS `business_follows` (
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 4. Actualizar tabla notifications para agregar campos faltantes (si no existen)
-ALTER TABLE notifications
-  ADD COLUMN IF NOT EXISTS `businessId` CHAR(36) NULL AFTER `userId`,
-  ADD COLUMN IF NOT EXISTS `postId` CHAR(36) NULL AFTER `businessId`,
-  ADD COLUMN IF NOT EXISTS `propertyId` CHAR(36) NULL AFTER `postId`,
-  ADD COLUMN IF NOT EXISTS `bookingId` CHAR(36) NULL AFTER `propertyId`,
-  ADD COLUMN IF NOT EXISTS `actionUrl` VARCHAR(500) NULL AFTER `metadata`;
+-- 4. Actualizar tabla notifications para agregar campos faltantes
+-- Verificamos si las columnas existen antes de agregarlas
 
--- Agregar índice para businessId si no existe
-CREATE INDEX IF NOT EXISTS `idx_businessId` ON notifications (`businessId`);
-CREATE INDEX IF NOT EXISTS `idx_postId` ON notifications (`postId`);
+-- Verificar y agregar businessId
+SET @dbname = DATABASE();
+SET @tablename = 'notifications';
+SET @columnname = 'businessId';
+SET @preparedStatement = (SELECT IF(
+  (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE (table_name = @tablename)
+   AND (table_schema = @dbname)
+   AND (column_name = @columnname)) > 0,
+  'SELECT 1',
+  'ALTER TABLE notifications ADD COLUMN businessId CHAR(36) NULL AFTER userId'
+));
+PREPARE alterIfNotExists FROM @preparedStatement;
+EXECUTE alterIfNotExists;
+DEALLOCATE PREPARE alterIfNotExists;
+
+-- Verificar y agregar postId
+SET @columnname = 'postId';
+SET @preparedStatement = (SELECT IF(
+  (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE (table_name = @tablename)
+   AND (table_schema = @dbname)
+   AND (column_name = @columnname)) > 0,
+  'SELECT 1',
+  'ALTER TABLE notifications ADD COLUMN postId CHAR(36) NULL AFTER businessId'
+));
+PREPARE alterIfNotExists FROM @preparedStatement;
+EXECUTE alterIfNotExists;
+DEALLOCATE PREPARE alterIfNotExists;
+
+-- Verificar y agregar propertyId
+SET @columnname = 'propertyId';
+SET @preparedStatement = (SELECT IF(
+  (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE (table_name = @tablename)
+   AND (table_schema = @dbname)
+   AND (column_name = @columnname)) > 0,
+  'SELECT 1',
+  'ALTER TABLE notifications ADD COLUMN propertyId CHAR(36) NULL AFTER postId'
+));
+PREPARE alterIfNotExists FROM @preparedStatement;
+EXECUTE alterIfNotExists;
+DEALLOCATE PREPARE alterIfNotExists;
+
+-- Verificar y agregar bookingId
+SET @columnname = 'bookingId';
+SET @preparedStatement = (SELECT IF(
+  (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE (table_name = @tablename)
+   AND (table_schema = @dbname)
+   AND (column_name = @columnname)) > 0,
+  'SELECT 1',
+  'ALTER TABLE notifications ADD COLUMN bookingId CHAR(36) NULL AFTER propertyId'
+));
+PREPARE alterIfNotExists FROM @preparedStatement;
+EXECUTE alterIfNotExists;
+DEALLOCATE PREPARE alterIfNotExists;
+
+-- Verificar y agregar actionUrl
+SET @columnname = 'actionUrl';
+SET @preparedStatement = (SELECT IF(
+  (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE (table_name = @tablename)
+   AND (table_schema = @dbname)
+   AND (column_name = @columnname)) > 0,
+  'SELECT 1',
+  'ALTER TABLE notifications ADD COLUMN actionUrl VARCHAR(500) NULL'
+));
+PREPARE alterIfNotExists FROM @preparedStatement;
+EXECUTE alterIfNotExists;
+DEALLOCATE PREPARE alterIfNotExists;
+
+-- Agregar índices si no existen
+SET @s = (SELECT IF(
+  (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE (table_name = 'notifications')
+   AND (table_schema = @dbname)
+   AND (index_name = 'idx_businessId')) > 0,
+  'SELECT 1',
+  'CREATE INDEX idx_businessId ON notifications (businessId)'
+));
+PREPARE createIndexIfNotExists FROM @s;
+EXECUTE createIndexIfNotExists;
+DEALLOCATE PREPARE createIndexIfNotExists;
+
+SET @s = (SELECT IF(
+  (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE (table_name = 'notifications')
+   AND (table_schema = @dbname)
+   AND (index_name = 'idx_postId')) > 0,
+  'SELECT 1',
+  'CREATE INDEX idx_postId ON notifications (postId)'
+));
+PREPARE createIndexIfNotExists FROM @s;
+EXECUTE createIndexIfNotExists;
+DEALLOCATE PREPARE createIndexIfNotExists;
 
 -- 5. Actualizar categorías de menú para negocios de entretenimiento
 UPDATE menu_items

@@ -1,19 +1,31 @@
 import express from 'express';
 import businessPostController from './business-post.controller.js';
-import { authenticate } from '../../middleware/auth.middleware.js';
+import { authenticate, optionalAuthenticate } from '../../middleware/auth.middleware.js';
 import { uploadSocial } from '../../middleware/upload.js';
 
 const router = express.Router();
 
+// Middleware de logging para debug
+router.use((req, _res, next) => {
+  console.log('🔍 business-post.routes - Request:', {
+    method: req.method,
+    path: req.path,
+    url: req.url,
+    params: req.params,
+    hasAuth: !!req.headers.authorization
+  });
+  next();
+});
+
 /**
- * Rutas públicas
+ * Rutas públicas (con autenticación opcional)
  */
 
 // Obtener un post específico
-router.get('/posts/:postId', businessPostController.getPostById);
+router.get('/posts/:postId', optionalAuthenticate, businessPostController.getPostById);
 
 // Obtener posts de un negocio
-router.get('/:businessId/posts', businessPostController.getPostsByBusiness);
+router.get('/:businessId/posts', optionalAuthenticate, businessPostController.getPostsByBusiness);
 
 /**
  * Rutas protegidas (requieren autenticación)

@@ -39,6 +39,7 @@ import BusinessPosts from '@modules/business/pages/BusinessPosts';
 import BusinessAnalytics from '@modules/business/pages/BusinessAnalytics';
 import BusinessSettings from '@modules/business/pages/BusinessSettings';
 import RestaurantMenu from '@modules/business/pages/RestaurantMenu';
+import SpaServices from '@modules/business/pages/SpaServices';
 import CreatePropertySimplified from '@modules/business/pages/CreatePropertySimplified';
 import CreateRoomsSimplified from '@modules/business/pages/CreateRoomsSimplified';
 import BusinessTours from '@modules/business/pages/BusinessTours';
@@ -130,6 +131,7 @@ function App() {
         <Route path="business/:id/settings" element={<BusinessSettings />} />
         <Route path="business/:id" element={<BusinessDetail />} />
         <Route path="business/:id/menu" element={<RestaurantMenu />} />
+        <Route path="business/:id/spa-services" element={<SpaServices />} />
         <Route path="business/:businessId/property/create" element={<CreatePropertySimplified />} />
         <Route path="business/:businessId/property/create-rooms" element={<CreateRoomsSimplified />} />
         <Route path="business/:id/tours" element={<BusinessTours />} />

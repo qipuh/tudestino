@@ -37,10 +37,9 @@ const Business = sequelize.define('Business', {
   },
   description: {
     type: DataTypes.TEXT,
-    allowNull: false,
+    allowNull: true,
     validate: {
-      notEmpty: true,
-      len: [10, 5000]
+      len: [0, 5000]
     }
   },
   logo: {

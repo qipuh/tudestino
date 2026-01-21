@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, ChevronRight, ChevronLeft, X, Plus, Check, Upload, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Save, ChevronRight, ChevronLeft, X, Plus, Check, Upload, Image as ImageIcon, Calendar } from 'lucide-react';
 import api, { getImageUrl } from '../../../services/api';
 import TagInput from '../../../components/TagInput';
 
@@ -80,7 +80,7 @@ function CreateTourSteps() {
     fullDescription: '',
     coverImage: '',
     gallery: [],
-    itinerary: [{ day: 1, title: '', description: '', activities: [] }],
+    itinerary: [{ day: 1, title: '', description: '', activities: [{ title: '', description: '', time: '' }] }],
     pointsOfInterest: [],
     includedActivities: [],
     accommodations: [],
@@ -100,8 +100,9 @@ function CreateTourSteps() {
     guideLanguages: [],
     maxGroupSize: 20,
     basePricePerPerson: '',
-    priceCurrency: 'USD',
-    supplements: { single: '', highSeason: '', extraNight: '' },
+    priceCurrency: 'PEN',
+    supplements: { highSeason: '', lowSeason: '' },
+    seasonPrices: {}, // { seasonId: price }
     discounts: { children: '', groups: '', seniors: '' },
     meetingPoint: {
       address: '',
@@ -144,7 +145,23 @@ function CreateTourSteps() {
         fullDescription: tour.fullDescription || '',
         coverImage: tour.coverImage || '',
         gallery: tour.gallery || [],
-        itinerary: tour.itinerary || [{ day: 1, title: '', description: '', activities: [] }],
+        itinerary: tour.itinerary ? tour.itinerary.map(day => ({
+          ...day,
+          activities: Array.isArray(day.activities)
+            ? day.activities.map(act => {
+                // Si la actividad es string (formato antiguo), convertir a objeto
+                if (typeof act === 'string') {
+                  return { title: act, description: '', time: '' };
+                }
+                // Si ya es objeto (formato nuevo), asegurar que tenga todos los campos
+                return {
+                  title: act.title || '',
+                  description: act.description || '',
+                  time: act.time || ''
+                };
+              })
+            : [{ title: '', description: '', time: '' }]
+        })) : [{ day: 1, title: '', description: '', activities: [{ title: '', description: '', time: '' }] }],
         pointsOfInterest: tour.pointsOfInterest || [],
         includedActivities: tour.includedActivities || [],
         accommodations: tour.accommodations || [],
@@ -164,8 +181,9 @@ function CreateTourSteps() {
         guideLanguages: tour.guideLanguages || [],
         maxGroupSize: tour.maxGroupSize || 20,
         basePricePerPerson: tour.basePricePerPerson || '',
-        priceCurrency: tour.priceCurrency || 'USD',
-        supplements: tour.supplements || { single: '', highSeason: '', extraNight: '' },
+        priceCurrency: tour.priceCurrency || 'PEN',
+        supplements: tour.supplements || { highSeason: '', lowSeason: '' },
+        seasonPrices: tour.seasonPrices || {},
         discounts: tour.discounts || { children: '', groups: '', seniors: '' },
         meetingPoint: tour.meetingPoint || {
           address: '',
@@ -231,7 +249,7 @@ function CreateTourSteps() {
       ...prev,
       itinerary: [
         ...prev.itinerary,
-        { day: prev.itinerary.length + 1, title: '', description: '', activities: [] }
+        { day: prev.itinerary.length + 1, title: '', description: '', activities: [{ title: '', description: '', time: '' }] }
       ]
     }));
   };
@@ -242,6 +260,26 @@ function CreateTourSteps() {
     newItinerary.forEach((day, i) => {
       day.day = i + 1;
     });
+    setFormData(prev => ({ ...prev, itinerary: newItinerary }));
+  };
+
+  const addActivity = (dayIndex) => {
+    const newItinerary = [...formData.itinerary];
+    newItinerary[dayIndex].activities.push({ title: '', description: '', time: '' });
+    setFormData(prev => ({ ...prev, itinerary: newItinerary }));
+  };
+
+  const removeActivity = (dayIndex, activityIndex) => {
+    const newItinerary = [...formData.itinerary];
+    if (newItinerary[dayIndex].activities.length > 1) {
+      newItinerary[dayIndex].activities = newItinerary[dayIndex].activities.filter((_, i) => i !== activityIndex);
+      setFormData(prev => ({ ...prev, itinerary: newItinerary }));
+    }
+  };
+
+  const handleActivityChange = (dayIndex, activityIndex, field, value) => {
+    const newItinerary = [...formData.itinerary];
+    newItinerary[dayIndex].activities[activityIndex][field] = value;
     setFormData(prev => ({ ...prev, itinerary: newItinerary }));
   };
 
@@ -389,11 +427,19 @@ function CreateTourSteps() {
           removeGalleryImage={removeGalleryImage}
         />;
       case 2:
-        return <Step2Itinerary formData={formData} handleItineraryChange={handleItineraryChange} addItineraryDay={addItineraryDay} removeItineraryDay={removeItineraryDay} />;
+        return <Step2Itinerary
+          formData={formData}
+          handleItineraryChange={handleItineraryChange}
+          addItineraryDay={addItineraryDay}
+          removeItineraryDay={removeItineraryDay}
+          addActivity={addActivity}
+          removeActivity={removeActivity}
+          handleActivityChange={handleActivityChange}
+        />;
       case 3:
         return <Step3Services formData={formData} handleChange={handleChange} setFormData={setFormData} />;
       case 4:
-        return <Step4Pricing formData={formData} handleChange={handleChange} />;
+        return <Step4Pricing formData={formData} handleChange={handleChange} setFormData={setFormData} businessId={businessId} />;
       case 5:
         return <Step5Logistics formData={formData} handleChange={handleChange} setFormData={setFormData} />;
       case 6:
@@ -766,7 +812,7 @@ function Step1BasicInfo({ formData, handleChange, setFormData, handleCoverImageU
 }
 
 // Step 2: Itinerario
-function Step2Itinerary({ formData, handleItineraryChange, addItineraryDay, removeItineraryDay }) {
+function Step2Itinerary({ formData, handleItineraryChange, addItineraryDay, removeItineraryDay, addActivity, removeActivity, handleActivityChange }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -781,63 +827,136 @@ function Step2Itinerary({ formData, handleItineraryChange, addItineraryDay, remo
         </button>
       </div>
 
-      <div className="space-y-4">
-        {formData.itinerary.map((day, index) => (
-          <div key={index} className="border border-gray-200 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-gray-900">Día {day.day}</h3>
+      <div className="space-y-6">
+        {formData.itinerary.map((day, dayIndex) => (
+          <div key={dayIndex} className="border-2 border-gray-200 rounded-xl p-4 bg-gray-50">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <span className="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">
+                  {day.day}
+                </span>
+                Día {day.day}
+              </h3>
               {formData.itinerary.length > 1 && (
                 <button
                   type="button"
-                  onClick={() => removeItineraryDay(index)}
-                  className="text-red-600 hover:text-red-700 text-sm"
+                  onClick={() => removeItineraryDay(dayIndex)}
+                  className="text-red-600 hover:text-red-700 p-1 hover:bg-red-50 rounded transition"
                 >
-                  <X size={18} />
+                  <X size={20} />
                 </button>
               )}
             </div>
 
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Título del Día
-                </label>
-                <input
-                  type="text"
-                  value={day.title}
-                  onChange={(e) => handleItineraryChange(index, 'title', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                  placeholder="Ej: Cusco - Valle Sagrado"
-                />
+            <div className="space-y-4">
+              {/* Información general del día */}
+              <div className="bg-white rounded-lg p-3 space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Título del Día
+                  </label>
+                  <input
+                    type="text"
+                    value={day.title}
+                    onChange={(e) => handleItineraryChange(dayIndex, 'title', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                    placeholder="Ej: Cusco - Valle Sagrado"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Descripción General del Día
+                  </label>
+                  <textarea
+                    value={day.description}
+                    onChange={(e) => handleItineraryChange(dayIndex, 'description', e.target.value)}
+                    rows="2"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                    placeholder="Resumen general de las actividades del día"
+                  />
+                </div>
               </div>
 
+              {/* Actividades del día */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Descripción del Día
-                </label>
-                <textarea
-                  value={day.description}
-                  onChange={(e) => handleItineraryChange(index, 'description', e.target.value)}
-                  rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                  placeholder="Describe las actividades del día"
-                />
-              </div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-semibold text-gray-900">
+                    Actividades del Día
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => addActivity(dayIndex)}
+                    className="text-primary hover:text-primary-dark text-sm flex items-center gap-1 font-medium"
+                  >
+                    <Plus size={14} />
+                    Agregar Actividad
+                  </button>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Actividades (separadas por comas)
-                </label>
-                <input
-                  type="text"
-                  value={day.activities?.join(', ') || ''}
-                  onChange={(e) => {
-                    const activities = e.target.value.split(',').map(a => a.trim()).filter(Boolean);
-                    handleItineraryChange(index, 'activities', activities);
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                  placeholder="Ej: Visita a ruinas, Almuerzo típico"
-                />
+                <div className="space-y-3">
+                  {day.activities && day.activities.map((activity, activityIndex) => (
+                    <div key={activityIndex} className="bg-white rounded-lg p-3 border border-gray-200 relative">
+                      {day.activities.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeActivity(dayIndex, activityIndex)}
+                          className="absolute top-2 right-2 text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition"
+                        >
+                          <X size={16} />
+                        </button>
+                      )}
+
+                      <div className="space-y-2 pr-6">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            Actividad {activityIndex + 1}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="md:col-span-2">
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Título de la Actividad
+                            </label>
+                            <input
+                              type="text"
+                              value={activity.title || ''}
+                              onChange={(e) => handleActivityChange(dayIndex, activityIndex, 'title', e.target.value)}
+                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-primary focus:border-primary"
+                              placeholder="Ej: Visita a Machu Picchu"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Hora (opcional)
+                            </label>
+                            <input
+                              type="time"
+                              value={activity.time || ''}
+                              onChange={(e) => handleActivityChange(dayIndex, activityIndex, 'time', e.target.value)}
+                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-primary focus:border-primary"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Descripción de la Actividad
+                          </label>
+                          <textarea
+                            value={activity.description || ''}
+                            onChange={(e) => handleActivityChange(dayIndex, activityIndex, 'description', e.target.value)}
+                            rows="2"
+                            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-primary focus:border-primary"
+                            placeholder="Detalles de la actividad..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -916,7 +1035,52 @@ function Step3Services({ formData, handleChange, setFormData }) {
 }
 
 // Step 4: Precios
-function Step4Pricing({ formData, handleChange }) {
+function Step4Pricing({ formData, handleChange, setFormData, businessId }) {
+  const [seasons, setSeasons] = useState([]);
+  const [loadingSeasons, setLoadingSeasons] = useState(true);
+
+  useEffect(() => {
+    loadSeasons();
+  }, [businessId]);
+
+  const loadSeasons = async () => {
+    try {
+      setLoadingSeasons(true);
+      const response = await api.get(`/businesses/${businessId}/seasons`);
+      setSeasons(response.data || []);
+    } catch (err) {
+      console.error('Error loading seasons:', err);
+      setSeasons([]);
+    } finally {
+      setLoadingSeasons(false);
+    }
+  };
+
+  const handleSeasonPriceChange = (seasonId, value) => {
+    setFormData(prev => ({
+      ...prev,
+      seasonPrices: {
+        ...prev.seasonPrices,
+        [seasonId]: value
+      }
+    }));
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+  };
+
+  const getSeasonTypeColor = (type) => {
+    const colors = {
+      high: 'bg-red-50 border-red-200 text-red-700',
+      low: 'bg-blue-50 border-blue-200 text-blue-700',
+      custom: 'bg-purple-50 border-purple-200 text-purple-700'
+    };
+    return colors[type] || 'bg-gray-50 border-gray-200 text-gray-700';
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-gray-900 mb-4">Precios y Tarifas</h2>
@@ -954,22 +1118,8 @@ function Step4Pricing({ formData, handleChange }) {
       </div>
 
       <div>
-        <h3 className="font-medium text-gray-900 mb-3">Suplementos (Opcional)</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm text-gray-700 mb-1">Habitación Individual</label>
-            <input
-              type="number"
-              name="supplements.single"
-              step="0.01"
-              min="0"
-              value={formData.supplements.single}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              placeholder="0.00"
-            />
-          </div>
-
+        <h3 className="font-medium text-gray-900 mb-3">Suplementos por Temporada (Opcional)</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm text-gray-700 mb-1">Temporada Alta</label>
             <input
@@ -985,13 +1135,13 @@ function Step4Pricing({ formData, handleChange }) {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-700 mb-1">Noche Extra</label>
+            <label className="block text-sm text-gray-700 mb-1">Temporada Baja</label>
             <input
               type="number"
-              name="supplements.extraNight"
+              name="supplements.lowSeason"
               step="0.01"
               min="0"
-              value={formData.supplements.extraNight}
+              value={formData.supplements.lowSeason}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
               placeholder="0.00"
@@ -999,6 +1149,44 @@ function Step4Pricing({ formData, handleChange }) {
           </div>
         </div>
       </div>
+
+      {/* Precios por Temporadas */}
+      {!loadingSeasons && seasons.length > 0 && (
+        <div>
+          <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+            <Calendar size={18} className="text-primary" />
+            Precios por Temporada (Opcional)
+          </h3>
+          <p className="text-sm text-gray-600 mb-3">
+            Define precios específicos para cada temporada. Si no se establece, se usará el precio base.
+          </p>
+          <div className="space-y-3">
+            {seasons.map((season) => (
+              <div key={season.id} className={`border rounded-lg p-3 ${getSeasonTypeColor(season.type)}`}>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-sm mb-1">{season.name}</h4>
+                    <p className="text-xs opacity-75">
+                      {formatDate(season.startDate)} - {formatDate(season.endDate)}
+                    </p>
+                  </div>
+                  <div className="w-32">
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.seasonPrices[season.id] || ''}
+                      onChange={(e) => handleSeasonPriceChange(season.id, e.target.value)}
+                      placeholder="Precio"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div>
         <h3 className="font-medium text-gray-900 mb-3">Descuentos en % (Opcional)</h3>

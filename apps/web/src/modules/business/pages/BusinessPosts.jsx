@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Plus, Image as ImageIcon, Video, Grid3x3, Play, Heart, MessageCircle, Loader } from 'lucide-react';
 import BusinessLayout from '../components/BusinessLayout';
 import CreateContentSidebar from '../../social/components/CreateContentSidebar';
+import ReelViewer from '../../../components/social/ReelViewer';
 import { getBusinessPosts, createBusinessPost } from '../../../services/businessService';
 import { getImageUrl } from '../../../services/api';
 
@@ -13,6 +14,8 @@ function BusinessPosts() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'posts' | 'reels'
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [selectedPostIndex, setSelectedPostIndex] = useState(0);
 
   useEffect(() => {
     loadPosts();
@@ -40,6 +43,18 @@ function BusinessPosts() {
   const handlePostCreated = async () => {
     // Reload posts after creating a new one
     await loadPosts();
+  };
+
+  const handlePostClick = (post, index) => {
+    setSelectedPost(post);
+    setSelectedPostIndex(index);
+  };
+
+  const handleNavigate = (newIndex) => {
+    if (newIndex >= 0 && newIndex < filteredPosts.length) {
+      setSelectedPostIndex(newIndex);
+      setSelectedPost(filteredPosts[newIndex]);
+    }
   };
 
   // Filter posts based on active tab
@@ -145,8 +160,12 @@ function BusinessPosts() {
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-1">
-            {filteredPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
+            {filteredPosts.map((post, index) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                onClick={() => handlePostClick(post, index)}
+              />
             ))}
           </div>
         )}
@@ -160,17 +179,32 @@ function BusinessPosts() {
         type={contentType}
         onSuccess={handlePostCreated}
       />
+
+      {/* Post/Reel Viewer Modal */}
+      {selectedPost && (
+        <ReelViewer
+          reel={selectedPost}
+          reels={filteredPosts}
+          currentIndex={selectedPostIndex}
+          onNavigate={handleNavigate}
+          onClose={() => setSelectedPost(null)}
+          isOwnProfile={false}
+        />
+      )}
     </BusinessLayout>
   );
 }
 
 // Componente de tarjeta de post en el grid
-function PostCard({ post }) {
+function PostCard({ post, onClick }) {
   const firstMedia = post.media?.[0];
   const isVideo = firstMedia?.type === 'video';
 
   return (
-    <div className="relative aspect-square bg-gray-100 group cursor-pointer overflow-hidden">
+    <div
+      onClick={onClick}
+      className="relative aspect-square bg-gray-100 group cursor-pointer overflow-hidden"
+    >
       {/* Media */}
       {isVideo ? (
         <video
@@ -217,8 +251,17 @@ function PostCard({ post }) {
 function BusinessCreateContentSidebar({ businessId, isOpen, onClose, type, onSuccess }) {
   const handleSubmit = async (formData) => {
     try {
+      console.log('📤 Enviando FormData al endpoint de negocio:', businessId);
+
+      // Log del contenido del FormData para debugging
+      for (let pair of formData.entries()) {
+        console.log('FormData:', pair[0], pair[1]);
+      }
+
       // Llamar al endpoint de negocios en lugar del de usuarios
       const response = await createBusinessPost(businessId, formData);
+
+      console.log('✅ Respuesta exitosa:', response);
 
       if (onSuccess) {
         onSuccess(response.data);
@@ -226,7 +269,10 @@ function BusinessCreateContentSidebar({ businessId, isOpen, onClose, type, onSuc
 
       return response;
     } catch (error) {
-      console.error('Error creating business post:', error);
+      console.error('❌ Error creating business post:', error);
+      console.error('Error details:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Error message:', error.message);
       throw error;
     }
   };

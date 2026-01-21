@@ -54,17 +54,25 @@ class BusinessPostController {
    * GET /api/businesses/:businessId/posts
    */
   async getPostsByBusiness(req, res) {
+    console.log('🔥 getPostsByBusiness called!', {
+      businessId: req.params.businessId,
+      type: req.query.type,
+      hasUser: !!req.user,
+      userId: req.user?.id
+    });
     try {
       const { businessId } = req.params;
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 20;
       const type = req.query.type;
+      const currentUserId = req.user?.id; // Usuario autenticado (opcional)
 
       const result = await businessPostService.getPostsByBusiness(
         businessId,
         page,
         limit,
-        type
+        type,
+        currentUserId
       );
 
       return res.status(200).json({

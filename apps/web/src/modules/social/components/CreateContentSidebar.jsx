@@ -235,12 +235,21 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess, busin
       formData.append('location', location);
 
       // Agregar archivos
+      // Para business: siempre usar 'media'
+      // Para user reels: usar 'video' (el backend espera este nombre)
+      // Para user posts: usar 'media'
       selectedFiles.forEach((file, index) => {
         if (contentType === 'reel') {
           console.log('🎬 Agregando video al FormData:', file.name);
-          formData.append('video', file);
+          if (businessId) {
+            // Business reel: usar 'media'
+            formData.append('media', file);
+          } else {
+            // User reel: usar 'video' (requerido por el backend)
+            formData.append('video', file);
+          }
         } else {
-          console.log('📸 Agregando media al FormData:', file.name);
+          console.log('📸 Agregando imagen al FormData:', file.name);
           formData.append('media', file);
         }
       });

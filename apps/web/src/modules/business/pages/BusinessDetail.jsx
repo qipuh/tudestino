@@ -80,6 +80,11 @@ function BusinessDetail({ businessIdProp }) {
   const [showReservationModal, setShowReservationModal] = useState(false);
   const [menuItems, setMenuItems] = useState([]);
   const [loadingMenu, setLoadingMenu] = useState(false);
+  const [spaServices, setSpaServices] = useState([]);
+  const [loadingSpaServices, setLoadingSpaServices] = useState(false);
+  const [showSpaGallery, setShowSpaGallery] = useState(false);
+  const [currentSpaService, setCurrentSpaService] = useState(null);
+  const [spaGalleryPhotos, setSpaGalleryPhotos] = useState([]);
   const [photos, setPhotos] = useState([]);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -112,6 +117,9 @@ function BusinessDetail({ businessIdProp }) {
         loadMenu();
       } else if (business.businessType === 'hotel') {
         loadProperty();
+      } else if (business.businessType === 'spa') {
+        setActiveTab('spa-services');
+        loadSpaServices();
       } else {
         setActiveTab('info');
       }
@@ -136,6 +144,31 @@ function BusinessDetail({ businessIdProp }) {
       setMenuItems([]);
     } finally {
       setLoadingMenu(false);
+    }
+  };
+
+  const loadSpaServices = async () => {
+    try {
+      setLoadingSpaServices(true);
+      const response = await api.get(`/businesses/${id}/spa-services`);
+      setSpaServices(response.data || []);
+    } catch (error) {
+      console.error('Error loading spa services:', error);
+      setSpaServices([]);
+    } finally {
+      setLoadingSpaServices(false);
+    }
+  };
+
+  const handleOpenSpaGallery = async (service) => {
+    setCurrentSpaService(service);
+    setShowSpaGallery(true);
+    try {
+      const response = await api.get(`/businesses/${id}/spa-services/${service.id}/photos`);
+      setSpaGalleryPhotos(response.data || []);
+    } catch (error) {
+      console.error('Error loading spa gallery:', error);
+      setSpaGalleryPhotos([]);
     }
   };
 
@@ -741,6 +774,18 @@ function BusinessDetail({ businessIdProp }) {
                   {business.businessType === 'entertainment' ? 'Carta' : 'Menú'}
                 </button>
               )}
+              {business.businessType === 'spa' && (
+                <button
+                  onClick={() => setActiveTab('spa-services')}
+                  className={`px-4 py-3 text-sm font-medium border-b-2 transition flex items-center gap-2 ${
+                    activeTab === 'spa-services'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  💆 Servicios
+                </button>
+              )}
               <button
                 onClick={() => setActiveTab('info')}
                 className={`px-4 py-3 text-sm font-medium border-b-2 transition flex items-center gap-2 ${
@@ -1082,6 +1127,79 @@ function BusinessDetail({ businessIdProp }) {
             </div>
           )}
 
+          {/* TAB: Servicios de Spa */}
+          {activeTab === 'spa-services' && business.businessType === 'spa' && (
+            <div>
+              {loadingSpaServices ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-gray-600">Cargando servicios...</p>
+                </div>
+              ) : spaServices.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {spaServices.filter(service => service.isAvailable).map((service) => (
+                    <div
+                      key={service.id}
+                      className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition bg-white"
+                    >
+                      {service.image ? (
+                        <img
+                          src={getImageUrl(service.image, 'spa-services')}
+                          alt={service.name}
+                          className="w-full h-48 object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-48 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                          <span className="text-6xl">💆</span>
+                        </div>
+                      )}
+                      <div className="p-6">
+                        <h3 className="font-bold text-xl text-gray-900 mb-2">{service.name}</h3>
+                        {service.description && (
+                          <p className="text-sm text-gray-600 mb-4">{service.description}</p>
+                        )}
+                        <div className="flex items-center justify-between mb-4">
+                          {service.duration && (
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                              <Clock size={16} />
+                              <span>{service.duration} min</span>
+                            </div>
+                          )}
+                          <div className="text-2xl font-bold text-primary">
+                            S/ {parseFloat(service.price).toFixed(2)}
+                          </div>
+                        </div>
+                        {service.photoCount > 0 && (
+                          <button
+                            onClick={() => handleOpenSpaGallery(service)}
+                            className="w-full mb-3 px-4 py-2 border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition font-medium flex items-center justify-center gap-2"
+                          >
+                            <ImageIcon size={16} />
+                            Ver galería ({service.photoCount} foto{service.photoCount !== 1 ? 's' : ''})
+                          </button>
+                        )}
+                        {user && (
+                          <button
+                            onClick={() => setShowReservationModal(true)}
+                            className="w-full px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition font-medium"
+                          >
+                            Reservar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-16 bg-white rounded-lg border-2 border-dashed">
+                  <span className="text-6xl mb-4 block">💆</span>
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">Servicios no disponibles</h3>
+                  <p className="text-gray-600">Este negocio aún no ha agregado sus servicios.</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* TAB: Galería */}
           {activeTab === 'gallery' && (
             <div>
@@ -1159,6 +1277,14 @@ function BusinessDetail({ businessIdProp }) {
             setShowReservationModal(false);
           }}
         />
+
+        {/* Reels Sidebar - Filtrado por negocio */}
+        <ReelsSidebar
+          isOpen={sidebarOpen}
+          onToggle={toggleSidebar}
+          businessId={id}
+          filterByBusiness={true}
+        />
       </div>
     );
   }
@@ -1199,13 +1325,19 @@ function BusinessDetail({ businessIdProp }) {
             </span>
           </div>
 
-          <div className="mt-6 flex gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             <Link
               to={`/business/${business.id}/manage`}
               className="px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg font-bold flex items-center gap-2 transition-all"
             >
               <Grid size={20} />
               Panel de Gestión
+            </Link>
+            <Link
+              to={`/business/${business.id}/analytics`}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2"
+            >
+              📊 Estadísticas
             </Link>
             <Link
               to={`/business/${business.id}/edit`}
@@ -1221,12 +1353,22 @@ function BusinessDetail({ businessIdProp }) {
                 {business.businessType === 'entertainment' ? '🍹 Gestionar Carta y Fotos' : '🍽️ Gestionar Menú y Fotos'}
               </Link>
             )}
-            <Link
-              to={`/business/${business.id}/services`}
-              className="px-6 py-2 border border-primary text-primary rounded-lg hover:bg-gray-50 font-medium"
-            >
-              Gestionar Servicios
-            </Link>
+            {business.businessType === 'spa' && (
+              <Link
+                to={`/business/${business.id}/spa-services`}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+              >
+                💆 Gestionar Servicios
+              </Link>
+            )}
+            {!['spa', 'restaurant', 'entertainment', 'tours'].includes(business.businessType) && (
+              <Link
+                to={`/business/${business.id}/services`}
+                className="px-6 py-2 border border-primary text-primary rounded-lg hover:bg-gray-50 font-medium"
+              >
+                Gestionar Servicios
+              </Link>
+            )}
             <button
               onClick={() => setShowDeleteConfirm(true)}
               className="px-6 py-2 border border-red-500 text-red-600 rounded-lg hover:bg-red-50 font-medium"
@@ -1412,12 +1554,24 @@ function BusinessDetail({ businessIdProp }) {
           <h3 className="text-lg font-bold text-blue-900 mb-3">Acciones Rápidas</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link
-              to={`/business/${business.id}/services`}
+              to={
+                business.businessType === 'spa'
+                  ? `/business/${business.id}/spa-services`
+                  : business.businessType === 'restaurant' || business.businessType === 'entertainment'
+                  ? `/business/${business.id}/menu`
+                  : business.businessType === 'tours'
+                  ? `/business/${business.id}/tours`
+                  : `/business/${business.id}/services`
+              }
               className="flex items-center gap-3 p-4 bg-white rounded-lg hover:shadow-md transition"
             >
-              <span className="text-3xl">📦</span>
+              <span className="text-3xl">
+                {business.businessType === 'spa' ? '💆' : business.businessType === 'restaurant' ? '🍽️' : business.businessType === 'tours' ? '🗺️' : '📦'}
+              </span>
               <div>
-                <div className="font-medium">Gestionar Servicios</div>
+                <div className="font-medium">
+                  {business.businessType === 'spa' ? 'Gestionar Servicios' : business.businessType === 'restaurant' || business.businessType === 'entertainment' ? 'Gestionar Menú' : business.businessType === 'tours' ? 'Gestionar Tours' : 'Gestionar Servicios'}
+                </div>
                 <div className="text-sm text-gray-600">Añadir o editar servicios</div>
               </div>
             </Link>
@@ -1432,7 +1586,7 @@ function BusinessDetail({ businessIdProp }) {
               </div>
             </Link>
             <Link
-              to={`/business/${business.id}/stats`}
+              to={`/business/${business.id}/analytics`}
               className="flex items-center gap-3 p-4 bg-white rounded-lg hover:shadow-md transition"
             >
               <span className="text-3xl">📊</span>
@@ -1465,6 +1619,63 @@ function BusinessDetail({ businessIdProp }) {
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
               >
                 Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Spa Service Gallery Modal */}
+      {showSpaGallery && currentSpaService && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">{currentSpaService.name}</h2>
+                  <p className="text-sm text-gray-500 mt-1">Galería de fotos</p>
+                </div>
+                <button
+                  onClick={() => setShowSpaGallery(false)}
+                  className="text-gray-400 hover:text-gray-600 text-3xl leading-none"
+                >
+                  &times;
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {spaGalleryPhotos.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {spaGalleryPhotos.map((photo) => (
+                    <div key={photo.id} className="relative group">
+                      <img
+                        src={getImageUrl(photo.url, 'spa-services')}
+                        alt={photo.caption || currentSpaService.name}
+                        className="w-full h-64 object-cover rounded-lg"
+                      />
+                      {photo.caption && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white p-2 rounded-b-lg">
+                          <p className="text-sm">{photo.caption}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <ImageIcon size={64} className="mx-auto mb-4 text-gray-300" />
+                  <p>No hay fotos disponibles</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-200">
+              <button
+                onClick={() => setShowSpaGallery(false)}
+                className="w-full px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium"
+              >
+                Cerrar
               </button>
             </div>
           </div>

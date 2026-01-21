@@ -2,6 +2,8 @@ import * as socialService from './social.service.js';
 import { Post, Reel, Like, Comment } from './social.model.sequelize.js';
 import User from '../users/user.model-mysql.js';
 import CommentLike from './commentLike.model.js';
+import BusinessSocialPost from '../businesses/business-social-post.model.js';
+import Business from '../businesses/business.model.js';
 
 // ==================== PROFILE CONTROLLERS ====================
 
@@ -413,6 +415,7 @@ export const getUserPosts = async (req, res) => {
   try {
     const { userId } = req.params;
     const { page = 1, limit = 20 } = req.query;
+    const currentUserId = req.user?.id; // Usuario autenticado (opcional)
 
     const offset = (page - 1) * limit;
 
@@ -431,10 +434,33 @@ export const getUserPosts = async (req, res) => {
       offset: parseInt(offset),
     });
 
+    // Agregar campo isLiked a cada post
+    const postsWithLikeStatus = await Promise.all(
+      posts.map(async (post) => {
+        let isLiked = false;
+
+        if (currentUserId) {
+          const like = await Like.findOne({
+            where: {
+              contentType: 'post',
+              contentId: post.id,
+              userId: currentUserId,
+            },
+          });
+          isLiked = !!like;
+        }
+
+        return {
+          ...post.toJSON(),
+          isLiked,
+        };
+      })
+    );
+
     res.json({
       success: true,
       data: {
-        posts,
+        posts: postsWithLikeStatus,
         pagination: {
           total: count,
           page: parseInt(page),
@@ -524,11 +550,11 @@ export const getUserReels = async (req, res) => {
 export const getFeed = async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
+    const currentUserId = req.user?.id; // Usuario autenticado (opcional)
     const offset = (page - 1) * limit;
 
-    // Por ahora, obtener todos los posts públicos
-    // En el futuro, filtrar por usuarios seguidos
-    const posts = await Post.findAll({
+    // Obtener posts de usuarios
+    const userPosts = await Post.findAll({
       where: { isActive: true },
       include: [{
         model: User,
@@ -536,11 +562,48 @@ export const getFeed = async (req, res) => {
         attributes: ['id', 'name', 'email', 'avatar', 'username'],
       }],
       order: [['createdAt', 'DESC']],
-      limit: parseInt(limit),
-      offset: parseInt(offset),
     });
 
-    res.json({ success: true, data: { posts } });
+    // Obtener posts de negocios
+    const businessPosts = await BusinessSocialPost.findAll({
+      where: { isActive: true, type: 'post' },
+      include: [{
+        model: Business,
+        as: 'business',
+        attributes: ['id', 'name', 'slug', 'logo'],
+      }],
+      order: [['createdAt', 'DESC']],
+    });
+
+    // Combinar y ordenar por fecha
+    const allPosts = [...userPosts, ...businessPosts]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(offset, offset + parseInt(limit));
+
+    // Agregar campo isLiked a cada post
+    const postsWithLikeStatus = await Promise.all(
+      allPosts.map(async (post) => {
+        let isLiked = false;
+
+        if (currentUserId) {
+          const like = await Like.findOne({
+            where: {
+              contentType: 'post',
+              contentId: post.id,
+              userId: currentUserId,
+            },
+          });
+          isLiked = !!like;
+        }
+
+        return {
+          ...post.toJSON(),
+          isLiked,
+        };
+      })
+    );
+
+    res.json({ success: true, data: { posts: postsWithLikeStatus } });
   } catch (error) {
     console.error('Error getting feed:', error);
     res.status(500).json({ success: false, message: 'Error al obtener el feed', error: error.message });
@@ -557,7 +620,8 @@ export const getReelsFeed = async (req, res) => {
     const currentUserId = req.user?.id; // Usuario autenticado (opcional)
     const offset = (page - 1) * limit;
 
-    const reels = await Reel.findAll({
+    // Obtener reels de usuarios
+    const userReels = await Reel.findAll({
       where: { isActive: true },
       include: [{
         model: User,
@@ -565,13 +629,27 @@ export const getReelsFeed = async (req, res) => {
         attributes: ['id', 'name', 'email', 'avatar', 'username'],
       }],
       order: [['createdAt', 'DESC']],
-      limit: parseInt(limit),
-      offset: parseInt(offset),
     });
+
+    // Obtener reels de negocios
+    const businessReels = await BusinessSocialPost.findAll({
+      where: { isActive: true, type: 'reel' },
+      include: [{
+        model: Business,
+        as: 'business',
+        attributes: ['id', 'name', 'slug', 'logo'],
+      }],
+      order: [['createdAt', 'DESC']],
+    });
+
+    // Combinar y ordenar por fecha
+    const allReels = [...userReels, ...businessReels]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(offset, offset + parseInt(limit));
 
     // Agregar campo isLiked a cada reel
     const reelsWithLikeStatus = await Promise.all(
-      reels.map(async (reel) => {
+      allReels.map(async (reel) => {
         let isLiked = false;
 
         if (currentUserId) {

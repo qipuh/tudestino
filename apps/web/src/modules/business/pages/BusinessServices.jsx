@@ -61,6 +61,8 @@ function BusinessServices() {
         navigate(`/business/${id}/menu`);
       } else if (business.businessType === 'tours') {
         navigate(`/business/${id}/tours`);
+      } else if (business.businessType === 'spa') {
+        navigate(`/business/${id}/spa-services`);
       }
     }
   }, [business, id, navigate]);
@@ -607,31 +609,6 @@ function BusinessServices() {
                       <option value="inactive">Inactivo</option>
                       <option value="under_maintenance">En mantenimiento</option>
                     </select>
-                  </div>
-
-                  {/* Settings (JSON) */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Configuración (JSON opcional)
-                    </label>
-                    <textarea
-                      name="settings"
-                      value={JSON.stringify(formData.settings, null, 2)}
-                      onChange={(e) => {
-                        try {
-                          const settings = JSON.parse(e.target.value);
-                          setFormData({ ...formData, settings });
-                        } catch (err) {
-                          // Invalid JSON, ignore
-                        }
-                      }}
-                      rows="5"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary font-mono text-sm"
-                      placeholder='{"price": 100, "capacity": 2}'
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Configuración específica del servicio en formato JSON
-                    </p>
                   </div>
 
                   {/* Tours-specific fields */}

@@ -73,6 +73,16 @@ const Tour = sequelize.define('Tour', {
     type: DataTypes.TEXT,
     comment: 'Descripción general del tour'
   },
+  shortDescription: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: 'Descripción corta para vista previa'
+  },
+  fullDescription: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    comment: 'Descripción completa del tour'
+  },
   itinerary: {
     type: DataTypes.JSON,
     comment: 'Array de objetos: [{ day: number, title: string, description: string, activities: [] }]'

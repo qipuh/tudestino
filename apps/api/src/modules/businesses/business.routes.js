@@ -56,6 +56,32 @@ const businessUpload = multer({
   }
 });
 
+// Configurar multer para subir imágenes de servicios de spa
+const spaServiceStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/spa-services/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const spaServiceUpload = multer({
+  storage: spaServiceStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (extname && mimetype) {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten imágenes (jpeg, jpg, png, webp)'));
+    }
+  }
+});
+
 const router = express.Router();
 
 /**
@@ -132,6 +158,44 @@ router.post('/:businessId/photos', authenticate, businessUpload.single('photo'),
 
 // Eliminar foto de un negocio
 router.delete('/:businessId/photos/:photoId', authenticate, businessController.deletePhoto);
+
+/**
+ * Rutas de temporadas del negocio
+ */
+
+// Obtener temporadas de un negocio (público)
+router.get('/:businessId/seasons', businessController.getSeasons);
+
+// Crear temporada para un negocio
+router.post('/:businessId/seasons', authenticate, businessController.createSeason);
+
+// Eliminar temporada de un negocio
+router.delete('/:businessId/seasons/:seasonId', authenticate, businessController.deleteSeason);
+
+/**
+ * Rutas de servicios de spa/wellness
+ */
+
+// Obtener servicios de un spa (público)
+router.get('/:businessId/spa-services', businessController.getSpaServices);
+
+// Crear servicio de spa
+router.post('/:businessId/spa-services', authenticate, spaServiceUpload.single('image'), businessController.createSpaService);
+
+// Actualizar servicio de spa
+router.put('/:businessId/spa-services/:serviceId', authenticate, spaServiceUpload.single('image'), businessController.updateSpaService);
+
+// Eliminar servicio de spa
+router.delete('/:businessId/spa-services/:serviceId', authenticate, businessController.deleteSpaService);
+
+// Obtener fotos de un servicio de spa (público)
+router.get('/:businessId/spa-services/:serviceId/photos', businessController.getSpaServicePhotos);
+
+// Subir foto de un servicio de spa
+router.post('/:businessId/spa-services/:serviceId/photos', authenticate, spaServiceUpload.single('photo'), businessController.uploadSpaServicePhoto);
+
+// Eliminar foto de un servicio de spa
+router.delete('/:businessId/spa-services/:serviceId/photos/:photoId', authenticate, businessController.deleteSpaServicePhoto);
 
 /**
  * Rutas de tours/excursiones

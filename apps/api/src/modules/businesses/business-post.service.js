@@ -1,5 +1,6 @@
 import BusinessSocialPost from './business-social-post.model.js';
 import Business from './business.model.js';
+import { Like } from '../social/social.model.sequelize.js';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
 
@@ -33,7 +34,7 @@ class BusinessPostService {
   /**
    * Obtener posts de un negocio
    */
-  async getPostsByBusiness(businessId, page = 1, limit = 20, type = null) {
+  async getPostsByBusiness(businessId, page = 1, limit = 20, type = null, currentUserId = null) {
     try {
       const offset = (page - 1) * limit;
       const where = { businessId, isActive: true };
@@ -56,8 +57,31 @@ class BusinessPostService {
         order: [['createdAt', 'DESC']]
       });
 
+      // Agregar campo isLiked a cada post
+      const postsWithLikeStatus = await Promise.all(
+        rows.map(async (post) => {
+          let isLiked = false;
+
+          if (currentUserId) {
+            const like = await Like.findOne({
+              where: {
+                contentType: 'post',
+                contentId: post.id,
+                userId: currentUserId,
+              },
+            });
+            isLiked = !!like;
+          }
+
+          return {
+            ...post.toJSON(),
+            isLiked,
+          };
+        })
+      );
+
       return {
-        posts: rows,
+        posts: postsWithLikeStatus,
         total: count,
         page,
         pages: Math.ceil(count / limit)

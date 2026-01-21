@@ -12,7 +12,9 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentReelIndex, setCurrentReelIndex] = useState(0);
+  const [currentPostIndex, setCurrentPostIndex] = useState(0);
   const [selectedReel, setSelectedReel] = useState(null);
+  const [selectedPost, setSelectedPost] = useState(null);
   const sidebarRef = useRef(null);
   const startYRef = useRef(0);
   const isDraggingRef = useRef(false);
@@ -101,21 +103,43 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
 
       const response = await api.get(endpoint);
       console.log('🎬 ReelsSidebar: Response completo:', response);
-      const reelsData = response.data || response;
+
+      // El interceptor de axios ya extrae response.data
+      const reelsData = response;
       console.log('🎬 ReelsSidebar: Reels data:', reelsData);
+      console.log('🎬 ReelsSidebar: Reels data.data:', reelsData.data);
+      console.log('🎬 ReelsSidebar: Tiene reels en data?', reelsData.data?.reels);
+      console.log('🎬 ReelsSidebar: Keys de data:', reelsData.data ? Object.keys(reelsData.data) : 'no data');
 
       // Extraer el array de reels correctamente
-      // Para business posts, viene como { posts: [...] }
-      // Para user reels, viene como { reels: [...] }
-      // Para feed, puede venir directamente como array
       let reelsArray = [];
+
       if (filterByBusiness) {
-        reelsArray = Array.isArray(reelsData) ? reelsData : (reelsData.posts || []);
-      } else {
+        // Business posts: { posts: [...], total, page, pages }
+        if (reelsData.posts) {
+          reelsArray = reelsData.posts;
+        } else if (Array.isArray(reelsData)) {
+          reelsArray = reelsData;
+        }
+      } else if (filterByUser) {
+        // User reels: puede venir como { reels: [...] } o directamente array
         reelsArray = Array.isArray(reelsData) ? reelsData : (reelsData.reels || []);
+      } else {
+        // Feed general: puede venir como { success: true, data: { reels: [...] } } o { reels: [...] }
+        if (reelsData.data && reelsData.data.reels) {
+          reelsArray = reelsData.data.reels;
+        } else if (reelsData.reels) {
+          reelsArray = reelsData.reels;
+        } else if (Array.isArray(reelsData)) {
+          reelsArray = reelsData;
+        } else if (reelsData.data && Array.isArray(reelsData.data)) {
+          // Caso donde data es directamente el array
+          reelsArray = reelsData.data;
+        }
       }
 
-      console.log('🎬 ReelsSidebar: Reels array:', reelsArray);
+      console.log('🎬 ReelsSidebar: Reels array final:', reelsArray);
+      console.log('🎬 ReelsSidebar: Array length:', reelsArray.length);
       console.log('🎬 ReelsSidebar: Es array?', Array.isArray(reelsArray));
 
       // Solo aplicar el smart ordering si es el feed general
@@ -153,17 +177,44 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
       }
 
       const response = await api.get(endpoint);
-      const postsData = response.data || response;
+      console.log('📸 ReelsSidebar: Response completo:', response);
+
+      // El interceptor de axios ya extrae response.data
+      const postsData = response;
+      console.log('📸 ReelsSidebar: Posts data:', postsData);
+      console.log('📸 ReelsSidebar: Posts data.data:', postsData.data);
+      console.log('📸 ReelsSidebar: Tiene posts en data?', postsData.data?.posts);
+      console.log('📸 ReelsSidebar: Keys de data:', postsData.data ? Object.keys(postsData.data) : 'no data');
 
       // Extraer el array de posts correctamente
       let postsArray = [];
+
       if (filterByBusiness) {
+        // Business posts: { posts: [...], total, page, pages }
+        if (postsData.posts) {
+          postsArray = postsData.posts;
+        } else if (Array.isArray(postsData)) {
+          postsArray = postsData;
+        }
+      } else if (filterByUser) {
+        // User posts: puede venir como { posts: [...] } o directamente array
         postsArray = Array.isArray(postsData) ? postsData : (postsData.posts || []);
       } else {
-        postsArray = Array.isArray(postsData) ? postsData : (postsData.posts || []);
+        // Feed general: puede venir como { success: true, data: { posts: [...] } } o { posts: [...] }
+        if (postsData.data && postsData.data.posts) {
+          postsArray = postsData.data.posts;
+        } else if (postsData.posts) {
+          postsArray = postsData.posts;
+        } else if (Array.isArray(postsData)) {
+          postsArray = postsData;
+        } else if (postsData.data && Array.isArray(postsData.data)) {
+          // Caso donde data es directamente el array
+          postsArray = postsData.data;
+        }
       }
 
-      console.log('📸 ReelsSidebar: Posts array:', postsArray);
+      console.log('📸 ReelsSidebar: Posts array final:', postsArray);
+      console.log('📸 ReelsSidebar: Array length:', postsArray.length);
       setPosts(postsArray);
     } catch (error) {
       console.error('❌ Error loading posts:', error);
@@ -236,9 +287,21 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
     }
   };
 
+  const openFullPost = (index) => {
+    if (posts[index]) {
+      setCurrentPostIndex(index);
+      setSelectedPost(posts[index]);
+    }
+  };
+
   const handleNavigate = (newIndex) => {
     setCurrentReelIndex(newIndex);
     setSelectedReel(reels[newIndex]);
+  };
+
+  const handleNavigatePost = (newIndex) => {
+    setCurrentPostIndex(newIndex);
+    setSelectedPost(posts[newIndex]);
   };
 
   const currentReel = reels[currentReelIndex];
@@ -383,18 +446,25 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
                 </div>
               ) : (
                 <div className="h-full overflow-y-auto p-4">
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-4">
                     {posts.map((post, index) => {
                       const firstMedia = post.media?.[0] || (post.images?.[0] ? { url: post.images[0], type: 'image' } : null);
                       const isVideo = firstMedia?.type === 'video';
 
                       return (
-                        <div key={post.id || index} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden group cursor-pointer">
+                        <div
+                          key={post.id || index}
+                          onClick={() => openFullPost(index)}
+                          className="relative w-full aspect-square bg-gray-100 rounded-lg overflow-hidden group cursor-pointer hover:ring-4 hover:ring-primary/30 transition-all"
+                        >
                           {/* Media */}
                           {isVideo ? (
                             <video
                               src={getImageUrl(firstMedia.url, 'social')}
                               className="w-full h-full object-cover"
+                              muted
+                              loop
+                              playsInline
                             />
                           ) : firstMedia ? (
                             <img
@@ -410,20 +480,75 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
 
                           {/* Multi-media indicator */}
                           {post.media?.length > 1 && (
-                            <div className="absolute top-2 right-2">
-                              <Grid3x3 size={16} className="text-white drop-shadow-lg" />
+                            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full">
+                              <Grid3x3 size={14} className="text-white" />
                             </div>
                           )}
 
-                          {/* Hover overlay with stats */}
-                          <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 text-white text-sm">
-                            <div className="flex items-center gap-1">
-                              <Heart size={16} fill="white" />
-                              <span>{post.likesCount || 0}</span>
+                          {/* Overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80">
+                            {/* Play icon center - only for videos */}
+                            {isVideo && (
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="bg-white/20 backdrop-blur-sm rounded-full p-4">
+                                  <Play size={32} className="text-white" fill="white" />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* User/Business info - Top */}
+                            <div className="absolute top-3 left-3 right-3">
+                              {(() => {
+                                const isBusinessPost = post?.business;
+                                const profile = isBusinessPost ? post.business : post?.user;
+                                const profileLink = isBusinessPost
+                                  ? `/business/${profile?.id}`
+                                  : `/profile/${profile?.id}`;
+                                const profileImage = isBusinessPost ? profile?.logo : profile?.avatar;
+                                const profileName = profile?.name || 'Usuario';
+
+                                return (
+                                  <Link
+                                    to={profileLink}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+                                  >
+                                    <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden border-2 border-white/40">
+                                      {profileImage ? (
+                                        <img
+                                          src={getImageUrl(profileImage, isBusinessPost ? 'business' : 'social')}
+                                          alt={profileName}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <span className="text-white font-bold text-sm">
+                                          {profileName?.charAt(0) || '?'}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-white font-semibold drop-shadow-lg text-sm">
+                                      {profileName}
+                                    </p>
+                                  </Link>
+                                );
+                              })()}
                             </div>
-                            <div className="flex items-center gap-1">
-                              <MessageCircle size={16} fill="white" />
-                              <span>{post.commentsCount || 0}</span>
+
+                            {/* Caption and stats - Bottom */}
+                            <div className="absolute bottom-3 left-3 right-3">
+                              <p className="text-white text-sm mb-2 line-clamp-2 drop-shadow-lg">
+                                {post?.caption || post?.content}
+                              </p>
+                              <div className="flex items-center gap-4 text-white text-sm">
+                                <div className="flex items-center gap-1">
+                                  <Heart size={16} />
+                                  <span>{post.likesCount || 0}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <MessageCircle size={16} />
+                                  <span>{post.commentsCount || 0}</span>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -459,28 +584,44 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
                   className="reel-card flex-1 relative bg-black rounded-2xl overflow-hidden cursor-pointer hover:ring-4 hover:ring-primary/30 transition-all shadow-xl group"
                 >
                   {/* Video/Image */}
-                  {currentReel?.videoUrl || currentReel?.video_url ? (
-                    <video
-                      src={getImageUrl(currentReel.videoUrl || currentReel.video_url, 'social')}
-                      className="w-full h-full object-cover"
-                      muted
-                      loop
-                      autoPlay
-                      playsInline
-                    />
-                  ) : currentReel?.images && currentReel.images.length > 0 ? (
-                    <img
-                      src={getImageUrl(currentReel.images[0], 'social')}
-                      alt={currentReel.content}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-dark to-secondary">
-                      <p className="text-white text-center p-6">
-                        {currentReel?.content}
-                      </p>
-                    </div>
-                  )}
+                  {(() => {
+                    // Soportar ambas estructuras: user posts (videoUrl) y business posts (media array)
+                    const videoUrl = currentReel?.videoUrl || currentReel?.video_url;
+                    const mediaVideo = currentReel?.media?.find(m => m.type === 'video');
+                    const mediaImage = currentReel?.media?.find(m => m.type === 'image');
+                    const userImage = currentReel?.images?.[0];
+
+                    if (videoUrl || mediaVideo) {
+                      const src = videoUrl || mediaVideo?.url;
+                      return (
+                        <video
+                          src={getImageUrl(src, 'social')}
+                          className="w-full h-full object-cover"
+                          muted
+                          loop
+                          autoPlay
+                          playsInline
+                        />
+                      );
+                    } else if (mediaImage || userImage) {
+                      const src = mediaImage?.url || userImage;
+                      return (
+                        <img
+                          src={getImageUrl(src, 'social')}
+                          alt={currentReel.content || currentReel.caption}
+                          className="w-full h-full object-cover"
+                        />
+                      );
+                    } else {
+                      return (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-dark to-secondary">
+                          <p className="text-white text-center p-6">
+                            {currentReel?.content || currentReel?.caption}
+                          </p>
+                        </div>
+                      );
+                    }
+                  })()}
 
                   {/* Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80">
@@ -493,37 +634,55 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
 
                     {/* User info - Top */}
                     <div className="absolute top-4 left-4 right-4">
-                      <Link
-                        to={`/profile/${currentReel?.user?.id}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex items-center gap-3 hover:opacity-90 transition-opacity"
-                      >
-                        <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden border-2 border-white/40">
-                          {currentReel?.user?.avatar ? (
-                            <img
-                              src={getImageUrl(currentReel.user.avatar, 'social')}
-                              alt={currentReel.user.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-white font-bold">
-                              {currentReel?.user?.name?.charAt(0) || '?'}
-                            </span>
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-white font-semibold drop-shadow-lg">
-                            {currentReel?.user?.name || 'Usuario'}
-                          </p>
-                          <p className="text-white/90 text-xs drop-shadow">@{currentReel?.user?.username || 'usuario'}</p>
-                        </div>
-                      </Link>
+                      {(() => {
+                        // Soportar ambas estructuras: user posts y business posts
+                        const isBusinessPost = currentReel?.business;
+                        const profile = isBusinessPost ? currentReel.business : currentReel?.user;
+                        const profileLink = isBusinessPost
+                          ? `/business/${profile?.id}`
+                          : `/profile/${profile?.id}`;
+                        const profileImage = isBusinessPost ? profile?.logo : profile?.avatar;
+                        const profileName = profile?.name || 'Usuario';
+                        const profileUsername = isBusinessPost
+                          ? profile?.slug
+                          : profile?.username || 'usuario';
+
+                        return (
+                          <Link
+                            to={profileLink}
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center gap-3 hover:opacity-90 transition-opacity"
+                          >
+                            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden border-2 border-white/40">
+                              {profileImage ? (
+                                <img
+                                  src={getImageUrl(profileImage, isBusinessPost ? 'business' : 'social')}
+                                  alt={profileName}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-white font-bold">
+                                  {profileName?.charAt(0) || '?'}
+                                </span>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-white font-semibold drop-shadow-lg">
+                                {profileName}
+                              </p>
+                              <p className="text-white/90 text-xs drop-shadow">
+                                {isBusinessPost ? profileUsername : `@${profileUsername}`}
+                              </p>
+                            </div>
+                          </Link>
+                        );
+                      })()}
                     </div>
 
                     {/* Content and stats - Bottom */}
                     <div className="absolute bottom-4 left-4 right-4">
                       <p className="text-white text-sm mb-3 line-clamp-2 drop-shadow-lg">
-                        {currentReel?.content}
+                        {currentReel?.content || currentReel?.caption}
                       </p>
 
                       <div className="flex items-center gap-5">
@@ -581,6 +740,18 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
           onNavigate={handleNavigate}
           onClose={() => setSelectedReel(null)}
           isOwnProfile={selectedReel.user?.id === currentUser?.id}
+        />
+      )}
+
+      {/* Post Viewer Modal */}
+      {selectedPost && (
+        <ReelViewer
+          reel={selectedPost}
+          reels={posts}
+          currentIndex={currentPostIndex}
+          onNavigate={handleNavigatePost}
+          onClose={() => setSelectedPost(null)}
+          isOwnProfile={selectedPost.user?.id === currentUser?.id || selectedPost.business?.id === businessId}
         />
       )}
     </>

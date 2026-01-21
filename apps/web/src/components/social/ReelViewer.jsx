@@ -16,6 +16,12 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
     return null;
   }
 
+  // Detectar el tipo de contenido automáticamente
+  // Si es un business post, usar el tipo del campo 'type'
+  // Si es un user post/reel, detectar por videoUrl (reel) o images (post)
+  const contentType = reel.type || (reel.videoUrl || reel.video_url ? 'reel' : 'post');
+  console.log('🔍 ReelViewer - Content type:', contentType, 'for reel:', reel);
+
   const [isLiked, setIsLiked] = useState(reel.isLiked || false);
   const [isSaved, setIsSaved] = useState(false);
   const [likesCount, setLikesCount] = useState(reel.likesCount || 0);
@@ -24,15 +30,16 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
   const [loadingComments, setLoadingComments] = useState(false);
-  const [showReplies, setShowReplies] = useState({});
 
   const loadComments = async () => {
     setLoadingComments(true);
     try {
-      const response = await getPostComments(reel.id, 'reel');
+      const response = await getPostComments(reel.id, contentType);
       console.log('🔍 loadComments - Full response:', response);
 
-      const commentsArray = response?.comments || response?.data?.comments || [];
+      // API retorna: { success, data: { comments: [...], pagination } }
+      // El interceptor extrae response.data, quedando: { success, data: { comments } }
+      const commentsArray = response?.data?.comments || [];
       console.log('🔍 loadComments - Comments array:', commentsArray);
 
       setComments(commentsArray);
@@ -69,7 +76,10 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
     }
 
     try {
-      const response = await togglePostLike(reel.id, 'reel');
+      const response = await togglePostLike(reel.id, contentType);
+      console.log('👍 handleLike - Response:', response);
+      // API retorna: { success, message, data: { liked: true/false } }
+      // El interceptor extrae response.data, quedando: { success, message, data: { liked } }
       const liked = response?.data?.liked;
 
       if (liked !== undefined) {
@@ -96,12 +106,35 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
     }
 
     try {
-      const response = await addComment(reel.id, newComment.trim(), 'reel', null);
+      // Si estamos respondiendo a un comentario, usar su ID como parentCommentId
+      const parentCommentId = replyingTo ? replyingTo.id : null;
+      const response = await addComment(reel.id, newComment.trim(), contentType, parentCommentId);
+      console.log('💬 handleAddComment - Response:', response);
+      // API retorna: { success, message, data: commentObject }
+      // El interceptor extrae response.data, quedando: { success, message, data: commentObject }
       const newCommentData = response?.data;
 
       if (newCommentData) {
-        setComments([newCommentData, ...comments]);
-        setCommentsCount(commentsCount + 1);
+        if (parentCommentId) {
+          // Es una respuesta, agregar al array de replies del comentario padre
+          const updateComments = (commentsList) => {
+            return commentsList.map(c => {
+              if (c.id === parentCommentId) {
+                return {
+                  ...c,
+                  replies: [...(c.replies || []), newCommentData],
+                };
+              }
+              return c;
+            });
+          };
+          setComments(updateComments(comments));
+          // No incrementar commentsCount para respuestas, solo para comentarios principales
+        } else {
+          // Es un comentario principal, agregar al inicio
+          setComments([newCommentData, ...comments]);
+          setCommentsCount(commentsCount + 1);
+        }
       }
 
       setNewComment('');
@@ -122,7 +155,9 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
       const response = await toggleCommentLike(commentId);
       console.log('💬 toggleCommentLike response:', response);
 
-      const liked = response?.liked ?? response?.data?.liked;
+      // API retorna: { success, message, data: { liked: true/false } }
+      // El interceptor extrae response.data, quedando: { success, message, data: { liked } }
+      const liked = response?.data?.liked;
 
       if (liked === undefined) {
         console.error('❌ Invalid response from toggleCommentLike:', response);
@@ -187,7 +222,6 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
 
     const replies = comment.replies || [];
     const hasReplies = replies.length > 0;
-    const areRepliesVisible = showReplies[comment.id];
 
     return (
       <div key={comment.id}>
@@ -218,10 +252,14 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
               )}
               <button
                 onClick={() => handleLikeComment(comment.id)}
-                className={`text-xs font-semibold transition-colors ${
+                className={`flex items-center gap-1 text-xs font-semibold transition-colors ${
                   comment.isLiked ? 'text-red-500' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
+                <Heart
+                  size={14}
+                  className={comment.isLiked ? 'fill-red-500' : ''}
+                />
                 Me gusta
               </button>
               {!isReply && (
@@ -237,23 +275,12 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
                   Responder
                 </button>
               )}
-              {hasReplies && !isReply && (
-                <button
-                  onClick={() => setShowReplies(prev => ({
-                    ...prev,
-                    [comment.id]: !prev[comment.id]
-                  }))}
-                  className="text-xs font-semibold text-gray-500 hover:text-gray-700"
-                >
-                  {areRepliesVisible ? 'Ocultar' : `Ver ${replies.length}`} {replies.length === 1 ? 'respuesta' : 'respuestas'}
-                </button>
-              )}
             </div>
           </div>
         </div>
 
-        {/* Nested replies */}
-        {hasReplies && areRepliesVisible && (
+        {/* Nested replies - Always visible */}
+        {hasReplies && (
           <div className="ml-10 mt-3 space-y-3 border-l-2 border-gray-200 pl-3">
             {replies.map(reply => renderComment(reply, true))}
           </div>
@@ -281,158 +308,179 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
 
   return (
     <>
-      {/* Backdrop - Only on mobile */}
-      <div className="md:hidden fixed inset-0 bg-black bg-opacity-75 z-50" onClick={onClose} />
-
-      {/* Desktop: Sidebar (non-blocking), Mobile: Centered modal */}
+      {/* Full-screen backdrop */}
       <div
-        className="fixed md:top-0 md:right-0 md:bottom-0 md:w-[600px] z-50
-                   max-md:inset-0 max-md:flex max-md:items-center max-md:justify-center max-md:p-4"
+        className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+        onClick={onClose}
       >
-        <div
-          className="bg-white rounded-lg md:rounded-none overflow-hidden flex flex-col md:h-full relative shadow-2xl w-full"
-          style={{ maxHeight: '90vh' }}
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-white hover:text-gray-300 z-50 bg-black bg-opacity-50 rounded-full p-2"
         >
-          {/* Close button */}
+          <X size={24} />
+        </button>
+
+        {/* Previous button */}
+        {hasPrevious && (
           <button
-            onClick={onClose}
-            className="absolute top-4 right-4 md:top-2 md:right-2 text-white md:text-gray-600 hover:text-gray-300 md:hover:text-gray-900 z-10 bg-black md:bg-white bg-opacity-50 md:bg-opacity-90 rounded-full p-2"
+            onClick={handlePrevious}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
           >
-            <X size={24} />
+            <ChevronLeft size={28} />
           </button>
+        )}
 
-          {/* Previous button */}
-          {hasPrevious && (
-            <button
-              onClick={handlePrevious}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
-            >
-              <ChevronLeft size={24} />
-            </button>
-          )}
+        {/* Next button */}
+        {hasNext && (
+          <button
+            onClick={handleNext}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
+          >
+            <ChevronRight size={28} />
+          </button>
+        )}
 
-          {/* Next button */}
-          {hasNext && (
-            <button
-              onClick={handleNext}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition"
-            >
-              <ChevronRight size={24} />
-            </button>
-          )}
+        {/* Two-column modal container */}
+        <div
+          className="bg-white w-full max-w-7xl h-[90vh] flex flex-col md:flex-row rounded-lg overflow-hidden shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* LEFT COLUMN: Image/Video */}
+          <div className="relative bg-black flex items-center justify-center md:w-[60%] md:h-full h-[50vh] md:min-h-0">
+            {(() => {
+              // Soportar ambas estructuras: user posts (videoUrl) y business posts (media array)
+              const videoUrl = reel.videoUrl || reel.video_url;
+              const mediaVideo = reel.media?.find(m => m.type === 'video');
+              const mediaImage = reel.media?.find(m => m.type === 'image');
+              const userImage = reel.images?.[0];
 
-          {/* Video Section - Top on mobile, Full width on desktop */}
-          <div className="relative bg-black flex items-center justify-center w-full md:w-full" style={{ maxHeight: '50vh' }}>
-            {reel.videoUrl || reel.video_url ? (
-              <video
-                src={getImageUrl(reel.videoUrl || reel.video_url, 'social')}
-                className="max-w-full max-h-[50vh] md:max-h-[40vh] w-full object-contain"
-                controls
-                autoPlay
-                loop
-                playsInline
-              />
-            ) : (
-              <div className="flex items-center justify-center text-white text-center p-8">
-                <div>
-                  <Play size={64} className="mx-auto mb-4 opacity-50" />
-                  <p className="text-lg">{reel.caption || reel.content || 'Contenido no disponible'}</p>
-                </div>
-              </div>
-            )}
+              if (videoUrl || mediaVideo) {
+                const src = videoUrl || mediaVideo?.url;
+                return (
+                  <video
+                    src={getImageUrl(src, 'social')}
+                    className="w-full h-full object-contain"
+                    controls
+                    autoPlay
+                    loop
+                    playsInline
+                  />
+                );
+              } else if (mediaImage || userImage) {
+                const src = mediaImage?.url || userImage;
+                return (
+                  <img
+                    src={getImageUrl(src, 'social')}
+                    alt={reel.caption || reel.content}
+                    className="w-full h-full object-contain"
+                  />
+                );
+              } else {
+                return (
+                  <div className="flex items-center justify-center text-white text-center p-8">
+                    <div>
+                      <Play size={64} className="mx-auto mb-4 opacity-50" />
+                      <p className="text-lg">{reel.caption || reel.content || 'Contenido no disponible'}</p>
+                    </div>
+                  </div>
+                );
+              }
+            })()}
           </div>
 
-          {/* Content Section - Bottom on mobile, Below video on desktop */}
-          <div className="flex-1 w-full flex flex-col bg-white overflow-hidden">
+          {/* RIGHT COLUMN: Comments and Interactions */}
+          <div className="flex-1 md:w-[40%] flex flex-col bg-white overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <Link to={`/profile/${reel.user?.id}`} onClick={onClose} className="flex items-center gap-3 hover:opacity-80">
-                <img
-                  src={reel.user?.avatar ? getImageUrl(reel.user.avatar, 'social') : `https://ui-avatars.com/api/?name=${encodeURIComponent(reel.user?.name || 'User')}&background=random`}
-                  alt={reel.user?.name}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-                <div>
-                  <p className="font-semibold text-sm">{reel.user?.name || 'Usuario'}</p>
-                  {reel.location && (
-                    <p className="text-xs text-gray-500 flex items-center gap-1">
-                      <MapPin size={12} />
-                      {reel.location}
-                    </p>
-                  )}
-                </div>
-              </Link>
-              {!isOwnProfile && reel.user?.id && (
-                <FollowButton
-                  userId={reel.user.id}
-                  initialIsFollowing={reel.user.isFollowing}
-                  onFollowChange={onFollowChange}
-                  className="ml-auto"
-                />
-              )}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
+              {(() => {
+                // Soportar ambas estructuras: user posts y business posts
+                const isBusinessPost = reel.business;
+                const profile = isBusinessPost ? reel.business : reel.user;
+                const profileLink = isBusinessPost
+                  ? `/business/${profile?.id}`
+                  : `/profile/${profile?.id}`;
+                const profileImage = isBusinessPost ? profile?.logo : profile?.avatar;
+                const profileName = profile?.name || 'Usuario';
+
+                return (
+                  <>
+                    <Link to={profileLink} onClick={onClose} className="flex items-center gap-3 hover:opacity-80">
+                      <img
+                        src={profileImage ? getImageUrl(profileImage, isBusinessPost ? 'business' : 'social') : `https://ui-avatars.com/api/?name=${encodeURIComponent(profileName)}&background=random`}
+                        alt={profileName}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div>
+                        <p className="font-semibold text-sm">{profileName}</p>
+                        {reel.location && (
+                          <p className="text-xs text-gray-500 flex items-center gap-1">
+                            <MapPin size={12} />
+                            {reel.location}
+                          </p>
+                        )}
+                      </div>
+                    </Link>
+                    {!isOwnProfile && profile?.id && !isBusinessPost && (
+                      <FollowButton
+                        userId={profile.id}
+                        initialIsFollowing={profile.isFollowing}
+                        onFollowChange={onFollowChange}
+                        className="ml-auto"
+                      />
+                    )}
+                  </>
+                );
+              })()}
             </div>
 
             {/* Caption and comments area - scrollable */}
-            <div className="flex-1 overflow-y-auto p-4" style={{ maxHeight: 'calc(90vh - 200px)' }}>
+            <div className="flex-1 overflow-y-auto p-4">
               {/* Caption */}
-              {(reel.caption || reel.content) && (
-                <div className="text-sm mb-4">
-                  <Link to={`/profile/${reel.user?.id}`} onClick={onClose} className="flex items-start gap-2">
-                    <img
-                      src={reel.user?.avatar ? getImageUrl(reel.user.avatar, 'social') : `https://ui-avatars.com/api/?name=${encodeURIComponent(reel.user?.name || 'User')}&background=random`}
-                      alt={reel.user?.name}
-                      className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                    />
-                    <div className="flex-1">
-                      <span className="font-semibold hover:opacity-80">{reel.user?.name}</span>
-                      <span className="ml-2">{reel.caption || reel.content}</span>
-                    </div>
-                  </Link>
-                </div>
-              )}
+              {(reel.caption || reel.content) && (() => {
+                const isBusinessPost = reel.business;
+                const profile = isBusinessPost ? reel.business : reel.user;
+                const profileLink = isBusinessPost
+                  ? `/business/${profile?.id}`
+                  : `/profile/${profile?.id}`;
+                const profileImage = isBusinessPost ? profile?.logo : profile?.avatar;
+                const profileName = profile?.name || 'Usuario';
+
+                return (
+                  <div className="text-sm mb-4 pb-4 border-b border-gray-100">
+                    <Link to={profileLink} onClick={onClose} className="flex items-start gap-2">
+                      <img
+                        src={profileImage ? getImageUrl(profileImage, isBusinessPost ? 'business' : 'social') : `https://ui-avatars.com/api/?name=${encodeURIComponent(profileName)}&background=random`}
+                        alt={profileName}
+                        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                      />
+                      <div className="flex-1">
+                        <span className="font-semibold hover:opacity-80">{profileName}</span>
+                        <span className="ml-2">{reel.caption || reel.content}</span>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {formatDate(reel.createdAt || reel.created_at || Date.now())}
+                        </p>
+                      </div>
+                    </Link>
+                  </div>
+                );
+              })()}
 
               {/* Comments section */}
-              <div className="space-y-3 mb-4">
+              <div className="space-y-4">
                 {loadingComments ? (
                   <p className="text-sm text-gray-400">Cargando comentarios...</p>
                 ) : comments.length > 0 ? (
-                  (() => {
-                    // Separar comentarios principales de respuestas
-                    const repliesMap = new Map();
-                    const mainComments = [];
-
-                    comments.forEach(comment => {
-                      if (!comment.parentCommentId) {
-                        mainComments.push(comment);
-                        repliesMap.set(comment.id, []);
-                      }
-                    });
-
-                    // Asociar respuestas
-                    comments.forEach(comment => {
-                      if (comment.parentCommentId && repliesMap.has(comment.parentCommentId)) {
-                        repliesMap.get(comment.parentCommentId).push(comment);
-                      }
-                    });
-
-                    return mainComments.map(comment => {
-                      const replies = repliesMap.get(comment.id) || [];
-                      return renderComment({ ...comment, replies }, false);
-                    });
-                  })()
+                  // El backend ya envía los comentarios con sus replies anidadas
+                  comments.map(comment => renderComment(comment, false))
                 ) : (
-                  <p className="text-sm text-gray-500">No hay comentarios todavía</p>
+                  <p className="text-sm text-gray-500 text-center py-8">No hay comentarios todavía</p>
                 )}
               </div>
-
-              {/* Timestamp */}
-              <p className="text-xs text-gray-400 uppercase mt-4">
-                {formatDate(reel.createdAt || reel.created_at || Date.now())}
-              </p>
             </div>
 
             {/* Actions and comment input - fixed at bottom */}
-            <div className="border-t border-gray-200">
+            <div className="border-t border-gray-200 flex-shrink-0">
               <div className="p-4">
                 <div className="flex items-center gap-4 mb-3">
                   <button
@@ -444,7 +492,6 @@ function ReelViewer({ reel, onClose, isOwnProfile, onFollowChange, reels = [], c
                   <button
                     onClick={() => {
                       commentInputRef.current?.focus();
-                      commentInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }}
                     className="hover:text-gray-600 transition-colors"
                   >

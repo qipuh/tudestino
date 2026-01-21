@@ -41,9 +41,8 @@ const businessTypes = [
   { value: 'restaurant', label: 'Restaurante', icon: '🍽️' },
   { value: 'entertainment', label: 'Entretenimiento', icon: '🎭' },
   { value: 'tours', label: 'Tours y Excursiones', icon: '🗺️' },
-  { value: 'transport', label: 'Transporte', icon: '🚗' },
+  { value: 'transport', label: 'Transporte', icon: '🚗', comingSoon: true },
   { value: 'spa', label: 'Spa y Bienestar', icon: '💆' },
-  { value: 'other', label: 'Otro', icon: '🏢' },
 ];
 
 function CreateBusiness() {
@@ -486,10 +485,12 @@ function CreateBusiness() {
                     {businessTypes.map((type) => (
                       <label
                         key={type.value}
-                        className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition ${
-                          formData.businessType === type.value
-                            ? 'border-primary bg-primary bg-opacity-5'
-                            : 'border-gray-200 hover:border-gray-300'
+                        className={`flex items-center gap-3 p-4 border-2 rounded-lg transition relative ${
+                          type.comingSoon
+                            ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                            : formData.businessType === type.value
+                            ? 'border-primary bg-primary bg-opacity-5 cursor-pointer'
+                            : 'border-gray-200 hover:border-gray-300 cursor-pointer'
                         }`}
                       >
                         <input
@@ -498,10 +499,18 @@ function CreateBusiness() {
                           value={type.value}
                           checked={formData.businessType === type.value}
                           onChange={handleChange}
+                          disabled={type.comingSoon}
                           className="sr-only"
                         />
                         <span className="text-2xl">{type.icon}</span>
-                        <span className="text-sm font-medium">{type.label}</span>
+                        <div className="flex-1">
+                          <span className="text-sm font-medium block">{type.label}</span>
+                          {type.comingSoon && (
+                            <span className="text-xs text-orange-600 font-semibold mt-0.5 block">
+                              PRÓXIMAMENTE
+                            </span>
+                          )}
+                        </div>
                       </label>
                     ))}
                   </div>

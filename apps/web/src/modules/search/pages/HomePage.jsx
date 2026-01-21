@@ -143,7 +143,7 @@ function HomePage() {
     { name: 'Restaurantes', icon: Home, type: 'restaurant', link: '/search?category=restaurant', searchParam: 'category=restaurant' },
     { name: 'Eventos', icon: Castle, type: 'event', link: '/events', searchParam: 'category=event' },
     { name: 'Entretenimiento', icon: TreePine, type: 'entertainment', link: '/search?category=entertainment', searchParam: 'category=entertainment' },
-    { name: 'Información Turística', icon: MapPin, type: 'attractions', link: '#atractivos', searchParam: 'category=attractions' },
+    { name: 'Información Turística', icon: MapPin, type: 'attractions', link: '/search?businessType=tour', searchParam: 'businessType=tour' },
   ];
 
   // Agrupar por tipo

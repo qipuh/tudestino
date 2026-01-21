@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { MapPin, Star, SlidersHorizontal, Grid, List, Loader2, Map as MapIcon, Calendar } from 'lucide-react';
+import { MapPin, Star, SlidersHorizontal, Grid, List, Loader2, Map as MapIcon, Calendar, Search } from 'lucide-react';
 import api, { getImageUrl } from '@services/api';
 import PropertiesMap from '@components/PropertiesMap';
 
@@ -17,7 +17,11 @@ function SearchResultsPage() {
   // Filtros adicionales
   const [filters, setFilters] = useState({
     category: 'all', // all, hotel, restaurant, event, entertainment
+    businessType: '', // tour, etc.
+    query: '', // búsqueda por texto/nombre
     minRating: '',
+    minPrice: '',
+    maxPrice: '',
     sortBy: 'relevance'
   });
 
@@ -30,8 +34,27 @@ function SearchResultsPage() {
   const latitude = searchParams.get('lat');
   const longitude = searchParams.get('lng');
 
+  // Inicializar filtros desde URL
   useEffect(() => {
-    fetchSearchResults();
+    const categoryFromUrl = searchParams.get('category') || 'all';
+    const businessTypeFromUrl = searchParams.get('businessType') || '';
+    const queryFromUrl = searchParams.get('q') || '';
+
+    setFilters(prev => ({
+      ...prev,
+      category: categoryFromUrl,
+      businessType: businessTypeFromUrl,
+      query: queryFromUrl
+    }));
+  }, [searchParams.get('category'), searchParams.get('businessType'), searchParams.get('q')]);
+
+  // Debounce para búsqueda por texto
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchSearchResults();
+    }, filters.query ? 500 : 0); // 500ms de debounce solo cuando hay query
+
+    return () => clearTimeout(timeoutId);
   }, [searchParams, filters]);
 
   const fetchSearchResults = async () => {
@@ -43,8 +66,12 @@ function SearchResultsPage() {
       if (location) params.append('location', location);
       if (latitude) params.append('latitude', latitude);
       if (longitude) params.append('longitude', longitude);
-      if (filters.category) params.append('category', filters.category);
+      if (filters.category && filters.category !== 'all') params.append('category', filters.category);
+      if (filters.businessType) params.append('businessType', filters.businessType);
+      if (filters.query) params.append('q', filters.query);
       if (filters.minRating) params.append('minRating', filters.minRating);
+      if (filters.minPrice) params.append('minPrice', filters.minPrice);
+      if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
       if (filters.sortBy) params.append('sortBy', filters.sortBy);
 
       const response = await api.get(`/search/all?${params.toString()}`);
@@ -76,6 +103,27 @@ function SearchResultsPage() {
 
   const handleFilterChange = (name, value) => {
     setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      category: 'all',
+      businessType: '',
+      query: '',
+      minRating: '',
+      minPrice: '',
+      maxPrice: '',
+      sortBy: 'relevance'
+    });
+  };
+
+  const hasActiveFilters = () => {
+    return filters.category !== 'all' ||
+           filters.businessType !== '' ||
+           filters.query !== '' ||
+           filters.minRating !== '' ||
+           filters.minPrice !== '' ||
+           filters.maxPrice !== '';
   };
 
   // Función para obtener la URL del negocio (usando slug cuando sea posible)
@@ -127,6 +175,22 @@ function SearchResultsPage() {
                   👥 {totalGuests}
                 </span>
               )}
+
+              {/* Campo de búsqueda */}
+              <div className="relative">
+                {loading ? (
+                  <Loader2 size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary animate-spin" />
+                ) : (
+                  <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                )}
+                <input
+                  type="text"
+                  value={filters.query}
+                  onChange={(e) => handleFilterChange('query', e.target.value)}
+                  placeholder="Buscar por nombre..."
+                  className="pl-9 pr-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary w-64"
+                />
+              </div>
             </div>
 
             {/* Centro/Derecha: Controles */}
@@ -134,10 +198,22 @@ function SearchResultsPage() {
               {/* Botón Filtros */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 px-3 py-1.5 border rounded-lg hover:bg-gray-50 transition text-sm"
+                className="flex items-center gap-2 px-3 py-1.5 border rounded-lg hover:bg-gray-50 transition text-sm relative"
               >
                 <SlidersHorizontal size={16} />
                 Filtros
+                {hasActiveFilters() && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {[
+                      filters.category !== 'all',
+                      filters.businessType !== '',
+                      filters.query !== '',
+                      filters.minRating !== '',
+                      filters.minPrice !== '',
+                      filters.maxPrice !== ''
+                    ].filter(Boolean).length}
+                  </span>
+                )}
               </button>
 
               {/* Ordenar */}
@@ -184,7 +260,18 @@ function SearchResultsPage() {
           {/* Panel de filtros - COMPACTO */}
           {showFilters && (
             <div className="bg-gray-50 rounded-lg p-4 mt-3 border">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-gray-700">Filtros de búsqueda</h3>
+                {hasActiveFilters() && (
+                  <button
+                    onClick={clearFilters}
+                    className="text-xs text-primary hover:text-primary-dark font-medium transition"
+                  >
+                    Limpiar filtros
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     Categoría
@@ -203,6 +290,19 @@ function SearchResultsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Tipo de negocio
+                  </label>
+                  <select
+                    value={filters.businessType}
+                    onChange={(e) => handleFilterChange('businessType', e.target.value)}
+                    className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">Todos</option>
+                    <option value="tour">Agencias de Tours</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
                     Rating mínimo
                   </label>
                   <select
@@ -216,6 +316,32 @@ function SearchResultsPage() {
                     <option value="3.5">3.5+</option>
                     <option value="3.0">3.0+</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Precio mínimo
+                  </label>
+                  <input
+                    type="number"
+                    value={filters.minPrice}
+                    onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                    placeholder="S/ Min"
+                    min="0"
+                    className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Precio máximo
+                  </label>
+                  <input
+                    type="number"
+                    value={filters.maxPrice}
+                    onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                    placeholder="S/ Max"
+                    min="0"
+                    className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
                 </div>
               </div>
             </div>

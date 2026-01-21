@@ -5,6 +5,9 @@ import Business from './business.model.js';
 import User from '../users/user.model-mysql.js';
 import MenuItem from './menu-item.model.js';
 import BusinessPhoto from './business-photo.model.js';
+import BusinessSeason from './business-season.model.js';
+import SpaService from './spa-service.model.js';
+import SpaServicePhoto from './spa-service-photo.model.js';
 
 class BusinessController {
   /**
@@ -851,6 +854,487 @@ class BusinessController {
       });
     } catch (error) {
       console.error('Error en deletePhoto:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Obtener temporadas de un negocio
+   * GET /api/businesses/:businessId/seasons
+   */
+  async getSeasons(req, res) {
+    try {
+      const { businessId } = req.params;
+
+      const seasons = await BusinessSeason.findAll({
+        where: { businessId },
+        order: [['startDate', 'ASC']]
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: seasons
+      });
+    } catch (error) {
+      console.error('Error en getSeasons:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Crear una temporada para un negocio
+   * POST /api/businesses/:businessId/seasons
+   */
+  async createSeason(req, res) {
+    try {
+      const { businessId } = req.params;
+      const ownerId = req.user.id;
+      const { name, type, startDate, endDate } = req.body;
+
+      // Verificar que el usuario sea dueño del negocio
+      const business = await Business.findOne({
+        where: { id: businessId, ownerId }
+      });
+
+      if (!business) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para modificar este negocio'
+        });
+      }
+
+      // Validar campos requeridos
+      if (!name || !startDate || !endDate) {
+        return res.status(400).json({
+          success: false,
+          message: 'Los campos name, startDate y endDate son requeridos'
+        });
+      }
+
+      // Validar que la fecha de fin sea posterior a la fecha de inicio
+      if (new Date(endDate) <= new Date(startDate)) {
+        return res.status(400).json({
+          success: false,
+          message: 'La fecha de fin debe ser posterior a la fecha de inicio'
+        });
+      }
+
+      const season = await BusinessSeason.create({
+        businessId,
+        name,
+        type: type || 'high',
+        startDate,
+        endDate
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: 'Temporada creada exitosamente',
+        data: season
+      });
+    } catch (error) {
+      console.error('Error en createSeason:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Eliminar una temporada de un negocio
+   * DELETE /api/businesses/:businessId/seasons/:seasonId
+   */
+  async deleteSeason(req, res) {
+    try {
+      const { businessId, seasonId } = req.params;
+      const ownerId = req.user.id;
+
+      // Verificar que el usuario sea dueño del negocio
+      const business = await Business.findOne({
+        where: { id: businessId, ownerId }
+      });
+
+      if (!business) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para modificar este negocio'
+        });
+      }
+
+      const season = await BusinessSeason.findOne({
+        where: { id: seasonId, businessId }
+      });
+
+      if (!season) {
+        return res.status(404).json({
+          success: false,
+          message: 'Temporada no encontrada'
+        });
+      }
+
+      await season.destroy();
+
+      return res.status(200).json({
+        success: true,
+        message: 'Temporada eliminada'
+      });
+    } catch (error) {
+      console.error('Error en deleteSeason:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Obtener servicios de un spa/wellness
+   * GET /api/businesses/:businessId/spa-services
+   */
+  async getSpaServices(req, res) {
+    try {
+      const { businessId } = req.params;
+
+      const services = await SpaService.findAll({
+        where: { businessId },
+        order: [['category', 'ASC'], ['displayOrder', 'ASC'], ['name', 'ASC']]
+      });
+
+      // Agregar conteo de fotos para cada servicio
+      const servicesWithPhotoCount = await Promise.all(
+        services.map(async (service) => {
+          const photoCount = await SpaServicePhoto.count({
+            where: { serviceId: service.id }
+          });
+          return {
+            ...service.toJSON(),
+            photoCount
+          };
+        })
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: servicesWithPhotoCount
+      });
+    } catch (error) {
+      console.error('Error en getSpaServices:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Crear un servicio de spa
+   * POST /api/businesses/:businessId/spa-services
+   */
+  async createSpaService(req, res) {
+    try {
+      const { businessId } = req.params;
+      const ownerId = req.user.id;
+      const { name, description, category, duration, price, isAvailable } = req.body;
+
+      // Verificar que el usuario sea dueño del negocio
+      const business = await Business.findOne({
+        where: { id: businessId, ownerId }
+      });
+
+      if (!business) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para modificar este negocio'
+        });
+      }
+
+      const serviceData = {
+        businessId,
+        name,
+        description: description || '',
+        category,
+        duration: duration ? parseInt(duration) : null,
+        price: parseFloat(price),
+        isAvailable: isAvailable === '1' || isAvailable === true || isAvailable === 'true',
+      };
+
+      // Procesar imagen si existe
+      if (req.file) {
+        serviceData.image = req.file.filename;
+      }
+
+      const service = await SpaService.create(serviceData);
+
+      return res.status(201).json({
+        success: true,
+        message: 'Servicio agregado exitosamente',
+        data: service
+      });
+    } catch (error) {
+      console.error('Error en createSpaService:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Actualizar un servicio de spa
+   * PUT /api/businesses/:businessId/spa-services/:serviceId
+   */
+  async updateSpaService(req, res) {
+    try {
+      const { businessId, serviceId } = req.params;
+      const ownerId = req.user.id;
+      const { name, description, category, duration, price, isAvailable } = req.body;
+
+      // Verificar que el usuario sea dueño del negocio
+      const business = await Business.findOne({
+        where: { id: businessId, ownerId }
+      });
+
+      if (!business) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para modificar este negocio'
+        });
+      }
+
+      const service = await SpaService.findOne({
+        where: { id: serviceId, businessId }
+      });
+
+      if (!service) {
+        return res.status(404).json({
+          success: false,
+          message: 'Servicio no encontrado'
+        });
+      }
+
+      const updateData = {
+        name,
+        description: description || '',
+        category,
+        duration: duration ? parseInt(duration) : null,
+        price: parseFloat(price),
+        isAvailable: isAvailable === '1' || isAvailable === true || isAvailable === 'true',
+      };
+
+      // Procesar imagen si existe
+      if (req.file) {
+        updateData.image = req.file.filename;
+      }
+
+      await service.update(updateData);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Servicio actualizado',
+        data: service
+      });
+    } catch (error) {
+      console.error('Error en updateSpaService:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Eliminar un servicio de spa
+   * DELETE /api/businesses/:businessId/spa-services/:serviceId
+   */
+  async deleteSpaService(req, res) {
+    try {
+      const { businessId, serviceId } = req.params;
+      const ownerId = req.user.id;
+
+      // Verificar que el usuario sea dueño del negocio
+      const business = await Business.findOne({
+        where: { id: businessId, ownerId }
+      });
+
+      if (!business) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para modificar este negocio'
+        });
+      }
+
+      const service = await SpaService.findOne({
+        where: { id: serviceId, businessId }
+      });
+
+      if (!service) {
+        return res.status(404).json({
+          success: false,
+          message: 'Servicio no encontrado'
+        });
+      }
+
+      await service.destroy();
+
+      return res.status(200).json({
+        success: true,
+        message: 'Servicio eliminado'
+      });
+    } catch (error) {
+      console.error('Error en deleteSpaService:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Obtener fotos de un servicio de spa
+   * GET /api/businesses/:businessId/spa-services/:serviceId/photos
+   */
+  async getSpaServicePhotos(req, res) {
+    try {
+      const { serviceId } = req.params;
+
+      const photos = await SpaServicePhoto.findAll({
+        where: { serviceId },
+        order: [['displayOrder', 'ASC'], ['createdAt', 'DESC']]
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: photos
+      });
+    } catch (error) {
+      console.error('Error en getSpaServicePhotos:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Subir foto de un servicio de spa
+   * POST /api/businesses/:businessId/spa-services/:serviceId/photos
+   */
+  async uploadSpaServicePhoto(req, res) {
+    try {
+      const { businessId, serviceId } = req.params;
+      const ownerId = req.user.id;
+      const { caption } = req.body;
+
+      // Verificar que el usuario sea dueño del negocio
+      const business = await Business.findOne({
+        where: { id: businessId, ownerId }
+      });
+
+      if (!business) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para modificar este negocio'
+        });
+      }
+
+      // Verificar que el servicio pertenece al negocio
+      const service = await SpaService.findOne({
+        where: { id: serviceId, businessId }
+      });
+
+      if (!service) {
+        return res.status(404).json({
+          success: false,
+          message: 'Servicio no encontrado'
+        });
+      }
+
+      // Verificar que no haya más de 5 fotos
+      const photoCount = await SpaServicePhoto.count({
+        where: { serviceId }
+      });
+
+      if (photoCount >= 5) {
+        return res.status(400).json({
+          success: false,
+          message: 'Este servicio ya tiene el máximo de 5 fotos'
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: 'No se ha subido ninguna foto'
+        });
+      }
+
+      const photo = await SpaServicePhoto.create({
+        serviceId,
+        url: req.file.filename,
+        caption
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: 'Foto subida exitosamente',
+        data: photo
+      });
+    } catch (error) {
+      console.error('Error en uploadSpaServicePhoto:', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Eliminar foto de un servicio de spa
+   * DELETE /api/businesses/:businessId/spa-services/:serviceId/photos/:photoId
+   */
+  async deleteSpaServicePhoto(req, res) {
+    try {
+      const { businessId, serviceId, photoId } = req.params;
+      const ownerId = req.user.id;
+
+      // Verificar que el usuario sea dueño del negocio
+      const business = await Business.findOne({
+        where: { id: businessId, ownerId }
+      });
+
+      if (!business) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permiso para modificar este negocio'
+        });
+      }
+
+      const photo = await SpaServicePhoto.findOne({
+        where: { id: photoId, serviceId }
+      });
+
+      if (!photo) {
+        return res.status(404).json({
+          success: false,
+          message: 'Foto no encontrada'
+        });
+      }
+
+      await photo.destroy();
+
+      return res.status(200).json({
+        success: true,
+        message: 'Foto eliminada'
+      });
+    } catch (error) {
+      console.error('Error en deleteSpaServicePhoto:', error);
       return res.status(400).json({
         success: false,
         message: error.message

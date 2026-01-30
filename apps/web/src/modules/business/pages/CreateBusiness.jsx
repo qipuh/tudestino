@@ -254,7 +254,8 @@ function CreateBusiness() {
     socialMedia: {
       facebook: '',
       instagram: '',
-      twitter: '',
+      tiktok: '',
+      youtube: '',
     },
   });
   const [error, setError] = useState('');
@@ -327,8 +328,8 @@ function CreateBusiness() {
 
   // Geocodificar dirección específica cuando cambie
   useEffect(() => {
-    // Solo ejecutar en el paso 2
-    if (step !== 2) return;
+    // Solo ejecutar en el paso 3 (ubicación)
+    if (step !== 3) return;
 
     const geocodeAddress = async () => {
       const { street, city, state, country } = formData.address;
@@ -520,9 +521,9 @@ function CreateBusiness() {
     e.preventDefault();
     setError('');
 
-    // Solo permitir submit en el paso 3
-    if (step < 3) {
-      // Si no estamos en el paso 3, avanzar al siguiente paso
+    // Solo permitir submit en el paso 4
+    if (step < 4) {
+      // Si no estamos en el paso 4, avanzar al siguiente paso
       nextStep();
       return;
     }
@@ -571,6 +572,8 @@ function CreateBusiness() {
         setError('Completa todos los campos requeridos');
         return;
       }
+    }
+    if (step === 2) {
       // Validar campos adicionales para hoteles
       if (formData.businessType === 'hotel') {
         if (!formData.hotelSubtype) {
@@ -583,7 +586,7 @@ function CreateBusiness() {
         }
       }
     }
-    if (step === 2) {
+    if (step === 3) {
       if (!formData.address.city) {
         setError('Debes seleccionar una ubicación antes de continuar');
         return;
@@ -619,19 +622,26 @@ function CreateBusiness() {
               <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2 ${step >= 1 ? 'bg-primary text-white' : 'bg-gray-200'}`}>
                 1
               </div>
-              <div className="text-xs text-center">Información básica</div>
+              <div className="text-xs text-center">Tipo de negocio</div>
             </div>
             <div className={`flex-1 border-t-2 ${step >= 2 ? 'border-primary' : 'border-gray-200'}`}></div>
             <div className={`flex-1 ${step >= 2 ? 'text-primary' : 'text-gray-400'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2 ${step >= 2 ? 'bg-primary text-white' : 'bg-gray-200'}`}>
                 2
               </div>
-              <div className="text-xs text-center">Ubicación</div>
+              <div className="text-xs text-center">Detalles</div>
             </div>
             <div className={`flex-1 border-t-2 ${step >= 3 ? 'border-primary' : 'border-gray-200'}`}></div>
             <div className={`flex-1 ${step >= 3 ? 'text-primary' : 'text-gray-400'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2 ${step >= 3 ? 'bg-primary text-white' : 'bg-gray-200'}`}>
                 3
+              </div>
+              <div className="text-xs text-center">Ubicación</div>
+            </div>
+            <div className={`flex-1 border-t-2 ${step >= 4 ? 'border-primary' : 'border-gray-200'}`}></div>
+            <div className={`flex-1 ${step >= 4 ? 'text-primary' : 'text-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2 ${step >= 4 ? 'bg-primary text-white' : 'bg-gray-200'}`}>
+                4
               </div>
               <div className="text-xs text-center">Contacto</div>
             </div>
@@ -647,7 +657,7 @@ function CreateBusiness() {
           )}
 
           <form onSubmit={handleSubmit}>
-            {/* Step 1: Información básica */}
+            {/* Step 1: Nombre y tipo de negocio */}
             {step === 1 && (
               <div className="space-y-6">
                 <div>
@@ -721,175 +731,176 @@ function CreateBusiness() {
                     ))}
                   </div>
                 </div>
+              </div>
+            )}
 
-                {/* Campos adicionales para Hotel/Alojamiento */}
-                {formData.businessType === 'hotel' && (
-                  <div className="space-y-6 bg-gray-50 p-6 rounded-xl border border-gray-200">
-                    {/* Tipo de Alojamiento */}
-                    <div>
-                      <label className="block text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <ion-icon name="home" class="text-xl text-primary"></ion-icon>
-                        Tipo de Alojamiento *
-                      </label>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {Object.entries(hotelSubtypes).map(([key, subtype]) => (
-                          <button
-                            key={key}
-                            type="button"
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                hotelSubtype: key,
-                                hotelCategory: '', // Reset category when subtype changes
-                              });
-                            }}
-                            className={`group relative flex items-center gap-4 p-5 rounded-xl border-2 transition-all duration-200 bg-white ${
-                              formData.hotelSubtype === key
-                                ? `${subtype.borderColor} ring-2 ring-offset-2 ${subtype.color.replace('text-', 'ring-')}`
-                                : 'border-gray-200 hover:border-gray-400 hover:shadow-md'
-                            }`}
-                          >
-                            {/* Icono siempre visible */}
-                            <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${
-                              formData.hotelSubtype === key ? subtype.bgColor : 'bg-gray-100'
-                            }`}>
+            {/* Step 2: Detalles del alojamiento (solo para hotel) */}
+            {step === 2 && formData.businessType === 'hotel' && (
+              <div className="space-y-6">
+                {/* Tipo de Alojamiento */}
+                <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
+                  <label className="block text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <ion-icon name="home" className="text-xl text-primary"></ion-icon>
+                    Tipo de Alojamiento *
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Object.entries(hotelSubtypes).map(([key, subtype]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            hotelSubtype: key,
+                            hotelCategory: '', // Reset category when subtype changes
+                          });
+                        }}
+                        className={`group relative flex items-center gap-4 p-5 rounded-xl border-2 transition-all duration-200 bg-white ${
+                          formData.hotelSubtype === key
+                            ? `${subtype.borderColor} ring-2 ring-offset-2 ${subtype.color.replace('text-', 'ring-')}`
+                            : 'border-gray-200 hover:border-gray-400 hover:shadow-md'
+                        }`}
+                      >
+                        {/* Icono siempre visible */}
+                        <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${
+                          formData.hotelSubtype === key ? subtype.bgColor : 'bg-gray-100'
+                        }`}>
+                          <ion-icon
+                            name={subtype.icon}
+                            className={`text-3xl ${formData.hotelSubtype === key ? subtype.color : 'text-gray-400'}`}
+                          ></ion-icon>
+                        </div>
+
+                        {/* Texto */}
+                        <div className="flex-1 text-left">
+                          <span className={`text-sm font-semibold block ${
+                            formData.hotelSubtype === key ? subtype.color : 'text-gray-900'
+                          }`}>
+                            {subtype.label}
+                          </span>
+                        </div>
+
+                        {/* Checkmark */}
+                        {formData.hotelSubtype === key && (
+                          <div className="flex-shrink-0">
+                            <div className={`w-8 h-8 rounded-full ${subtype.bgColor} flex items-center justify-center`}>
+                              <ion-icon name="checkmark-circle" className={`text-2xl ${subtype.color}`}></ion-icon>
+                            </div>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Categoría */}
+                {formData.hotelSubtype && hotelSubtypes[formData.hotelSubtype] && (
+                  <div className="bg-amber-50 p-6 rounded-xl border border-amber-200 animate-fadeIn">
+                    <label className="block text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <ion-icon name="ribbon" className="text-xl text-primary"></ion-icon>
+                      Categoría / Clasificación *
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {hotelSubtypes[formData.hotelSubtype].categories.map((category) => (
+                        <button
+                          key={category.value}
+                          type="button"
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              hotelCategory: category.value,
+                            });
+                          }}
+                          className={`relative flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all duration-200 bg-white min-h-[120px] justify-center ${
+                            formData.hotelCategory === category.value
+                              ? `${hotelSubtypes[formData.hotelSubtype].borderColor} ring-2 ring-offset-2 ${hotelSubtypes[formData.hotelSubtype].color.replace('text-', 'ring-')}`
+                              : 'border-gray-200 hover:border-gray-400 hover:shadow-md'
+                          }`}
+                        >
+                          {/* Renderizar iconos según categoría */}
+                          {category.stars && (
+                            <div className="flex gap-1">
+                              {[...Array(category.stars)].map((_, i) => (
+                                <ion-icon
+                                  key={i}
+                                  name="star"
+                                  className="text-2xl text-yellow-500"
+                                ></ion-icon>
+                              ))}
+                              {category.grand && (
+                                <ion-icon
+                                  name="medal"
+                                  className="text-2xl text-amber-600 ml-1"
+                                ></ion-icon>
+                              )}
+                            </div>
+                          )}
+
+                          {category.keys && (
+                            <div className="flex gap-1">
+                              {[...Array(category.keys)].map((_, i) => (
+                                <ion-icon
+                                  key={i}
+                                  name="key"
+                                  className="text-2xl text-amber-600"
+                                ></ion-icon>
+                              ))}
+                            </div>
+                          )}
+
+                          {category.spikes && (
+                            <div className="flex gap-1">
+                              {[...Array(category.spikes)].map((_, i) => (
+                                <ion-icon
+                                  key={i}
+                                  name="flower"
+                                  className="text-2xl text-lime-600"
+                                ></ion-icon>
+                              ))}
+                            </div>
+                          )}
+
+                          {category.backpacks && (
+                            <div className="flex gap-1">
+                              {[...Array(category.backpacks)].map((_, i) => (
+                                <ion-icon
+                                  key={i}
+                                  name="backpack"
+                                  className="text-2xl text-indigo-600"
+                                ></ion-icon>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Texto de categoría */}
+                          <span className={`text-sm font-semibold text-center ${
+                            formData.hotelCategory === category.value
+                              ? hotelSubtypes[formData.hotelSubtype].color
+                              : 'text-gray-900'
+                          }`}>
+                            {category.label}
+                          </span>
+
+                          {/* Checkmark */}
+                          {formData.hotelCategory === category.value && (
+                            <div className="absolute top-3 right-3">
                               <ion-icon
-                                name={subtype.icon}
-                                class={`text-3xl ${formData.hotelSubtype === key ? subtype.color : 'text-gray-400'}`}
+                                name="checkmark-circle"
+                                className={`text-2xl ${hotelSubtypes[formData.hotelSubtype].color}`}
                               ></ion-icon>
                             </div>
-
-                            {/* Texto */}
-                            <div className="flex-1 text-left">
-                              <span className={`text-sm font-semibold block ${
-                                formData.hotelSubtype === key ? subtype.color : 'text-gray-900'
-                              }`}>
-                                {subtype.label}
-                              </span>
-                            </div>
-
-                            {/* Checkmark */}
-                            {formData.hotelSubtype === key && (
-                              <div className="flex-shrink-0">
-                                <div className={`w-8 h-8 rounded-full ${subtype.bgColor} flex items-center justify-center`}>
-                                  <ion-icon name="checkmark-circle" class={`text-2xl ${subtype.color}`}></ion-icon>
-                                </div>
-                              </div>
-                            )}
-                          </button>
-                        ))}
-                      </div>
+                          )}
+                        </button>
+                      ))}
                     </div>
-
-                    {/* Categoría */}
-                    {formData.hotelSubtype && hotelSubtypes[formData.hotelSubtype] && (
-                      <div className="animate-fadeIn">
-                        <label className="block text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                          <ion-icon name="ribbon" class="text-xl text-primary"></ion-icon>
-                          Categoría / Clasificación *
-                        </label>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {hotelSubtypes[formData.hotelSubtype].categories.map((category) => (
-                            <button
-                              key={category.value}
-                              type="button"
-                              onClick={() => {
-                                setFormData({
-                                  ...formData,
-                                  hotelCategory: category.value,
-                                });
-                              }}
-                              className={`relative flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all duration-200 bg-white min-h-[120px] justify-center ${
-                                formData.hotelCategory === category.value
-                                  ? `${hotelSubtypes[formData.hotelSubtype].borderColor} ring-2 ring-offset-2 ${hotelSubtypes[formData.hotelSubtype].color.replace('text-', 'ring-')}`
-                                  : 'border-gray-200 hover:border-gray-400 hover:shadow-md'
-                              }`}
-                            >
-                              {/* Renderizar iconos según categoría */}
-                              {category.stars && (
-                                <div className="flex gap-1">
-                                  {[...Array(category.stars)].map((_, i) => (
-                                    <ion-icon
-                                      key={i}
-                                      name="star"
-                                      class="text-2xl text-yellow-500"
-                                    ></ion-icon>
-                                  ))}
-                                  {category.grand && (
-                                    <ion-icon
-                                      name="medal"
-                                      class="text-2xl text-amber-600 ml-1"
-                                    ></ion-icon>
-                                  )}
-                                </div>
-                              )}
-
-                              {category.keys && (
-                                <div className="flex gap-1">
-                                  {[...Array(category.keys)].map((_, i) => (
-                                    <ion-icon
-                                      key={i}
-                                      name="key"
-                                      class="text-2xl text-amber-600"
-                                    ></ion-icon>
-                                  ))}
-                                </div>
-                              )}
-
-                              {category.spikes && (
-                                <div className="flex gap-1">
-                                  {[...Array(category.spikes)].map((_, i) => (
-                                    <ion-icon
-                                      key={i}
-                                      name="flower"
-                                      class="text-2xl text-lime-600"
-                                    ></ion-icon>
-                                  ))}
-                                </div>
-                              )}
-
-                              {category.backpacks && (
-                                <div className="flex gap-1">
-                                  {[...Array(category.backpacks)].map((_, i) => (
-                                    <ion-icon
-                                      key={i}
-                                      name="backpack"
-                                      class="text-2xl text-indigo-600"
-                                    ></ion-icon>
-                                  ))}
-                                </div>
-                              )}
-
-                              {/* Texto de categoría */}
-                              <span className={`text-sm font-semibold text-center ${
-                                formData.hotelCategory === category.value
-                                  ? hotelSubtypes[formData.hotelSubtype].color
-                                  : 'text-gray-900'
-                              }`}>
-                                {category.label}
-                              </span>
-
-                              {/* Checkmark */}
-                              {formData.hotelCategory === category.value && (
-                                <div className="absolute top-3 right-3">
-                                  <ion-icon
-                                    name="checkmark-circle"
-                                    class={`text-2xl ${hotelSubtypes[formData.hotelSubtype].color}`}
-                                  ></ion-icon>
-                                </div>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                        <p className="text-sm text-gray-600 mt-3 flex items-center gap-2">
-                          <ion-icon name="information-circle" class="text-lg text-blue-500"></ion-icon>
-                          Clasificación oficial de {hotelSubtypes[formData.hotelSubtype].label}
-                        </p>
-                      </div>
-                    )}
+                    <p className="text-sm text-gray-600 mt-3 flex items-center gap-2">
+                      <ion-icon name="information-circle" className="text-lg text-blue-500"></ion-icon>
+                      Clasificación oficial de {hotelSubtypes[formData.hotelSubtype].label}
+                    </p>
                   </div>
                 )}
 
+                {/* Descripción */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Descripción
@@ -919,8 +930,40 @@ function CreateBusiness() {
               </div>
             )}
 
-            {/* Step 2: Ubicación */}
-            {step === 2 && (
+            {/* Step 2: Descripción (para otros tipos de negocio) */}
+            {step === 2 && formData.businessType !== 'hotel' && (
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Descripción
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    maxLength={200}
+                    rows="4"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                    placeholder="Describe tu negocio..."
+                  />
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-gray-500">
+                      Describe brevemente tu negocio
+                    </p>
+                    <p className={`text-xs font-medium ${
+                      200 - formData.description.length <= 20
+                        ? 'text-orange-600'
+                        : 'text-gray-500'
+                    }`}>
+                      {200 - formData.description.length} caracteres restantes
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Ubicación */}
+            {step === 3 && (
               <div className="space-y-6">
                 {/* Búsqueda de ubicación */}
                 <div className="relative" ref={locationInputRef}>
@@ -1039,35 +1082,38 @@ function CreateBusiness() {
               </div>
             )}
 
-            {/* Step 3: Contacto */}
-            {step === 3 && (
+            {/* Step 4: Contacto */}
+            {step === 4 && (
               <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Teléfono de contacto
-                  </label>
-                  <input
-                    type="tel"
-                    name="contactPhone"
-                    value={formData.contactPhone}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                    placeholder="+51 976 123 456"
-                  />
-                </div>
+                {/* Teléfono y Email en una fila */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Teléfono de contacto
+                    </label>
+                    <input
+                      type="tel"
+                      name="contactPhone"
+                      value={formData.contactPhone}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                      placeholder="+51 976 123 456"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email de contacto
-                  </label>
-                  <input
-                    type="email"
-                    name="contactEmail"
-                    value={formData.contactEmail}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                    placeholder="info@minegocio.com"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email de contacto
+                    </label>
+                    <input
+                      type="email"
+                      name="contactEmail"
+                      value={formData.contactEmail}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                      placeholder="info@minegocio.com"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -1090,7 +1136,9 @@ function CreateBusiness() {
                   </label>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl">📘</span>
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <ion-icon name="logo-facebook" className="text-2xl text-blue-600"></ion-icon>
+                      </div>
                       <input
                         type="text"
                         name="socialMedia.facebook"
@@ -1101,7 +1149,9 @@ function CreateBusiness() {
                       />
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl">📷</span>
+                      <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <ion-icon name="logo-instagram" className="text-2xl text-pink-600"></ion-icon>
+                      </div>
                       <input
                         type="text"
                         name="socialMedia.instagram"
@@ -1112,14 +1162,29 @@ function CreateBusiness() {
                       />
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl">🐦</span>
+                      <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <ion-icon name="logo-tiktok" className="text-2xl text-white"></ion-icon>
+                      </div>
                       <input
                         type="text"
-                        name="socialMedia.twitter"
-                        value={formData.socialMedia.twitter}
+                        name="socialMedia.tiktok"
+                        value={formData.socialMedia.tiktok}
                         onChange={handleChange}
                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                        placeholder="twitter.com/minegocio"
+                        placeholder="tiktok.com/@minegocio"
+                      />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <ion-icon name="logo-youtube" className="text-2xl text-red-600"></ion-icon>
+                      </div>
+                      <input
+                        type="text"
+                        name="socialMedia.youtube"
+                        value={formData.socialMedia.youtube}
+                        onChange={handleChange}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                        placeholder="youtube.com/@minegocio"
                       />
                     </div>
                   </div>
@@ -1138,7 +1203,7 @@ function CreateBusiness() {
                   Atrás
                 </button>
               )}
-              {step < 3 ? (
+              {step < 4 ? (
                 <button
                   type="button"
                   onClick={nextStep}

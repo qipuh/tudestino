@@ -276,7 +276,11 @@
       "Bash(sshpass -p '3@monitoSS' ssh -o StrictHostKeyChecking=no root@138.197.75.84 \"cd /var/www/tudestino && pwd\")",
       "Bash(powershell.exe -Command \"ssh root@138.197.75.84 ''cd /var/www/tudestino && bash create-upload-dirs.sh''\")",
       "Bash(npm run build:web:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql.exe:*)",
+      "Bash(powershell \"Stop-Process -Id 11620 -Force\")",
+      "Bash(npx sequelize-cli:*)",
+      "Bash(\"/c/laragon/bin/mysql/mysql-8.0.30-winx64/bin/mysql.exe\" -u root tudestino -e \"ALTER TABLE messages MODIFY COLUMN id INT NOT NULL AUTO_INCREMENT;\")"
     ],
     "deny": [],
     "ask": []

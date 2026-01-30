@@ -45,23 +45,29 @@ const businessTypes = [
   { value: 'spa', label: 'Spa y Bienestar', icon: '💆' },
 ];
 
-// Configuración de subtipos de alojamiento y sus categorías
+// Configuración de subtipos de alojamiento y sus categorías con Ionicons
 const hotelSubtypes = {
   hotel: {
     label: 'Hotel',
-    icon: '🏨',
+    icon: 'business-outline',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
     categories: [
-      { value: '1-star', label: '1 Estrella ⭐' },
-      { value: '2-star', label: '2 Estrellas ⭐⭐' },
-      { value: '3-star', label: '3 Estrellas ⭐⭐⭐' },
-      { value: '4-star', label: '4 Estrellas ⭐⭐⭐⭐' },
-      { value: '5-star', label: '5 Estrellas ⭐⭐⭐⭐⭐' },
-      { value: '5-star-grand', label: '5 Estrellas Gran Lujo 👑' },
+      { value: '1-star', label: '1 Estrella', stars: 1 },
+      { value: '2-star', label: '2 Estrellas', stars: 2 },
+      { value: '3-star', label: '3 Estrellas', stars: 3 },
+      { value: '4-star', label: '4 Estrellas', stars: 4 },
+      { value: '5-star', label: '5 Estrellas', stars: 5 },
+      { value: '5-star-grand', label: '5 Estrellas Gran Lujo', stars: 5, grand: true },
     ]
   },
   hostel: {
     label: 'Hostal / Albergue',
-    icon: '🏠',
+    icon: 'home-outline',
+    color: 'text-green-600',
+    bgColor: 'bg-green-50',
+    borderColor: 'border-green-200',
     categories: [
       { value: 'basic', label: 'Básica' },
       { value: 'standard', label: 'Estándar' },
@@ -70,18 +76,24 @@ const hotelSubtypes = {
   },
   apartment: {
     label: 'Apartamento Turístico',
-    icon: '🏢',
+    icon: 'apps-outline',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-50',
+    borderColor: 'border-purple-200',
     categories: [
-      { value: '1-key', label: '1 Llave 🔑' },
-      { value: '2-key', label: '2 Llaves 🔑🔑' },
-      { value: '3-key', label: '3 Llaves 🔑🔑🔑' },
-      { value: '4-key', label: '4 Llaves 🔑🔑🔑🔑' },
-      { value: '5-key', label: '5 Llaves 🔑🔑🔑🔑🔑' },
+      { value: '1-key', label: '1 Llave', keys: 1 },
+      { value: '2-key', label: '2 Llaves', keys: 2 },
+      { value: '3-key', label: '3 Llaves', keys: 3 },
+      { value: '4-key', label: '4 Llaves', keys: 4 },
+      { value: '5-key', label: '5 Llaves', keys: 5 },
     ]
   },
   bnb: {
-    label: 'Bed & Breakfast (B&B)',
-    icon: '🛏️',
+    label: 'Bed & Breakfast',
+    icon: 'bed-outline',
+    color: 'text-pink-600',
+    bgColor: 'bg-pink-50',
+    borderColor: 'border-pink-200',
     categories: [
       { value: 'basic', label: 'Básica' },
       { value: 'standard', label: 'Estándar' },
@@ -89,17 +101,23 @@ const hotelSubtypes = {
     ]
   },
   resort: {
-    label: 'Resort / Complejo Turístico',
-    icon: '🏝️',
+    label: 'Resort / Complejo',
+    icon: 'water-outline',
+    color: 'text-cyan-600',
+    bgColor: 'bg-cyan-50',
+    borderColor: 'border-cyan-200',
     categories: [
-      { value: '3-star', label: '3 Estrellas ⭐⭐⭐' },
-      { value: '4-star', label: '4 Estrellas ⭐⭐⭐⭐' },
-      { value: '5-star', label: '5 Estrellas ⭐⭐⭐⭐⭐' },
+      { value: '3-star', label: '3 Estrellas', stars: 3 },
+      { value: '4-star', label: '4 Estrellas', stars: 4 },
+      { value: '5-star', label: '5 Estrellas', stars: 5 },
     ]
   },
   villa: {
     label: 'Villa / Chalet',
-    icon: '🏘️',
+    icon: 'home-sharp',
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50',
+    borderColor: 'border-amber-200',
     categories: [
       { value: 'standard', label: 'Estándar' },
       { value: 'superior', label: 'Superior' },
@@ -108,43 +126,58 @@ const hotelSubtypes = {
   },
   guesthouse: {
     label: 'Posada / Casa Rural',
-    icon: '🏡',
+    icon: 'leaf-outline',
+    color: 'text-lime-600',
+    bgColor: 'bg-lime-50',
+    borderColor: 'border-lime-200',
     categories: [
-      { value: '1-spike', label: '1 Espiga 🌾' },
-      { value: '2-spike', label: '2 Espigas 🌾🌾' },
-      { value: '3-spike', label: '3 Espigas 🌾🌾🌾' },
-      { value: '4-spike', label: '4 Espigas 🌾🌾🌾🌾' },
-      { value: '5-spike', label: '5 Espigas 🌾🌾🌾🌾🌾' },
+      { value: '1-spike', label: '1 Espiga', spikes: 1 },
+      { value: '2-spike', label: '2 Espigas', spikes: 2 },
+      { value: '3-spike', label: '3 Espigas', spikes: 3 },
+      { value: '4-spike', label: '4 Espigas', spikes: 4 },
+      { value: '5-spike', label: '5 Espigas', spikes: 5 },
     ]
   },
   motel: {
     label: 'Motel',
-    icon: '🛣️',
+    icon: 'car-outline',
+    color: 'text-slate-600',
+    bgColor: 'bg-slate-50',
+    borderColor: 'border-slate-200',
     categories: [
-      { value: '1-star', label: '1 Estrella ⭐' },
-      { value: '2-star', label: '2 Estrellas ⭐⭐' },
-      { value: '3-star', label: '3 Estrellas ⭐⭐⭐' },
+      { value: '1-star', label: '1 Estrella', stars: 1 },
+      { value: '2-star', label: '2 Estrellas', stars: 2 },
+      { value: '3-star', label: '3 Estrellas', stars: 3 },
     ]
   },
   homestay: {
-    label: 'Alojamiento en Casa Particular',
-    icon: '🏘️',
+    label: 'Casa Particular',
+    icon: 'people-outline',
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50',
+    borderColor: 'border-orange-200',
     categories: [
       { value: 'unrated', label: 'Sin categoría oficial' },
     ]
   },
   parador: {
     label: 'Parador',
-    icon: '🏛️',
+    icon: 'library-outline',
+    color: 'text-red-600',
+    bgColor: 'bg-red-50',
+    borderColor: 'border-red-200',
     categories: [
-      { value: '3-star', label: '3 Estrellas ⭐⭐⭐' },
-      { value: '4-star', label: '4 Estrellas ⭐⭐⭐⭐' },
-      { value: '5-star', label: '5 Estrellas ⭐⭐⭐⭐⭐' },
+      { value: '3-star', label: '3 Estrellas', stars: 3 },
+      { value: '4-star', label: '4 Estrellas', stars: 4 },
+      { value: '5-star', label: '5 Estrellas', stars: 5 },
     ]
   },
   glamping: {
     label: 'Glamping',
-    icon: '⛺',
+    icon: 'bonfire-outline',
+    color: 'text-emerald-600',
+    bgColor: 'bg-emerald-50',
+    borderColor: 'border-emerald-200',
     categories: [
       { value: 'basic', label: 'Básica' },
       { value: 'luxury', label: 'Lujo' },
@@ -153,16 +186,22 @@ const hotelSubtypes = {
   },
   youth_hostel: {
     label: 'Albergue Juvenil',
-    icon: '🎒',
+    icon: 'backpack-outline',
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-50',
+    borderColor: 'border-indigo-200',
     categories: [
-      { value: '1-backpack', label: '1 Mochila 🎒' },
-      { value: '2-backpack', label: '2 Mochilas 🎒🎒' },
-      { value: '3-backpack', label: '3 Mochilas 🎒🎒🎒' },
+      { value: '1-backpack', label: '1 Mochila', backpacks: 1 },
+      { value: '2-backpack', label: '2 Mochilas', backpacks: 2 },
+      { value: '3-backpack', label: '3 Mochilas', backpacks: 3 },
     ]
   },
   pension: {
     label: 'Pensión',
-    icon: '🏚️',
+    icon: 'grid-outline',
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-50',
+    borderColor: 'border-gray-200',
     categories: [
       { value: '1st-class', label: '1ª Categoría' },
       { value: '2nd-class', label: '2ª Categoría' },
@@ -171,16 +210,22 @@ const hotelSubtypes = {
   },
   monastery: {
     label: 'Hospedería / Monasterio',
-    icon: '⛪',
+    icon: 'moon-outline',
+    color: 'text-violet-600',
+    bgColor: 'bg-violet-50',
+    borderColor: 'border-violet-200',
     categories: [
-      { value: 'unrated', label: 'Sin categoría estandarizada' },
+      { value: 'unrated', label: 'Sin categoría' },
     ]
   },
   boat: {
     label: 'Barco / Casa Flotante',
-    icon: '⛵',
+    icon: 'boat-outline',
+    color: 'text-sky-600',
+    bgColor: 'bg-sky-50',
+    borderColor: 'border-sky-200',
     categories: [
-      { value: 'unrated', label: 'Sin categoría estandarizada' },
+      { value: 'unrated', label: 'Sin categoría' },
     ]
   },
 };
@@ -680,56 +725,178 @@ function CreateBusiness() {
                 {/* Campos adicionales para Hotel/Alojamiento */}
                 {formData.businessType === 'hotel' && (
                   <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tipo de Alojamiento *
-                      </label>
-                      <select
-                        name="hotelSubtype"
-                        value={formData.hotelSubtype}
-                        onChange={(e) => {
-                          setFormData({
-                            ...formData,
-                            hotelSubtype: e.target.value,
-                            hotelCategory: '', // Reset category when subtype changes
-                          });
-                        }}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                        required
-                      >
-                        <option value="">Selecciona un tipo...</option>
-                        {Object.entries(hotelSubtypes).map(([key, subtype]) => (
-                          <option key={key} value={key}>
-                            {subtype.icon} {subtype.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {formData.hotelSubtype && hotelSubtypes[formData.hotelSubtype] && (
+                    <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Categoría *
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          Tipo de Alojamiento *
                         </label>
-                        <select
-                          name="hotelCategory"
-                          value={formData.hotelCategory}
-                          onChange={handleChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                          required
-                        >
-                          <option value="">Selecciona una categoría...</option>
-                          {hotelSubtypes[formData.hotelSubtype].categories.map((category) => (
-                            <option key={category.value} value={category.value}>
-                              {category.label}
-                            </option>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          {Object.entries(hotelSubtypes).map(([key, subtype]) => (
+                            <button
+                              key={key}
+                              type="button"
+                              onClick={() => {
+                                setFormData({
+                                  ...formData,
+                                  hotelSubtype: key,
+                                  hotelCategory: '', // Reset category when subtype changes
+                                });
+                              }}
+                              className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${
+                                formData.hotelSubtype === key
+                                  ? `${subtype.borderColor} ${subtype.bgColor} shadow-md`
+                                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                              }`}
+                            >
+                              <ion-icon
+                                name={subtype.icon}
+                                class={`text-3xl ${formData.hotelSubtype === key ? subtype.color : 'text-gray-400'}`}
+                              ></ion-icon>
+                              <span className={`text-xs font-medium text-center leading-tight ${
+                                formData.hotelSubtype === key ? subtype.color : 'text-gray-700'
+                              }`}>
+                                {subtype.label}
+                              </span>
+                              {formData.hotelSubtype === key && (
+                                <div className="absolute -top-2 -right-2">
+                                  <div className={`${subtype.bgColor} ${subtype.borderColor} border-2 rounded-full p-1`}>
+                                    <ion-icon name="checkmark" class={`text-sm ${subtype.color}`}></ion-icon>
+                                  </div>
+                                </div>
+                              )}
+                            </button>
                           ))}
-                        </select>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Clasificación oficial de {hotelSubtypes[formData.hotelSubtype].label}
-                        </p>
+                        </div>
                       </div>
-                    )}
+
+                      {formData.hotelSubtype && hotelSubtypes[formData.hotelSubtype] && (
+                        <div className="animate-fadeIn">
+                          <label className="block text-sm font-medium text-gray-700 mb-3">
+                            Categoría / Clasificación *
+                          </label>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {hotelSubtypes[formData.hotelSubtype].categories.map((category) => (
+                              <button
+                                key={category.value}
+                                type="button"
+                                onClick={() => {
+                                  setFormData({
+                                    ...formData,
+                                    hotelCategory: category.value,
+                                  });
+                                }}
+                                className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${
+                                  formData.hotelCategory === category.value
+                                    ? `${hotelSubtypes[formData.hotelSubtype].borderColor} ${hotelSubtypes[formData.hotelSubtype].bgColor} shadow-md`
+                                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                }`}
+                              >
+                                {/* Renderizar estrellas */}
+                                {category.stars && (
+                                  <div className="flex gap-0.5">
+                                    {[...Array(category.stars)].map((_, i) => (
+                                      <ion-icon
+                                        key={i}
+                                        name="star"
+                                        class={`text-lg ${
+                                          formData.hotelCategory === category.value
+                                            ? 'text-yellow-500'
+                                            : 'text-gray-300'
+                                        }`}
+                                      ></ion-icon>
+                                    ))}
+                                    {category.grand && (
+                                      <ion-icon
+                                        name="medal"
+                                        class={`text-lg ml-1 ${
+                                          formData.hotelCategory === category.value
+                                            ? 'text-amber-500'
+                                            : 'text-gray-300'
+                                        }`}
+                                      ></ion-icon>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Renderizar llaves */}
+                                {category.keys && (
+                                  <div className="flex gap-0.5">
+                                    {[...Array(category.keys)].map((_, i) => (
+                                      <ion-icon
+                                        key={i}
+                                        name="key"
+                                        class={`text-lg ${
+                                          formData.hotelCategory === category.value
+                                            ? 'text-amber-600'
+                                            : 'text-gray-300'
+                                        }`}
+                                      ></ion-icon>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Renderizar espigas */}
+                                {category.spikes && (
+                                  <div className="flex gap-0.5">
+                                    {[...Array(category.spikes)].map((_, i) => (
+                                      <ion-icon
+                                        key={i}
+                                        name="flower"
+                                        class={`text-lg ${
+                                          formData.hotelCategory === category.value
+                                            ? 'text-lime-600'
+                                            : 'text-gray-300'
+                                        }`}
+                                      ></ion-icon>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Renderizar mochilas */}
+                                {category.backpacks && (
+                                  <div className="flex gap-0.5">
+                                    {[...Array(category.backpacks)].map((_, i) => (
+                                      <ion-icon
+                                        key={i}
+                                        name="backpack"
+                                        class={`text-lg ${
+                                          formData.hotelCategory === category.value
+                                            ? 'text-indigo-600'
+                                            : 'text-gray-300'
+                                        }`}
+                                      ></ion-icon>
+                                    ))}
+                                  </div>
+                                )}
+
+                                <span className={`text-xs font-medium text-center ${
+                                  formData.hotelCategory === category.value
+                                    ? hotelSubtypes[formData.hotelSubtype].color
+                                    : 'text-gray-700'
+                                }`}>
+                                  {category.label}
+                                </span>
+
+                                {formData.hotelCategory === category.value && (
+                                  <div className="absolute -top-2 -right-2">
+                                    <div className={`${hotelSubtypes[formData.hotelSubtype].bgColor} ${hotelSubtypes[formData.hotelSubtype].borderColor} border-2 rounded-full p-1`}>
+                                      <ion-icon
+                                        name="checkmark"
+                                        class={`text-sm ${hotelSubtypes[formData.hotelSubtype].color}`}
+                                      ></ion-icon>
+                                    </div>
+                                  </div>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                            <ion-icon name="information-circle-outline" class="text-sm"></ion-icon>
+                            Clasificación oficial de {hotelSubtypes[formData.hotelSubtype].label}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
 

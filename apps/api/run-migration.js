@@ -1,33 +1,34 @@
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import { readFileSync } from 'fs';
 import sequelize from './src/config/database-mysql.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 async function runMigration() {
   try {
-    console.log('🔄 Ejecutando migración: add-business-id-to-properties...');
+    console.log('🔌 Conectando a la base de datos...');
+    await sequelize.authenticate();
+    console.log('✅ Conexión establecida');
 
-    const sqlPath = join(__dirname, 'src/modules/properties/migrations/add-business-id-to-properties.sql');
-    const sql = readFileSync(sqlPath, 'utf8');
+    const queryInterface = sequelize.getQueryInterface();
 
-    // Split by semicolon to execute statements individually
-    const statements = sql
-      .split(';')
-      .map(s => s.trim())
-      .filter(s => s.length > 0 && !s.startsWith('--'));
+    console.log('📝 Agregando columna hotelSubtype...');
+    await queryInterface.addColumn('businesses', 'hotelSubtype', {
+      type: 'VARCHAR(50)',
+      allowNull: true,
+      comment: 'Subtipo de alojamiento: hotel, hostel, apartment, bnb, resort, villa, etc.'
+    });
 
-    for (const statement of statements) {
-      console.log('Ejecutando:', statement.substring(0, 50) + '...');
-      await sequelize.query(statement);
-    }
+    console.log('📝 Agregando columna hotelCategory...');
+    await queryInterface.addColumn('businesses', 'hotelCategory', {
+      type: 'VARCHAR(50)',
+      allowNull: true,
+      comment: 'Categoría del alojamiento: estrellas, llaves, espigas, mochilas, etc.'
+    });
 
     console.log('✅ Migración completada exitosamente');
+    await sequelize.close();
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error ejecutando migración:', error.message);
+    console.error('❌ Error en la migración:', error.message);
+    console.error('Detalles:', error);
+    await sequelize.close();
     process.exit(1);
   }
 }

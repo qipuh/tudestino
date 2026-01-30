@@ -195,19 +195,10 @@ function BusinessServices() {
   };
 
   const handleEditRoom = (room) => {
-    setEditingRoom(room);
-    // Cargar todos los datos de la habitación en el formulario
-    setRoomFormData({
-      name: room.name || '',
-      roomType: room.roomType || 'double',
-      quantity: room.quantity || 1,
-      guestCapacity: room.guestCapacity || 2,
-      pricePerNight: room.pricePerNight || '',
-      amenities: room.amenities || [],
-      isAvailable: room.isAvailable !== undefined ? room.isAvailable : true,
-      images: room.images || []
+    // Navegar al formulario completo de creación/edición de habitaciones
+    navigate(`/business/${id}/property/create-rooms`, {
+      state: { editingRoom: room }
     });
-    setShowRoomModal(true);
   };
 
   const handleSaveRoom = async (e) => {
@@ -358,7 +349,7 @@ function BusinessServices() {
                   <div className="relative h-48 bg-gray-200">
                     {room.images && room.images.length > 0 ? (
                       <img
-                        src={getImageUrl(`/uploads/rooms/${room.images[0]}`)}
+                        src={getImageUrl(room.images[0])}
                         alt={room.name}
                         className="w-full h-full object-cover"
                       />
@@ -1053,7 +1044,7 @@ function BusinessServices() {
                         {roomFormData.images.map((img, idx) => (
                           <div key={idx} className="relative aspect-square">
                             <img
-                              src={getImageUrl(`/uploads/rooms/${img}`)}
+                              src={getImageUrl(img)}
                               alt={`Imagen ${idx + 1}`}
                               className="w-full h-full object-cover rounded-lg border border-gray-200"
                             />

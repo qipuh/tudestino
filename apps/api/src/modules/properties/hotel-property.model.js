@@ -209,8 +209,9 @@ const Room = sequelize.define('Room', {
   },
   roomType: {
     type: DataTypes.ENUM(
-      'single', 'double', 'triple', 'quadruple', 'suite', 'junior_suite',
-      'family', 'shared_dormitory', 'studio', 'deluxe', 'executive', 'penthouse'
+      'single', 'double', 'matrimonial', 'twin', 'triple', 'quad',
+      'suite', 'junior_suite', 'family', 'deluxe', 'penthouse',
+      'dormitory', 'studio'
     ),
     allowNull: false,
   },
@@ -251,6 +252,22 @@ const Room = sequelize.define('Room', {
     type: DataTypes.JSON,
     defaultValue: [],
   },
+  view: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    comment: 'Tipo de vista: interior, exterior, garden, pool, sea, mountain, city',
+  },
+  mealPlan: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    defaultValue: 'none',
+    comment: 'Plan de comidas: none, breakfast, half_board, full_board, all_inclusive',
+  },
+  description: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    comment: 'Descripción detallada de la habitación',
+  },
   images: {
     type: DataTypes.JSON,
     defaultValue: [],
@@ -286,5 +303,7 @@ Property.belongsTo(Business, {
   foreignKey: 'businessId',
   as: 'business',
 });
+
+// Note: Property.belongsTo(User, { as: 'host' }) is defined in config/associations.js
 
 export { Property, Room };

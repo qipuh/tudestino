@@ -109,10 +109,16 @@ class BusinessPropertyService {
       for (const roomData of rooms) {
         const {
           type,
+          customName,
           quantity,
           capacity,
           pricePerNight,
-          amenities = [],
+          beds = [],
+          basicAmenities = [],
+          bathroomAmenities = [],
+          extras = [],
+          view,
+          mealPlan,
           description = '',
           images = []
         } = roomData;
@@ -126,28 +132,49 @@ class BusinessPropertyService {
         const roomTypeMap = {
           'single': 'single',
           'double': 'double',
+          'matrimonial': 'matrimonial',
+          'twin': 'twin',
           'triple': 'triple',
-          'quad': 'quadruple',
+          'quad': 'quad',
           'suite': 'suite',
-          'family': 'family'
+          'junior_suite': 'junior_suite',
+          'family': 'family',
+          'deluxe': 'deluxe',
+          'penthouse': 'penthouse',
+          'dormitory': 'dormitory',
+          'studio': 'studio'
         };
 
         const mappedRoomType = roomTypeMap[type] || type;
 
-        // Generar nombre basado en el tipo
+        // Usar nombre personalizado si existe, sino generar uno basado en el tipo
         const roomTypeNames = {
           'single': 'Habitación Individual',
           'double': 'Habitación Doble',
+          'matrimonial': 'Habitación Matrimonial',
+          'twin': 'Habitación Twin',
           'triple': 'Habitación Triple',
-          'quadruple': 'Habitación Cuádruple',
+          'quad': 'Habitación Cuádruple',
           'suite': 'Suite',
-          'family': 'Habitación Familiar'
+          'junior_suite': 'Junior Suite',
+          'family': 'Habitación Familiar',
+          'deluxe': 'Habitación Deluxe',
+          'penthouse': 'Penthouse',
+          'dormitory': 'Dormitorio Compartido',
+          'studio': 'Estudio'
         };
 
-        const roomName = roomTypeNames[mappedRoomType] || 'Habitación';
+        const roomName = customName || roomTypeNames[mappedRoomType] || 'Habitación';
 
-        // Crear configuración de camas básica según tipo
-        const bedsConfig = this.generateBedsConfig(mappedRoomType);
+        // Usar configuración de camas del frontend si existe, sino generar una básica
+        const bedsConfig = beds && beds.length > 0 ? beds : this.generateBedsConfig(mappedRoomType);
+
+        // Combinar todas las amenidades en un solo array
+        const allAmenities = {
+          basic: basicAmenities,
+          bathroom: bathroomAmenities,
+          extras: extras
+        };
 
         const room = await Room.create({
           propertyId: property.id,
@@ -157,7 +184,9 @@ class BusinessPropertyService {
           guestCapacity: capacity || 2,
           beds: bedsConfig,
           pricePerNight: pricePerNight,
-          amenities: amenities,
+          amenities: allAmenities,
+          view: view || null,
+          mealPlan: mealPlan || 'none',
           description: description || '',
           images: images,
           isAvailable: true

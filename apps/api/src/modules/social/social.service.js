@@ -1,4 +1,4 @@
-import User from '../users/user.model-mysql.js';
+import User from '../users/user.model.js'; // MongoDB model
 import UserFollow from './userFollow.model.js';
 import { Op } from 'sequelize';
 import sequelize from '../../config/database-mysql.js';

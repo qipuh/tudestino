@@ -372,6 +372,125 @@ router.post('/fix-ticket-isfree-column', async (req, res) => {
 });
 
 /**
+ * POST /api/migrations/add-hotel-subtype-category
+ * Adds hotelSubtype and hotelCategory columns to businesses table
+ */
+router.post('/add-hotel-subtype-category', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('businesses');
+    const addedColumns = [];
+
+    // Agregar hotelSubtype si no existe
+    if (!tableDescription.hotelSubtype) {
+      await queryInterface.addColumn('businesses', 'hotelSubtype', {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+        comment: 'Subtipo de alojamiento: hotel, hostel, apartment, bnb, resort, villa, etc.',
+      });
+      addedColumns.push('hotelSubtype');
+    }
+
+    // Agregar hotelCategory si no existe
+    if (!tableDescription.hotelCategory) {
+      await queryInterface.addColumn('businesses', 'hotelCategory', {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+        comment: 'Categoría del alojamiento: estrellas, llaves, espigas, mochilas, etc.',
+      });
+      addedColumns.push('hotelCategory');
+    }
+
+    if (addedColumns.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'Columns hotelSubtype and hotelCategory already exist',
+        alreadyExists: true,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully added columns: ${addedColumns.join(', ')}`,
+      addedColumns,
+      alreadyExists: false,
+    });
+  } catch (error) {
+    console.error('Error adding hotelSubtype and hotelCategory columns:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error adding columns',
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * POST /api/migrations/add-rooms-new-fields
+ * Adds view, mealPlan, and description columns to rooms table
+ */
+router.post('/add-rooms-new-fields', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('rooms');
+    const addedColumns = [];
+
+    // Agregar view si no existe
+    if (!tableDescription.view) {
+      await queryInterface.addColumn('rooms', 'view', {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+        comment: 'Tipo de vista: interior, exterior, garden, pool, sea, mountain, city',
+      });
+      addedColumns.push('view');
+    }
+
+    // Agregar mealPlan si no existe
+    if (!tableDescription.mealPlan) {
+      await queryInterface.addColumn('rooms', 'mealPlan', {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+        defaultValue: 'none',
+        comment: 'Plan de comidas: none, breakfast, half_board, full_board, all_inclusive',
+      });
+      addedColumns.push('mealPlan');
+    }
+
+    // Agregar description si no existe
+    if (!tableDescription.description) {
+      await queryInterface.addColumn('rooms', 'description', {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Descripción detallada de la habitación',
+      });
+      addedColumns.push('description');
+    }
+
+    if (addedColumns.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'Columns view, mealPlan, and description already exist in rooms table',
+        alreadyExists: true,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully added columns to rooms table: ${addedColumns.join(', ')}`,
+      addedColumns,
+      alreadyExists: false,
+    });
+  } catch (error) {
+    console.error('Error adding columns to rooms table:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error adding columns to rooms table',
+      error: error.message,
+    });
+  }
+});
+
+/**
  * POST /api/migrations/create-configs-table
  * Crea la tabla de configuraciones del sistema
  */

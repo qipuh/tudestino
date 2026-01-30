@@ -300,7 +300,7 @@ export const searchProperties = async (req, res) => {
         {
           model: Room,
           as: 'rooms',
-          attributes: ['id', 'roomType', 'name', 'quantity', 'guestCapacity', 'beds', 'pricePerNight', 'amenities', 'images', 'isAvailable']
+          attributes: ['id', 'roomType', 'name', 'quantity', 'guestCapacity', 'beds', 'pricePerNight', 'amenities', 'view', 'mealPlan', 'description', 'images', 'isAvailable']
         }
       ],
       order,

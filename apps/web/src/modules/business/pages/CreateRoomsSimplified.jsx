@@ -5,6 +5,7 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 const roomTypes = [
   { value: 'single', label: 'Individual', icon: 'bed-outline', color: 'text-blue-600', bgColor: 'bg-blue-50', defaultCapacity: 1 },
   { value: 'double', label: 'Doble', icon: 'bed-outline', color: 'text-green-600', bgColor: 'bg-green-50', defaultCapacity: 2 },
+  { value: 'matrimonial', label: 'Matrimonial', icon: 'heart-outline', color: 'text-rose-600', bgColor: 'bg-rose-50', defaultCapacity: 2 },
   { value: 'twin', label: 'Twin', icon: 'albums-outline', color: 'text-purple-600', bgColor: 'bg-purple-50', defaultCapacity: 2 },
   { value: 'triple', label: 'Triple', icon: 'people-outline', color: 'text-orange-600', bgColor: 'bg-orange-50', defaultCapacity: 3 },
   { value: 'quad', label: 'Cuádruple', icon: 'people-outline', color: 'text-red-600', bgColor: 'bg-red-50', defaultCapacity: 4 },
@@ -94,25 +95,55 @@ function CreateRoomsSimplified() {
   const location = useLocation();
   const { businessId } = useParams();
   const propertyData = location.state?.propertyData || {};
+  const editingRoom = location.state?.editingRoom || null;
 
   const [rooms, setRooms] = useState([]);
-  const [currentRoom, setCurrentRoom] = useState({
-    type: 'double',
-    customName: '',
-    quantity: 1,
-    capacity: 2,
-    pricePerNight: 0,
-    beds: [{ type: 'double', quantity: 1 }],
-    basicAmenities: ['wifi', 'tv', 'private_bathroom', 'hot_water'],
-    bathroomAmenities: ['private_bathroom', 'hot_water', 'shower', 'towels'],
-    view: 'interior',
-    mealPlan: 'none',
-    extras: [],
-    description: '',
-    images: [],
+  const [currentRoom, setCurrentRoom] = useState(() => {
+    // Si hay una habitación en edición, cargar sus datos
+    if (editingRoom) {
+      // Extraer amenidades por categoría
+      const amenities = editingRoom.amenities || {};
+      const basicAmenities = Array.isArray(amenities.basic) ? amenities.basic : [];
+      const bathroomAmenities = Array.isArray(amenities.bathroom) ? amenities.bathroom : [];
+      const extras = Array.isArray(amenities.extras) ? amenities.extras : [];
+
+      return {
+        type: editingRoom.roomType || 'double',
+        customName: editingRoom.name || '',
+        quantity: editingRoom.quantity || 1,
+        capacity: editingRoom.guestCapacity || 2,
+        pricePerNight: editingRoom.pricePerNight || 0,
+        beds: editingRoom.beds || [{ type: 'double', quantity: 1 }],
+        basicAmenities: basicAmenities,
+        bathroomAmenities: bathroomAmenities,
+        view: editingRoom.view || 'interior',
+        mealPlan: editingRoom.mealPlan || 'none',
+        extras: extras,
+        description: editingRoom.description || '',
+        images: editingRoom.images || [],
+      };
+    }
+
+    // Estado inicial por defecto
+    return {
+      type: 'double',
+      customName: '',
+      quantity: 1,
+      capacity: 2,
+      pricePerNight: 0,
+      beds: [{ type: 'double', quantity: 1 }],
+      basicAmenities: ['wifi', 'tv', 'private_bathroom', 'hot_water'],
+      bathroomAmenities: ['private_bathroom', 'hot_water', 'shower', 'towels'],
+      view: 'interior',
+      mealPlan: 'none',
+      extras: [],
+      description: '',
+      images: [],
+    };
   });
 
   const [dragActive, setDragActive] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(editingRoom ? 0 : null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -248,11 +279,9 @@ function CreateRoomsSimplified() {
         const result = await response.json();
 
         if (result.success && result.data && result.data.url) {
-          // Reemplazar preview con URL real
-          // La URL ya viene como /uploads/rooms/filename.jpg
-          // El servidor sirve las imágenes desde http://localhost:3000/uploads (sin /api)
-          const baseUrl = import.meta.env.VITE_API_URL.replace('/api', '');
-          const imageUrl = `${baseUrl}${result.data.url}`;
+          // Guardar solo la ruta relativa: /uploads/rooms/filename.jpg
+          // No guardar la URL completa para evitar duplicación
+          const imageUrl = result.data.url;
 
           setCurrentRoom(prev => ({
             ...prev,
@@ -295,7 +324,16 @@ function CreateRoomsSimplified() {
       return;
     }
 
-    setRooms([...rooms, currentRoom]);
+    if (editingIndex !== null) {
+      // Actualizar habitación existente
+      const updatedRooms = [...rooms];
+      updatedRooms[editingIndex] = currentRoom;
+      setRooms(updatedRooms);
+      setEditingIndex(null);
+    } else {
+      // Agregar nueva habitación
+      setRooms([...rooms, currentRoom]);
+    }
 
     // Reset form
     setCurrentRoom({
@@ -315,11 +353,94 @@ function CreateRoomsSimplified() {
     });
   };
 
+  const handleEditRoom = (index) => {
+    setCurrentRoom(rooms[index]);
+    setEditingIndex(index);
+    // Scroll to top para ver el formulario
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIndex(null);
+    setCurrentRoom({
+      type: 'double',
+      customName: '',
+      quantity: 1,
+      capacity: 2,
+      pricePerNight: 0,
+      beds: [{ type: 'double', quantity: 1 }],
+      basicAmenities: ['wifi', 'tv', 'private_bathroom', 'hot_water'],
+      bathroomAmenities: ['private_bathroom', 'hot_water', 'shower', 'towels'],
+      view: 'interior',
+      mealPlan: 'none',
+      extras: [],
+      description: '',
+      images: [],
+    });
+  };
+
   const handleDeleteRoom = (index) => {
     setRooms(rooms.filter((_, i) => i !== index));
+    if (editingIndex === index) {
+      setEditingIndex(null);
+      handleCancelEdit();
+    }
   };
 
   const handleSubmitAll = async () => {
+    // Modo edición: actualizar habitación existente
+    if (editingRoom) {
+      if (!currentRoom.pricePerNight || currentRoom.beds.length === 0) {
+        alert('Por favor completa todos los campos requeridos');
+        return;
+      }
+
+      try {
+        const updatedRoomData = {
+          name: currentRoom.customName || roomTypes.find(t => t.value === currentRoom.type)?.label || 'Habitación',
+          roomType: currentRoom.type,
+          quantity: currentRoom.quantity,
+          guestCapacity: currentRoom.capacity,
+          pricePerNight: parseFloat(currentRoom.pricePerNight),
+          beds: currentRoom.beds,
+          amenities: {
+            basic: currentRoom.basicAmenities,
+            bathroom: currentRoom.bathroomAmenities,
+            extras: currentRoom.extras
+          },
+          view: currentRoom.view,
+          mealPlan: currentRoom.mealPlan,
+          description: currentRoom.description,
+          images: currentRoom.images,
+          isAvailable: true
+        };
+
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/businesses/${businessId}/properties/rooms/${editingRoom.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(updatedRoomData)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Error al actualizar la habitación');
+        }
+
+        alert('¡Habitación actualizada exitosamente!');
+        navigate(`/business/${businessId}/services`);
+      } catch (error) {
+        console.error('Error al actualizar habitación:', error);
+        alert('Error: ' + error.message);
+      }
+      return;
+    }
+
+    // Modo creación: crear nueva propiedad con habitaciones
     if (rooms.length === 0) {
       alert('Debes agregar al menos una habitación');
       return;
@@ -362,9 +483,14 @@ function CreateRoomsSimplified() {
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Agregar Habitaciones</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {editingRoom ? 'Editar Habitación' : 'Agregar Habitaciones'}
+          </h1>
           <p className="text-gray-600 mt-2">
-            Define los tipos de habitación que ofreces en tu alojamiento
+            {editingRoom
+              ? 'Modifica los detalles de la habitación'
+              : 'Define los tipos de habitación que ofreces en tu alojamiento'
+            }
           </p>
         </div>
 
@@ -753,7 +879,22 @@ function CreateRoomsSimplified() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                     {currentRoom.images.map((image, index) => {
                       const isUploading = typeof image === 'object' && image.uploading;
-                      const imageUrl = typeof image === 'string' ? image : image.preview;
+                      // Si es string, es una ruta relativa del servidor - agregar base URL
+                      // Si es object.preview, es un data URL de FileReader - usar tal cual
+                      let imageUrl;
+                      if (typeof image === 'string') {
+                        // Si ya es una URL completa (empieza con http), usarla tal cual
+                        if (image.startsWith('http')) {
+                          imageUrl = image;
+                        } else {
+                          // Es una ruta relativa como /uploads/rooms/filename.jpg
+                          const baseUrl = import.meta.env.VITE_API_URL.replace('/api', '');
+                          imageUrl = `${baseUrl}${image}`;
+                        }
+                      } else {
+                        // Es un preview local (data URL)
+                        imageUrl = image.preview;
+                      }
 
                       return (
                         <div key={index} className="relative group">
@@ -789,25 +930,41 @@ function CreateRoomsSimplified() {
                 )}
               </div>
 
-              {/* Botón Agregar */}
-              <button
-                type="button"
-                onClick={handleAddRoom}
-                className="w-full bg-primary text-white py-4 rounded-lg hover:bg-primary-dark font-semibold text-lg flex items-center justify-center gap-2"
-              >
-                <ion-icon name="add-circle-outline" className="text-2xl"></ion-icon>
-                Agregar esta Habitación
-              </button>
+              {/* Botones Agregar/Actualizar y Cancelar - Solo en modo creación */}
+              {!editingRoom && (
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleAddRoom}
+                    className="flex-1 bg-primary text-white py-4 rounded-lg hover:bg-primary-dark font-semibold text-lg flex items-center justify-center gap-2"
+                  >
+                    <ion-icon name={editingIndex !== null ? "checkmark-circle-outline" : "add-circle-outline"} className="text-2xl"></ion-icon>
+                    {editingIndex !== null ? 'Actualizar Habitación' : 'Agregar esta Habitación'}
+                  </button>
+
+                  {editingIndex !== null && (
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="px-6 bg-gray-500 text-white py-4 rounded-lg hover:bg-gray-600 font-semibold text-lg flex items-center justify-center gap-2"
+                    >
+                      <ion-icon name="close-circle-outline" className="text-2xl"></ion-icon>
+                      Cancelar
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Lista de Habitaciones Agregadas */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-8">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <ion-icon name="list-outline" className="text-2xl text-primary"></ion-icon>
-                Habitaciones ({rooms.length})
-              </h2>
+          {/* Lista de Habitaciones Agregadas - Solo en modo creación */}
+          {!editingRoom && (
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow-md p-6 sticky top-8">
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <ion-icon name="list-outline" className="text-2xl text-primary"></ion-icon>
+                  Habitaciones ({rooms.length})
+                </h2>
 
               {rooms.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
@@ -818,10 +975,13 @@ function CreateRoomsSimplified() {
                 <div className="space-y-3 mb-6 max-h-[600px] overflow-y-auto">
                   {rooms.map((room, index) => {
                     const roomType = roomTypes.find(t => t.value === room.type);
+                    const isEditing = editingIndex === index;
                     return (
                       <div
                         key={index}
-                        className="border-2 rounded-lg p-4 hover:shadow-md transition"
+                        className={`border-2 rounded-lg p-4 hover:shadow-md transition ${
+                          isEditing ? 'border-primary bg-primary bg-opacity-5 shadow-md' : 'border-gray-200'
+                        }`}
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
@@ -852,32 +1012,56 @@ function CreateRoomsSimplified() {
                             </div>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteRoom(index)}
-                          className="w-full mt-2 text-sm bg-red-50 hover:bg-red-100 text-red-700 py-2 px-3 rounded-lg flex items-center justify-center gap-2"
-                        >
-                          <ion-icon name="trash-outline"></ion-icon>
-                          Eliminar
-                        </button>
+
+                        {isEditing && (
+                          <div className="mt-2 mb-2 px-3 py-2 bg-primary bg-opacity-10 text-primary rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
+                            <ion-icon name="create-outline" className="text-lg"></ion-icon>
+                            Editando esta habitación
+                          </div>
+                        )}
+
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            type="button"
+                            onClick={() => handleEditRoom(index)}
+                            className={`flex-1 text-sm py-2 px-3 rounded-lg flex items-center justify-center gap-2 ${
+                              isEditing
+                                ? 'bg-primary text-white'
+                                : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
+                            }`}
+                            disabled={isEditing}
+                          >
+                            <ion-icon name="create-outline"></ion-icon>
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteRoom(index)}
+                            className="flex-1 text-sm bg-red-50 hover:bg-red-100 text-red-700 py-2 px-3 rounded-lg flex items-center justify-center gap-2"
+                          >
+                            <ion-icon name="trash-outline"></ion-icon>
+                            Eliminar
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
               )}
 
-              {rooms.length > 0 && (
+              {(rooms.length > 0 || editingRoom) && (
                 <button
                   type="button"
                   onClick={handleSubmitAll}
                   className="w-full bg-green-600 text-white py-4 rounded-lg hover:bg-green-700 font-semibold flex items-center justify-center gap-2"
                 >
                   <ion-icon name="checkmark-circle-outline" className="text-2xl"></ion-icon>
-                  Finalizar y Guardar Todo
+                  {editingRoom ? 'Guardar Cambios' : 'Finalizar y Guardar Todo'}
                 </button>
               )}
             </div>
           </div>
+          )}
         </div>
       </div>
     </div>

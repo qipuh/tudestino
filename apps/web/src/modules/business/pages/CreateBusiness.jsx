@@ -724,180 +724,170 @@ function CreateBusiness() {
 
                 {/* Campos adicionales para Hotel/Alojamiento */}
                 {formData.businessType === 'hotel' && (
-                  <>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
-                          Tipo de Alojamiento *
-                        </label>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          {Object.entries(hotelSubtypes).map(([key, subtype]) => (
-                            <button
-                              key={key}
-                              type="button"
-                              onClick={() => {
-                                setFormData({
-                                  ...formData,
-                                  hotelSubtype: key,
-                                  hotelCategory: '', // Reset category when subtype changes
-                                });
-                              }}
-                              className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${
-                                formData.hotelSubtype === key
-                                  ? `${subtype.borderColor} ${subtype.bgColor} shadow-md`
-                                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                              }`}
-                            >
+                  <div className="space-y-6 bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    {/* Tipo de Alojamiento */}
+                    <div>
+                      <label className="block text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <ion-icon name="home" class="text-xl text-primary"></ion-icon>
+                        Tipo de Alojamiento *
+                      </label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {Object.entries(hotelSubtypes).map(([key, subtype]) => (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() => {
+                              setFormData({
+                                ...formData,
+                                hotelSubtype: key,
+                                hotelCategory: '', // Reset category when subtype changes
+                              });
+                            }}
+                            className={`group relative flex items-center gap-4 p-5 rounded-xl border-2 transition-all duration-200 bg-white ${
+                              formData.hotelSubtype === key
+                                ? `${subtype.borderColor} ring-2 ring-offset-2 ${subtype.color.replace('text-', 'ring-')}`
+                                : 'border-gray-200 hover:border-gray-400 hover:shadow-md'
+                            }`}
+                          >
+                            {/* Icono siempre visible */}
+                            <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${
+                              formData.hotelSubtype === key ? subtype.bgColor : 'bg-gray-100'
+                            }`}>
                               <ion-icon
                                 name={subtype.icon}
                                 class={`text-3xl ${formData.hotelSubtype === key ? subtype.color : 'text-gray-400'}`}
                               ></ion-icon>
-                              <span className={`text-xs font-medium text-center leading-tight ${
-                                formData.hotelSubtype === key ? subtype.color : 'text-gray-700'
+                            </div>
+
+                            {/* Texto */}
+                            <div className="flex-1 text-left">
+                              <span className={`text-sm font-semibold block ${
+                                formData.hotelSubtype === key ? subtype.color : 'text-gray-900'
                               }`}>
                                 {subtype.label}
                               </span>
-                              {formData.hotelSubtype === key && (
-                                <div className="absolute -top-2 -right-2">
-                                  <div className={`${subtype.bgColor} ${subtype.borderColor} border-2 rounded-full p-1`}>
-                                    <ion-icon name="checkmark" class={`text-sm ${subtype.color}`}></ion-icon>
-                                  </div>
+                            </div>
+
+                            {/* Checkmark */}
+                            {formData.hotelSubtype === key && (
+                              <div className="flex-shrink-0">
+                                <div className={`w-8 h-8 rounded-full ${subtype.bgColor} flex items-center justify-center`}>
+                                  <ion-icon name="checkmark-circle" class={`text-2xl ${subtype.color}`}></ion-icon>
+                                </div>
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Categoría */}
+                    {formData.hotelSubtype && hotelSubtypes[formData.hotelSubtype] && (
+                      <div className="animate-fadeIn">
+                        <label className="block text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                          <ion-icon name="ribbon" class="text-xl text-primary"></ion-icon>
+                          Categoría / Clasificación *
+                        </label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {hotelSubtypes[formData.hotelSubtype].categories.map((category) => (
+                            <button
+                              key={category.value}
+                              type="button"
+                              onClick={() => {
+                                setFormData({
+                                  ...formData,
+                                  hotelCategory: category.value,
+                                });
+                              }}
+                              className={`relative flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all duration-200 bg-white min-h-[120px] justify-center ${
+                                formData.hotelCategory === category.value
+                                  ? `${hotelSubtypes[formData.hotelSubtype].borderColor} ring-2 ring-offset-2 ${hotelSubtypes[formData.hotelSubtype].color.replace('text-', 'ring-')}`
+                                  : 'border-gray-200 hover:border-gray-400 hover:shadow-md'
+                              }`}
+                            >
+                              {/* Renderizar iconos según categoría */}
+                              {category.stars && (
+                                <div className="flex gap-1">
+                                  {[...Array(category.stars)].map((_, i) => (
+                                    <ion-icon
+                                      key={i}
+                                      name="star"
+                                      class="text-2xl text-yellow-500"
+                                    ></ion-icon>
+                                  ))}
+                                  {category.grand && (
+                                    <ion-icon
+                                      name="medal"
+                                      class="text-2xl text-amber-600 ml-1"
+                                    ></ion-icon>
+                                  )}
+                                </div>
+                              )}
+
+                              {category.keys && (
+                                <div className="flex gap-1">
+                                  {[...Array(category.keys)].map((_, i) => (
+                                    <ion-icon
+                                      key={i}
+                                      name="key"
+                                      class="text-2xl text-amber-600"
+                                    ></ion-icon>
+                                  ))}
+                                </div>
+                              )}
+
+                              {category.spikes && (
+                                <div className="flex gap-1">
+                                  {[...Array(category.spikes)].map((_, i) => (
+                                    <ion-icon
+                                      key={i}
+                                      name="flower"
+                                      class="text-2xl text-lime-600"
+                                    ></ion-icon>
+                                  ))}
+                                </div>
+                              )}
+
+                              {category.backpacks && (
+                                <div className="flex gap-1">
+                                  {[...Array(category.backpacks)].map((_, i) => (
+                                    <ion-icon
+                                      key={i}
+                                      name="backpack"
+                                      class="text-2xl text-indigo-600"
+                                    ></ion-icon>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Texto de categoría */}
+                              <span className={`text-sm font-semibold text-center ${
+                                formData.hotelCategory === category.value
+                                  ? hotelSubtypes[formData.hotelSubtype].color
+                                  : 'text-gray-900'
+                              }`}>
+                                {category.label}
+                              </span>
+
+                              {/* Checkmark */}
+                              {formData.hotelCategory === category.value && (
+                                <div className="absolute top-3 right-3">
+                                  <ion-icon
+                                    name="checkmark-circle"
+                                    class={`text-2xl ${hotelSubtypes[formData.hotelSubtype].color}`}
+                                  ></ion-icon>
                                 </div>
                               )}
                             </button>
                           ))}
                         </div>
+                        <p className="text-sm text-gray-600 mt-3 flex items-center gap-2">
+                          <ion-icon name="information-circle" class="text-lg text-blue-500"></ion-icon>
+                          Clasificación oficial de {hotelSubtypes[formData.hotelSubtype].label}
+                        </p>
                       </div>
-
-                      {formData.hotelSubtype && hotelSubtypes[formData.hotelSubtype] && (
-                        <div className="animate-fadeIn">
-                          <label className="block text-sm font-medium text-gray-700 mb-3">
-                            Categoría / Clasificación *
-                          </label>
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            {hotelSubtypes[formData.hotelSubtype].categories.map((category) => (
-                              <button
-                                key={category.value}
-                                type="button"
-                                onClick={() => {
-                                  setFormData({
-                                    ...formData,
-                                    hotelCategory: category.value,
-                                  });
-                                }}
-                                className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${
-                                  formData.hotelCategory === category.value
-                                    ? `${hotelSubtypes[formData.hotelSubtype].borderColor} ${hotelSubtypes[formData.hotelSubtype].bgColor} shadow-md`
-                                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                }`}
-                              >
-                                {/* Renderizar estrellas */}
-                                {category.stars && (
-                                  <div className="flex gap-0.5">
-                                    {[...Array(category.stars)].map((_, i) => (
-                                      <ion-icon
-                                        key={i}
-                                        name="star"
-                                        class={`text-lg ${
-                                          formData.hotelCategory === category.value
-                                            ? 'text-yellow-500'
-                                            : 'text-gray-300'
-                                        }`}
-                                      ></ion-icon>
-                                    ))}
-                                    {category.grand && (
-                                      <ion-icon
-                                        name="medal"
-                                        class={`text-lg ml-1 ${
-                                          formData.hotelCategory === category.value
-                                            ? 'text-amber-500'
-                                            : 'text-gray-300'
-                                        }`}
-                                      ></ion-icon>
-                                    )}
-                                  </div>
-                                )}
-
-                                {/* Renderizar llaves */}
-                                {category.keys && (
-                                  <div className="flex gap-0.5">
-                                    {[...Array(category.keys)].map((_, i) => (
-                                      <ion-icon
-                                        key={i}
-                                        name="key"
-                                        class={`text-lg ${
-                                          formData.hotelCategory === category.value
-                                            ? 'text-amber-600'
-                                            : 'text-gray-300'
-                                        }`}
-                                      ></ion-icon>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {/* Renderizar espigas */}
-                                {category.spikes && (
-                                  <div className="flex gap-0.5">
-                                    {[...Array(category.spikes)].map((_, i) => (
-                                      <ion-icon
-                                        key={i}
-                                        name="flower"
-                                        class={`text-lg ${
-                                          formData.hotelCategory === category.value
-                                            ? 'text-lime-600'
-                                            : 'text-gray-300'
-                                        }`}
-                                      ></ion-icon>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {/* Renderizar mochilas */}
-                                {category.backpacks && (
-                                  <div className="flex gap-0.5">
-                                    {[...Array(category.backpacks)].map((_, i) => (
-                                      <ion-icon
-                                        key={i}
-                                        name="backpack"
-                                        class={`text-lg ${
-                                          formData.hotelCategory === category.value
-                                            ? 'text-indigo-600'
-                                            : 'text-gray-300'
-                                        }`}
-                                      ></ion-icon>
-                                    ))}
-                                  </div>
-                                )}
-
-                                <span className={`text-xs font-medium text-center ${
-                                  formData.hotelCategory === category.value
-                                    ? hotelSubtypes[formData.hotelSubtype].color
-                                    : 'text-gray-700'
-                                }`}>
-                                  {category.label}
-                                </span>
-
-                                {formData.hotelCategory === category.value && (
-                                  <div className="absolute -top-2 -right-2">
-                                    <div className={`${hotelSubtypes[formData.hotelSubtype].bgColor} ${hotelSubtypes[formData.hotelSubtype].borderColor} border-2 rounded-full p-1`}>
-                                      <ion-icon
-                                        name="checkmark"
-                                        class={`text-sm ${hotelSubtypes[formData.hotelSubtype].color}`}
-                                      ></ion-icon>
-                                    </div>
-                                  </div>
-                                )}
-                              </button>
-                            ))}
-                          </div>
-                          <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                            <ion-icon name="information-circle-outline" class="text-sm"></ion-icon>
-                            Clasificación oficial de {hotelSubtypes[formData.hotelSubtype].label}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </>
+                    )}
+                  </div>
                 )}
 
                 <div>

@@ -55,6 +55,16 @@ const Business = sequelize.define('Business', {
     allowNull: false,
     comment: 'Tipo principal de negocio: hotel, restaurant, entertainment, etc.'
   },
+  hotelSubtype: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    comment: 'Subtipo de alojamiento: hotel, hostel, apartment, bnb, resort, villa, etc.'
+  },
+  hotelCategory: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    comment: 'Categoría del alojamiento: estrellas, llaves, espigas, mochilas, etc.'
+  },
   taxId: {
     type: DataTypes.STRING(100),
     allowNull: true

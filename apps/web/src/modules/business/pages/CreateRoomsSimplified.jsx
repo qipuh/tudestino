@@ -416,7 +416,7 @@ function CreateRoomsSimplified() {
         };
 
         const token = localStorage.getItem('token');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/businesses/${businessId}/properties/rooms/${editingRoom.id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/properties/${editingRoom.propertyId}/rooms/${editingRoom.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -425,12 +425,19 @@ function CreateRoomsSimplified() {
           body: JSON.stringify(updatedRoomData)
         });
 
-        const data = await response.json();
-
         if (!response.ok) {
-          throw new Error(data.message || 'Error al actualizar la habitación');
+          const errorText = await response.text();
+          let errorMessage = 'Error al actualizar la habitación';
+          try {
+            const errorData = JSON.parse(errorText);
+            errorMessage = errorData.message || errorMessage;
+          } catch (e) {
+            errorMessage = `Error ${response.status}: ${errorText || response.statusText}`;
+          }
+          throw new Error(errorMessage);
         }
 
+        await response.json(); // Consume response
         alert('¡Habitación actualizada exitosamente!');
         navigate(`/business/${businessId}/services`);
       } catch (error) {
@@ -930,30 +937,43 @@ function CreateRoomsSimplified() {
                 )}
               </div>
 
-              {/* Botones Agregar/Actualizar y Cancelar - Solo en modo creación */}
-              {!editingRoom && (
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={handleAddRoom}
-                    className="flex-1 bg-primary text-white py-4 rounded-lg hover:bg-primary-dark font-semibold text-lg flex items-center justify-center gap-2"
-                  >
-                    <ion-icon name={editingIndex !== null ? "checkmark-circle-outline" : "add-circle-outline"} className="text-2xl"></ion-icon>
-                    {editingIndex !== null ? 'Actualizar Habitación' : 'Agregar esta Habitación'}
-                  </button>
-
-                  {editingIndex !== null && (
+              {/* Botones de acción */}
+              <div className="flex gap-3">
+                {!editingRoom ? (
+                  // Modo creación: Agregar/Actualizar habitación a la lista
+                  <>
                     <button
                       type="button"
-                      onClick={handleCancelEdit}
-                      className="px-6 bg-gray-500 text-white py-4 rounded-lg hover:bg-gray-600 font-semibold text-lg flex items-center justify-center gap-2"
+                      onClick={handleAddRoom}
+                      className="flex-1 bg-primary text-white py-4 rounded-lg hover:bg-primary-dark font-semibold text-lg flex items-center justify-center gap-2"
                     >
-                      <ion-icon name="close-circle-outline" className="text-2xl"></ion-icon>
-                      Cancelar
+                      <ion-icon name={editingIndex !== null ? "checkmark-circle-outline" : "add-circle-outline"} className="text-2xl"></ion-icon>
+                      {editingIndex !== null ? 'Actualizar Habitación' : 'Agregar esta Habitación'}
                     </button>
-                  )}
-                </div>
-              )}
+
+                    {editingIndex !== null && (
+                      <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        className="px-6 bg-gray-500 text-white py-4 rounded-lg hover:bg-gray-600 font-semibold text-lg flex items-center justify-center gap-2"
+                      >
+                        <ion-icon name="close-circle-outline" className="text-2xl"></ion-icon>
+                        Cancelar
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  // Modo edición: Guardar cambios directamente
+                  <button
+                    type="button"
+                    onClick={handleSubmitAll}
+                    className="flex-1 bg-green-600 text-white py-4 rounded-lg hover:bg-green-700 font-semibold text-lg flex items-center justify-center gap-2"
+                  >
+                    <ion-icon name="checkmark-circle-outline" className="text-2xl"></ion-icon>
+                    Guardar Cambios
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

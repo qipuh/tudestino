@@ -45,6 +45,146 @@ const businessTypes = [
   { value: 'spa', label: 'Spa y Bienestar', icon: '💆' },
 ];
 
+// Configuración de subtipos de alojamiento y sus categorías
+const hotelSubtypes = {
+  hotel: {
+    label: 'Hotel',
+    icon: '🏨',
+    categories: [
+      { value: '1-star', label: '1 Estrella ⭐' },
+      { value: '2-star', label: '2 Estrellas ⭐⭐' },
+      { value: '3-star', label: '3 Estrellas ⭐⭐⭐' },
+      { value: '4-star', label: '4 Estrellas ⭐⭐⭐⭐' },
+      { value: '5-star', label: '5 Estrellas ⭐⭐⭐⭐⭐' },
+      { value: '5-star-grand', label: '5 Estrellas Gran Lujo 👑' },
+    ]
+  },
+  hostel: {
+    label: 'Hostal / Albergue',
+    icon: '🏠',
+    categories: [
+      { value: 'basic', label: 'Básica' },
+      { value: 'standard', label: 'Estándar' },
+      { value: 'superior', label: 'Superior' },
+    ]
+  },
+  apartment: {
+    label: 'Apartamento Turístico',
+    icon: '🏢',
+    categories: [
+      { value: '1-key', label: '1 Llave 🔑' },
+      { value: '2-key', label: '2 Llaves 🔑🔑' },
+      { value: '3-key', label: '3 Llaves 🔑🔑🔑' },
+      { value: '4-key', label: '4 Llaves 🔑🔑🔑🔑' },
+      { value: '5-key', label: '5 Llaves 🔑🔑🔑🔑🔑' },
+    ]
+  },
+  bnb: {
+    label: 'Bed & Breakfast (B&B)',
+    icon: '🛏️',
+    categories: [
+      { value: 'basic', label: 'Básica' },
+      { value: 'standard', label: 'Estándar' },
+      { value: 'superior', label: 'Superior' },
+    ]
+  },
+  resort: {
+    label: 'Resort / Complejo Turístico',
+    icon: '🏝️',
+    categories: [
+      { value: '3-star', label: '3 Estrellas ⭐⭐⭐' },
+      { value: '4-star', label: '4 Estrellas ⭐⭐⭐⭐' },
+      { value: '5-star', label: '5 Estrellas ⭐⭐⭐⭐⭐' },
+    ]
+  },
+  villa: {
+    label: 'Villa / Chalet',
+    icon: '🏘️',
+    categories: [
+      { value: 'standard', label: 'Estándar' },
+      { value: 'superior', label: 'Superior' },
+      { value: 'luxury', label: 'De Lujo' },
+    ]
+  },
+  guesthouse: {
+    label: 'Posada / Casa Rural',
+    icon: '🏡',
+    categories: [
+      { value: '1-spike', label: '1 Espiga 🌾' },
+      { value: '2-spike', label: '2 Espigas 🌾🌾' },
+      { value: '3-spike', label: '3 Espigas 🌾🌾🌾' },
+      { value: '4-spike', label: '4 Espigas 🌾🌾🌾🌾' },
+      { value: '5-spike', label: '5 Espigas 🌾🌾🌾🌾🌾' },
+    ]
+  },
+  motel: {
+    label: 'Motel',
+    icon: '🛣️',
+    categories: [
+      { value: '1-star', label: '1 Estrella ⭐' },
+      { value: '2-star', label: '2 Estrellas ⭐⭐' },
+      { value: '3-star', label: '3 Estrellas ⭐⭐⭐' },
+    ]
+  },
+  homestay: {
+    label: 'Alojamiento en Casa Particular',
+    icon: '🏘️',
+    categories: [
+      { value: 'unrated', label: 'Sin categoría oficial' },
+    ]
+  },
+  parador: {
+    label: 'Parador',
+    icon: '🏛️',
+    categories: [
+      { value: '3-star', label: '3 Estrellas ⭐⭐⭐' },
+      { value: '4-star', label: '4 Estrellas ⭐⭐⭐⭐' },
+      { value: '5-star', label: '5 Estrellas ⭐⭐⭐⭐⭐' },
+    ]
+  },
+  glamping: {
+    label: 'Glamping',
+    icon: '⛺',
+    categories: [
+      { value: 'basic', label: 'Básica' },
+      { value: 'luxury', label: 'Lujo' },
+      { value: 'ultra-luxury', label: 'Ultra Lujo' },
+    ]
+  },
+  youth_hostel: {
+    label: 'Albergue Juvenil',
+    icon: '🎒',
+    categories: [
+      { value: '1-backpack', label: '1 Mochila 🎒' },
+      { value: '2-backpack', label: '2 Mochilas 🎒🎒' },
+      { value: '3-backpack', label: '3 Mochilas 🎒🎒🎒' },
+    ]
+  },
+  pension: {
+    label: 'Pensión',
+    icon: '🏚️',
+    categories: [
+      { value: '1st-class', label: '1ª Categoría' },
+      { value: '2nd-class', label: '2ª Categoría' },
+      { value: '3rd-class', label: '3ª Categoría' },
+    ]
+  },
+  monastery: {
+    label: 'Hospedería / Monasterio',
+    icon: '⛪',
+    categories: [
+      { value: 'unrated', label: 'Sin categoría estandarizada' },
+    ]
+  },
+  boat: {
+    label: 'Barco / Casa Flotante',
+    icon: '⛵',
+    categories: [
+      { value: 'unrated', label: 'Sin categoría estandarizada' },
+    ]
+  },
+};
+
 function CreateBusiness() {
   const navigate = useNavigate();
   const { createBusiness, loading } = useBusiness();
@@ -53,6 +193,8 @@ function CreateBusiness() {
     slug: '',
     description: '',
     businessType: 'hotel',
+    hotelSubtype: '', // Subtipo de alojamiento (hotel, hostel, apartment, etc.)
+    hotelCategory: '', // Categoría según el subtipo (estrellas, llaves, etc.)
     address: {
       street: '',
       city: '',
@@ -312,6 +454,14 @@ function CreateBusiness() {
           [name]: value,
           slug: slug,
         });
+      } else if (name === 'businessType') {
+        // Limpiar campos de hotel si se cambia a otro tipo
+        setFormData({
+          ...formData,
+          [name]: value,
+          hotelSubtype: value === 'hotel' ? formData.hotelSubtype : '',
+          hotelCategory: value === 'hotel' ? formData.hotelCategory : '',
+        });
       } else {
         setFormData({
           ...formData,
@@ -375,6 +525,17 @@ function CreateBusiness() {
       if (!formData.name || !formData.businessType) {
         setError('Completa todos los campos requeridos');
         return;
+      }
+      // Validar campos adicionales para hoteles
+      if (formData.businessType === 'hotel') {
+        if (!formData.hotelSubtype) {
+          setError('Selecciona el tipo de alojamiento');
+          return;
+        }
+        if (!formData.hotelCategory) {
+          setError('Selecciona la categoría del alojamiento');
+          return;
+        }
       }
     }
     if (step === 2) {
@@ -515,6 +676,62 @@ function CreateBusiness() {
                     ))}
                   </div>
                 </div>
+
+                {/* Campos adicionales para Hotel/Alojamiento */}
+                {formData.businessType === 'hotel' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Tipo de Alojamiento *
+                      </label>
+                      <select
+                        name="hotelSubtype"
+                        value={formData.hotelSubtype}
+                        onChange={(e) => {
+                          setFormData({
+                            ...formData,
+                            hotelSubtype: e.target.value,
+                            hotelCategory: '', // Reset category when subtype changes
+                          });
+                        }}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                        required
+                      >
+                        <option value="">Selecciona un tipo...</option>
+                        {Object.entries(hotelSubtypes).map(([key, subtype]) => (
+                          <option key={key} value={key}>
+                            {subtype.icon} {subtype.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {formData.hotelSubtype && hotelSubtypes[formData.hotelSubtype] && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Categoría *
+                        </label>
+                        <select
+                          name="hotelCategory"
+                          value={formData.hotelCategory}
+                          onChange={handleChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                          required
+                        >
+                          <option value="">Selecciona una categoría...</option>
+                          {hotelSubtypes[formData.hotelSubtype].categories.map((category) => (
+                            <option key={category.value} value={category.value}>
+                              {category.label}
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Clasificación oficial de {hotelSubtypes[formData.hotelSubtype].label}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

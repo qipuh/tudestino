@@ -199,32 +199,71 @@ function CreateRoomsSimplified() {
 
   const handleFiles = async (files) => {
     const filesArray = Array.from(files);
-    const token = localStorage.getItem('token');
 
+    // Crear previsualizaciones inmediatas
+    const newPreviews = [];
     for (const file of filesArray) {
       if (file.type.startsWith('image/')) {
-        const formData = new FormData();
-        formData.append('image', file);
-
-        try {
-          const response = await fetch(`${import.meta.env.VITE_API_URL}/upload/rooms`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            },
-            body: formData
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          newPreviews.push({
+            preview: reader.result,
+            file: file,
+            uploading: true
           });
 
-          const data = await response.json();
-          if (data.url) {
+          // Actualizar previews inmediatamente
+          if (newPreviews.length === filesArray.filter(f => f.type.startsWith('image/')).length) {
             setCurrentRoom(prev => ({
               ...prev,
-              images: [...prev.images, data.url]
+              images: [...prev.images, ...newPreviews]
             }));
+
+            // Subir archivos
+            uploadFiles(newPreviews);
           }
-        } catch (error) {
-          console.error('Error uploading image:', error);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  };
+
+  const uploadFiles = async (previews) => {
+    const token = localStorage.getItem('token');
+
+    for (let i = 0; i < previews.length; i++) {
+      const preview = previews[i];
+      const formData = new FormData();
+      formData.append('image', preview.file);
+
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/upload/rooms`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+        if (data.url) {
+          // Reemplazar preview con URL real
+          setCurrentRoom(prev => ({
+            ...prev,
+            images: prev.images.map(img =>
+              img.preview === preview.preview
+                ? data.url
+                : img
+            )
+          }));
         }
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        // Remover preview si falla
+        setCurrentRoom(prev => ({
+          ...prev,
+          images: prev.images.filter(img => img.preview !== preview.preview)
+        }));
       }
     }
   };
@@ -643,23 +682,42 @@ function CreateRoomsSimplified() {
                 <label className="block text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <ion-icon name="images-outline" className="text-xl text-primary"></ion-icon>
                   Fotografías de la habitación
+                  <span className="text-sm font-normal text-gray-500">
+                    ({currentRoom.images.length} imagen{currentRoom.images.length !== 1 ? 'es' : ''})
+                  </span>
                 </label>
 
                 <div
-                  className={`border-2 border-dashed rounded-lg p-8 text-center transition ${
-                    dragActive ? 'border-primary bg-primary bg-opacity-5' : 'border-gray-300 hover:border-gray-400'
+                  className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 ${
+                    dragActive
+                      ? 'border-primary bg-primary bg-opacity-10 scale-105'
+                      : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                   }`}
                   onDragEnter={handleDrag}
                   onDragLeave={handleDrag}
                   onDragOver={handleDrag}
                   onDrop={handleDrop}
                 >
-                  <ion-icon name="cloud-upload-outline" className="text-6xl text-gray-400 mb-4"></ion-icon>
+                  {dragActive && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-primary bg-opacity-10 rounded-lg border-2 border-primary">
+                      <div className="text-center">
+                        <ion-icon name="cloud-upload" className="text-7xl text-primary mb-2 animate-bounce"></ion-icon>
+                        <p className="text-lg font-semibold text-primary">
+                          Suelta las imágenes aquí
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <ion-icon
+                    name="cloud-upload-outline"
+                    className={`text-6xl mb-4 transition ${dragActive ? 'text-primary' : 'text-gray-400'}`}
+                  ></ion-icon>
                   <p className="text-lg font-medium text-gray-900 mb-2">
                     Arrastra y suelta tus imágenes aquí
                   </p>
                   <p className="text-sm text-gray-600 mb-4">
-                    o haz clic para seleccionar archivos
+                    o haz clic para seleccionar archivos (JPG, PNG, WebP)
                   </p>
                   <input
                     type="file"
@@ -671,31 +729,53 @@ function CreateRoomsSimplified() {
                   />
                   <label
                     htmlFor="file-upload"
-                    className="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark cursor-pointer"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark cursor-pointer transition"
                   >
+                    <ion-icon name="images-outline" className="text-xl"></ion-icon>
                     Seleccionar imágenes
                   </label>
+                  <p className="text-xs text-gray-500 mt-4">
+                    Puedes agregar múltiples imágenes a la vez
+                  </p>
                 </div>
 
                 {/* Preview de imágenes */}
                 {currentRoom.images.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                    {currentRoom.images.map((image, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={image}
-                          alt={`Habitación ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(index)}
-                          className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition"
-                        >
-                          <ion-icon name="close-outline"></ion-icon>
-                        </button>
-                      </div>
-                    ))}
+                    {currentRoom.images.map((image, index) => {
+                      const isUploading = typeof image === 'object' && image.uploading;
+                      const imageUrl = typeof image === 'string' ? image : image.preview;
+
+                      return (
+                        <div key={index} className="relative group">
+                          <img
+                            src={imageUrl}
+                            alt={`Habitación ${index + 1}`}
+                            className={`w-full h-32 object-cover rounded-lg border-2 ${
+                              isUploading ? 'border-blue-400 opacity-70' : 'border-transparent'
+                            }`}
+                          />
+                          {isUploading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-lg">
+                              <div className="flex flex-col items-center gap-2">
+                                <div className="animate-spin">
+                                  <ion-icon name="cloud-upload-outline" className="text-3xl text-white"></ion-icon>
+                                </div>
+                                <span className="text-xs text-white font-medium">Subiendo...</span>
+                              </div>
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(index)}
+                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-red-600"
+                            disabled={isUploading}
+                          >
+                            <ion-icon name="close-outline" className="text-lg"></ion-icon>
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

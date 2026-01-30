@@ -37,12 +37,12 @@ function MapUpdater({ center }) {
 }
 
 const businessTypes = [
-  { value: 'hotel', label: 'Hotel / Alojamiento', icon: '🏨' },
-  { value: 'restaurant', label: 'Restaurante', icon: '🍽️' },
-  { value: 'entertainment', label: 'Entretenimiento', icon: '🎭' },
-  { value: 'tours', label: 'Tours y Excursiones', icon: '🗺️' },
-  { value: 'transport', label: 'Transporte', icon: '🚗', comingSoon: true },
-  { value: 'spa', label: 'Spa y Bienestar', icon: '💆' },
+  { value: 'hotel', label: 'Hotel / Alojamiento', icon: 'bed-outline', color: 'text-blue-600', bgColor: 'bg-blue-50' },
+  { value: 'restaurant', label: 'Restaurante', icon: 'restaurant-outline', color: 'text-orange-600', bgColor: 'bg-orange-50' },
+  { value: 'entertainment', label: 'Entretenimiento', icon: 'musical-notes-outline', color: 'text-purple-600', bgColor: 'bg-purple-50' },
+  { value: 'tours', label: 'Tours y Excursiones', icon: 'map-outline', color: 'text-green-600', bgColor: 'bg-green-50' },
+  { value: 'transport', label: 'Transporte', icon: 'car-outline', color: 'text-gray-600', bgColor: 'bg-gray-50', comingSoon: true },
+  { value: 'spa', label: 'Spa y Bienestar', icon: 'sparkles-outline', color: 'text-pink-600', bgColor: 'bg-pink-50' },
 ];
 
 // Configuración de subtipos de alojamiento y sus categorías con Ionicons
@@ -718,7 +718,16 @@ function CreateBusiness() {
                           disabled={type.comingSoon}
                           className="sr-only"
                         />
-                        <span className="text-2xl">{type.icon}</span>
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                          type.comingSoon ? 'bg-gray-100' : formData.businessType === type.value ? type.bgColor : 'bg-gray-100'
+                        }`}>
+                          <ion-icon
+                            name={type.icon}
+                            className={`text-3xl ${
+                              type.comingSoon ? 'text-gray-400' : formData.businessType === type.value ? type.color : 'text-gray-500'
+                            }`}
+                          ></ion-icon>
+                        </div>
                         <div className="flex-1">
                           <span className="text-sm font-medium block">{type.label}</span>
                           {type.comingSoon && (

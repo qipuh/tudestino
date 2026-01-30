@@ -237,7 +237,7 @@ function CreateRoomsSimplified() {
       formData.append('image', preview.file);
 
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/upload/rooms`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/upload/rooms/single`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -245,20 +245,26 @@ function CreateRoomsSimplified() {
           body: formData
         });
 
-        const data = await response.json();
-        if (data.url) {
-          // Reemplazar preview con URL real
+        const result = await response.json();
+
+        if (result.success && result.data && result.data.url) {
+          // Reemplazar preview con URL real (agregar el baseURL del servidor)
+          const imageUrl = `${import.meta.env.VITE_API_URL}${result.data.url}`;
+
           setCurrentRoom(prev => ({
             ...prev,
             images: prev.images.map(img =>
               img.preview === preview.preview
-                ? data.url
+                ? imageUrl
                 : img
             )
           }));
+        } else {
+          throw new Error(result.message || 'Error al subir imagen');
         }
       } catch (error) {
         console.error('Error uploading image:', error);
+        alert(`Error al subir imagen: ${error.message}`);
         // Remover preview si falla
         setCurrentRoom(prev => ({
           ...prev,

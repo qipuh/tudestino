@@ -248,8 +248,11 @@ function CreateRoomsSimplified() {
         const result = await response.json();
 
         if (result.success && result.data && result.data.url) {
-          // Reemplazar preview con URL real (agregar el baseURL del servidor)
-          const imageUrl = `${import.meta.env.VITE_API_URL}${result.data.url}`;
+          // Reemplazar preview con URL real
+          // La URL ya viene como /uploads/rooms/filename.jpg
+          // El servidor sirve las imágenes desde http://localhost:3000/uploads (sin /api)
+          const baseUrl = import.meta.env.VITE_API_URL.replace('/api', '');
+          const imageUrl = `${baseUrl}${result.data.url}`;
 
           setCurrentRoom(prev => ({
             ...prev,

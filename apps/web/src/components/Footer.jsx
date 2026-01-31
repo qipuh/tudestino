@@ -1,50 +1,108 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 function Footer() {
+  const [expandedSections, setExpandedSections] = useState({});
+
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const sections = [
+    {
+      id: 'help',
+      title: 'Asistencia',
+      links: [
+        { to: '/help', label: 'Centro de ayuda' },
+        { to: '/cancellation', label: 'Política de cancelación' },
+        { to: '/contact', label: 'Contacto' },
+      ]
+    },
+    {
+      id: 'community',
+      title: 'Comunidad',
+      links: [
+        { to: '/tudestino', label: 'Red social' },
+        { to: '/events', label: 'Eventos' },
+        { to: '/blog', label: 'Blog' },
+      ]
+    },
+    {
+      id: 'business',
+      title: 'Para negocios',
+      links: [
+        { to: '/host', label: 'Publica tu negocio' },
+        { to: '/business-resources', label: 'Recursos' },
+        { to: '/pricing', label: 'Precios' },
+      ]
+    },
+    {
+      id: 'about',
+      title: 'TuDestino.pe',
+      links: [
+        { to: '/about', label: 'Acerca de' },
+        { to: '/terms', label: 'Términos' },
+        { to: '/privacy', label: 'Privacidad' },
+      ]
+    }
+  ];
+
   return (
     <footer className="border-t border-gray-200 bg-gray-50 mt-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
-            <h3 className="font-semibold mb-4">Asistencia</h3>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li><Link to="/help" className="hover:underline">Centro de ayuda</Link></li>
-              <li><Link to="/cancellation" className="hover:underline">Política de cancelación</Link></li>
-              <li><Link to="/contact" className="hover:underline">Contacto</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-4">Comunidad</h3>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li><Link to="/tudestino" className="hover:underline">Red social</Link></li>
-              <li><Link to="/events" className="hover:underline">Eventos</Link></li>
-              <li><Link to="/blog" className="hover:underline">Blog</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-4">Para negocios</h3>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li><Link to="/host" className="hover:underline">Publica tu negocio</Link></li>
-              <li><Link to="/business-resources" className="hover:underline">Recursos para empresarios</Link></li>
-              <li><Link to="/pricing" className="hover:underline">Precios y comisiones</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-4">TuDestino.pe</h3>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li><Link to="/about" className="hover:underline">Acerca de</Link></li>
-              <li><Link to="/terms" className="hover:underline">Términos y condiciones</Link></li>
-              <li><Link to="/privacy" className="hover:underline">Política de privacidad</Link></li>
-            </ul>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Desktop - Grid normal */}
+        <div className="hidden md:grid md:grid-cols-4 gap-6">
+          {sections.map(section => (
+            <div key={section.id}>
+              <h3 className="font-semibold mb-3 text-sm">{section.title}</h3>
+              <ul className="space-y-2 text-xs text-gray-600">
+                {section.links.map(link => (
+                  <li key={link.to}>
+                    <Link to={link.to} className="hover:underline hover:text-primary">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <div className="mt-8 pt-8 border-t border-gray-200 text-sm text-gray-600 text-center">
-          <p>&copy; {new Date().getFullYear()} TuDestino.pe - Plataforma de turismo en Perú. Todos los derechos reservados.</p>
-          <p>tudestino.pe es un producto de Adaptika S.A.C.S</p>
+        {/* Mobile - Collapsible */}
+        <div className="md:hidden space-y-3">
+          {sections.map(section => (
+            <div key={section.id} className="border-b border-gray-200 pb-3">
+              <button
+                onClick={() => toggleSection(section.id)}
+                className="flex items-center justify-between w-full text-left"
+              >
+                <h3 className="font-semibold text-sm">{section.title}</h3>
+                <ion-icon
+                  name={expandedSections[section.id] ? 'chevron-up-outline' : 'chevron-down-outline'}
+                  className="text-lg"
+                ></ion-icon>
+              </button>
+              {expandedSections[section.id] && (
+                <ul className="mt-3 space-y-2 text-xs text-gray-600">
+                  {section.links.map(link => (
+                    <li key={link.to}>
+                      <Link to={link.to} className="hover:underline hover:text-primary">
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Copyright - Compacto */}
+        <div className="mt-6 pt-4 border-t border-gray-200 text-xs text-gray-600 text-center">
+          <p>&copy; {new Date().getFullYear()} TuDestino.pe - Adaptika S.A.C.S</p>
         </div>
       </div>
     </footer>

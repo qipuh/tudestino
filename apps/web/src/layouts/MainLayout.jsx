@@ -1,10 +1,14 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Header from '@components/Header';
 import Footer from '@components/Footer';
 import { useSidebar } from '../contexts/SidebarContext';
 
 function MainLayout() {
   const { sidebarOpen, sidebarVisible } = useSidebar();
+  const location = useLocation();
+
+  // Ocultar footer en páginas de búsqueda (porque tienen su propio layout full-screen)
+  const hideFooter = location.pathname === '/search' || location.pathname.startsWith('/search?');
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -17,7 +21,7 @@ function MainLayout() {
       >
         <Outlet />
       </main>
-      <Footer />
+      {!hideFooter && <Footer />}
     </div>
   );
 }

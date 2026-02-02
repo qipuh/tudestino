@@ -7,7 +7,10 @@ import {
   updateUserStatus,
   deleteUser,
   getWhatsAppConfig,
-  setWhatsAppConfig
+  setWhatsAppConfig,
+  getPendingVerifications,
+  approveVerification,
+  rejectVerification
 } from './admin.controller.js';
 
 const router = express.Router();
@@ -28,5 +31,10 @@ router.delete('/users/:userId', deleteUser);
 // Configuration management
 router.get('/config/whatsapp', getWhatsAppConfig);
 router.post('/config/whatsapp', setWhatsAppConfig);
+
+// Identity verification management
+router.get('/verifications/pending', getPendingVerifications);
+router.post('/verifications/:userId/approve', approveVerification);
+router.post('/verifications/:userId/reject', rejectVerification);
 
 export default router;

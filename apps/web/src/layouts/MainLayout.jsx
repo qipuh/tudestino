@@ -7,12 +7,27 @@ function MainLayout() {
   const { sidebarOpen, sidebarVisible } = useSidebar();
   const location = useLocation();
 
-  // Ocultar footer en páginas de búsqueda (porque tienen su propio layout full-screen)
-  const hideFooter = location.pathname === '/search' || location.pathname.startsWith('/search?');
+  // Ocultar header en páginas de administración (tienen su propio sistema de navegación)
+  // Nota: /business/:id (vista pública) SÍ muestra header, solo se oculta en rutas de gestión
+  const isBusinessManagement = location.pathname.match(/^\/business\/[^/]+\/(manage|edit|services|reservations|posts|analytics|settings|menu|spa-services|property|tours)/);
+  const hideHeader = location.pathname.startsWith('/account') ||
+                     isBusinessManagement ||
+                     location.pathname.startsWith('/bookings') ||
+                     location.pathname.startsWith('/messages') ||
+                     location.pathname.startsWith('/notifications');
+
+  // Ocultar footer en páginas de búsqueda y administración
+  const hideFooter = location.pathname === '/search' ||
+                     location.pathname.startsWith('/search?') ||
+                     location.pathname.startsWith('/account') ||
+                     isBusinessManagement ||
+                     location.pathname.startsWith('/bookings') ||
+                     location.pathname.startsWith('/messages') ||
+                     location.pathname.startsWith('/notifications');
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      {!hideHeader && <Header />}
       <main
         className="flex-1 transition-all duration-300"
         style={{

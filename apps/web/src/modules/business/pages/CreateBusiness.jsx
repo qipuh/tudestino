@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import useBusiness from '../hooks/useBusiness';
+import UserAccountLayout from '../../../layouts/UserAccountLayout';
 
 // Fix para los iconos de Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -230,6 +231,415 @@ const hotelSubtypes = {
   },
 };
 
+// Configuración de tipos de restaurantes y categorías gastronómicas
+const restaurantSubtypes = {
+  fine_dining: {
+    label: 'Alta Cocina / Fine Dining',
+    icon: 'diamond-outline',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-50',
+    borderColor: 'border-purple-200',
+    cuisineTypes: [
+      { value: 'peruvian', label: 'Peruana', icon: '🇵🇪' },
+      { value: 'fusion', label: 'Fusión', icon: '🌟' },
+      { value: 'international', label: 'Internacional', icon: '🌍' },
+      { value: 'french', label: 'Francesa', icon: '🇫🇷' },
+      { value: 'italian', label: 'Italiana', icon: '🇮🇹' },
+      { value: 'japanese', label: 'Japonesa', icon: '🇯🇵' },
+      { value: 'mediterranean', label: 'Mediterránea', icon: '🫒' },
+      { value: 'molecular', label: 'Molecular', icon: '⚗️' },
+    ]
+  },
+  casual: {
+    label: 'Restaurante Casual',
+    icon: 'restaurant-outline',
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50',
+    borderColor: 'border-orange-200',
+    cuisineTypes: [
+      { value: 'peruvian', label: 'Peruana', icon: '🇵🇪' },
+      { value: 'criolla', label: 'Criolla', icon: '🍲' },
+      { value: 'italian', label: 'Italiana', icon: '🇮🇹' },
+      { value: 'chinese', label: 'China / Chifa', icon: '🥢' },
+      { value: 'mexican', label: 'Mexicana', icon: '🇲🇽' },
+      { value: 'american', label: 'Americana', icon: '🇺🇸' },
+      { value: 'international', label: 'Internacional', icon: '🌍' },
+      { value: 'vegetarian', label: 'Vegetariana', icon: '🥗' },
+    ]
+  },
+  cevicheria: {
+    label: 'Cevichería',
+    icon: 'fish-outline',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    cuisineTypes: [
+      { value: 'peruvian_seafood', label: 'Mariscos Peruanos', icon: '🦐' },
+      { value: 'traditional', label: 'Tradicional', icon: '🐟' },
+      { value: 'fusion', label: 'Fusión Marina', icon: '🌊' },
+    ]
+  },
+  parrilla: {
+    label: 'Parrilla / Steakhouse',
+    icon: 'flame-outline',
+    color: 'text-red-600',
+    bgColor: 'bg-red-50',
+    borderColor: 'border-red-200',
+    cuisineTypes: [
+      { value: 'argentine', label: 'Argentina', icon: '🇦🇷' },
+      { value: 'peruvian', label: 'Peruana', icon: '🇵🇪' },
+      { value: 'brazilian', label: 'Brasileña', icon: '🇧🇷' },
+      { value: 'uruguayan', label: 'Uruguaya', icon: '🇺🇾' },
+    ]
+  },
+  pizzeria: {
+    label: 'Pizzería',
+    icon: 'pizza-outline',
+    color: 'text-green-600',
+    bgColor: 'bg-green-50',
+    borderColor: 'border-green-200',
+    cuisineTypes: [
+      { value: 'italian', label: 'Italiana Tradicional', icon: '🇮🇹' },
+      { value: 'neapolitan', label: 'Napolitana', icon: '🍕' },
+      { value: 'gourmet', label: 'Gourmet', icon: '✨' },
+      { value: 'casual', label: 'Casual', icon: '🍴' },
+    ]
+  },
+  fast_food: {
+    label: 'Comida Rápida',
+    icon: 'fast-food-outline',
+    color: 'text-yellow-600',
+    bgColor: 'bg-yellow-50',
+    borderColor: 'border-yellow-200',
+    cuisineTypes: [
+      { value: 'burgers', label: 'Hamburguesas', icon: '🍔' },
+      { value: 'chicken', label: 'Pollo', icon: '🍗' },
+      { value: 'pizza', label: 'Pizza', icon: '🍕' },
+      { value: 'sandwiches', label: 'Sándwiches', icon: '🥪' },
+      { value: 'mexican', label: 'Mexicana', icon: '🌮' },
+    ]
+  },
+  buffet: {
+    label: 'Buffet',
+    icon: 'fast-food-outline',
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50',
+    borderColor: 'border-amber-200',
+    cuisineTypes: [
+      { value: 'international', label: 'Internacional', icon: '🌍' },
+      { value: 'peruvian', label: 'Peruana', icon: '🇵🇪' },
+      { value: 'chinese', label: 'China', icon: '🥢' },
+      { value: 'mixed', label: 'Mixto', icon: '🍽️' },
+    ]
+  },
+  cafeteria: {
+    label: 'Cafetería / Café',
+    icon: 'cafe-outline',
+    color: 'text-brown-600',
+    bgColor: 'bg-amber-50',
+    borderColor: 'border-amber-200',
+    cuisineTypes: [
+      { value: 'specialty_coffee', label: 'Café de Especialidad', icon: '☕' },
+      { value: 'bakery', label: 'Pastelería', icon: '🥐' },
+      { value: 'brunch', label: 'Brunch', icon: '🥞' },
+      { value: 'desserts', label: 'Postres', icon: '🍰' },
+    ]
+  },
+  peruvian: {
+    label: 'Restaurante Peruano Especializado',
+    icon: 'restaurant-outline',
+    color: 'text-red-700',
+    bgColor: 'bg-red-50',
+    borderColor: 'border-red-200',
+    cuisineTypes: [
+      { value: 'nikkei', label: 'Nikkei', icon: '🍱' },
+      { value: 'amazonian', label: 'Amazónica', icon: '🌿' },
+      { value: 'andean', label: 'Andina', icon: '🏔️' },
+      { value: 'coastal', label: 'Costeña', icon: '🌊' },
+      { value: 'novo_andino', label: 'Novo Andino', icon: '⛰️' },
+    ]
+  },
+  vegetarian: {
+    label: 'Vegetariano / Vegano',
+    icon: 'leaf-outline',
+    color: 'text-green-700',
+    bgColor: 'bg-green-50',
+    borderColor: 'border-green-200',
+    cuisineTypes: [
+      { value: 'vegetarian', label: 'Vegetariano', icon: '🥗' },
+      { value: 'vegan', label: 'Vegano', icon: '🌱' },
+      { value: 'organic', label: 'Orgánico', icon: '🌿' },
+      { value: 'healthy', label: 'Saludable', icon: '💚' },
+    ]
+  },
+  asian: {
+    label: 'Cocina Asiática',
+    icon: 'restaurant-outline',
+    color: 'text-pink-600',
+    bgColor: 'bg-pink-50',
+    borderColor: 'border-pink-200',
+    cuisineTypes: [
+      { value: 'chinese', label: 'China / Chifa', icon: '🥢' },
+      { value: 'japanese', label: 'Japonesa', icon: '🇯🇵' },
+      { value: 'thai', label: 'Tailandesa', icon: '🇹🇭' },
+      { value: 'korean', label: 'Coreana', icon: '🇰🇷' },
+      { value: 'vietnamese', label: 'Vietnamita', icon: '🇻🇳' },
+      { value: 'fusion', label: 'Fusión Asiática', icon: '🌏' },
+    ]
+  },
+  bar_restaurant: {
+    label: 'Bar Restaurante',
+    icon: 'beer-outline',
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-50',
+    borderColor: 'border-indigo-200',
+    cuisineTypes: [
+      { value: 'tapas', label: 'Tapas', icon: '🍢' },
+      { value: 'pub_food', label: 'Comida de Pub', icon: '🍺' },
+      { value: 'international', label: 'Internacional', icon: '🌍' },
+      { value: 'casual', label: 'Casual', icon: '🍴' },
+    ]
+  },
+  bistro: {
+    label: 'Bistró',
+    icon: 'wine-outline',
+    color: 'text-violet-600',
+    bgColor: 'bg-violet-50',
+    borderColor: 'border-violet-200',
+    cuisineTypes: [
+      { value: 'french', label: 'Francesa', icon: '🇫🇷' },
+      { value: 'mediterranean', label: 'Mediterránea', icon: '🫒' },
+      { value: 'fusion', label: 'Fusión', icon: '✨' },
+      { value: 'contemporary', label: 'Contemporánea', icon: '🍷' },
+    ]
+  },
+};
+
+// Configuración de tipos de entretenimiento y sus categorías
+const entertainmentSubtypes = {
+  bar: {
+    label: 'Bar / Pub',
+    icon: 'beer-outline',
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50',
+    borderColor: 'border-amber-200',
+    categories: [
+      { value: 'sports_bar', label: 'Bar Deportivo', icon: '⚽' },
+      { value: 'irish_pub', label: 'Pub Irlandés', icon: '🍀' },
+      { value: 'wine_bar', label: 'Bar de Vinos', icon: '🍷' },
+      { value: 'cocktail_bar', label: 'Bar de Cócteles', icon: '🍸' },
+      { value: 'beer_bar', label: 'Bar Cervecero', icon: '🍺' },
+      { value: 'lounge', label: 'Lounge Bar', icon: '🛋️' },
+    ]
+  },
+  nightclub: {
+    label: 'Discoteca / Club Nocturno',
+    icon: 'radio-outline',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-50',
+    borderColor: 'border-purple-200',
+    categories: [
+      { value: 'nightclub', label: 'Discoteca General', icon: '🎵' },
+      { value: 'electronic', label: 'Música Electrónica', icon: '🎧' },
+      { value: 'latin', label: 'Música Latina', icon: '💃' },
+      { value: 'reggaeton', label: 'Reggaetón', icon: '🔥' },
+      { value: 'rock', label: 'Rock', icon: '🎸' },
+      { value: 'mixed', label: 'Música Variada', icon: '🎶' },
+    ]
+  },
+  karaoke: {
+    label: 'Karaoke',
+    icon: 'mic-outline',
+    color: 'text-pink-600',
+    bgColor: 'bg-pink-50',
+    borderColor: 'border-pink-200',
+    categories: [
+      { value: 'karaoke_bar', label: 'Karaoke Bar', icon: '🎤' },
+      { value: 'karaoke_private', label: 'Karaoke Privado (Cabinas)', icon: '🚪' },
+      { value: 'karaoke_restaurant', label: 'Karaoke Restaurante', icon: '🍽️' },
+    ]
+  },
+  casino: {
+    label: 'Casino / Juegos',
+    icon: 'game-controller-outline',
+    color: 'text-red-600',
+    bgColor: 'bg-red-50',
+    borderColor: 'border-red-200',
+    categories: [
+      { value: 'casino', label: 'Casino', icon: '🎰' },
+      { value: 'slots', label: 'Sala de Tragamonedas', icon: '🎲' },
+      { value: 'poker', label: 'Sala de Póker', icon: '🃏' },
+      { value: 'bingo', label: 'Bingo', icon: '🎯' },
+    ]
+  },
+  live_music: {
+    label: 'Música en Vivo',
+    icon: 'musical-notes-outline',
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-50',
+    borderColor: 'border-indigo-200',
+    categories: [
+      { value: 'live_band', label: 'Bandas en Vivo', icon: '🎸' },
+      { value: 'jazz_club', label: 'Club de Jazz', icon: '🎷' },
+      { value: 'acoustic', label: 'Música Acústica', icon: '🎻' },
+      { value: 'tribute', label: 'Bandas Tributo', icon: '⭐' },
+    ]
+  },
+  brewery: {
+    label: 'Cervecería Artesanal',
+    icon: 'beer-outline',
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50',
+    borderColor: 'border-orange-200',
+    categories: [
+      { value: 'brewpub', label: 'Brewpub (Producción propia)', icon: '🏭' },
+      { value: 'taproom', label: 'Taproom', icon: '🍻' },
+      { value: 'beer_garden', label: 'Beer Garden', icon: '🌳' },
+    ]
+  },
+  lounge: {
+    label: 'Lounge / Bar de Ambiente',
+    icon: 'wine-outline',
+    color: 'text-violet-600',
+    bgColor: 'bg-violet-50',
+    borderColor: 'border-violet-200',
+    categories: [
+      { value: 'lounge_bar', label: 'Lounge Bar', icon: '🍸' },
+      { value: 'shisha_lounge', label: 'Shisha Lounge', icon: '💨' },
+      { value: 'rooftop', label: 'Rooftop Lounge', icon: '🌆' },
+      { value: 'cocktail_lounge', label: 'Cocktail Lounge', icon: '🍹' },
+    ]
+  },
+  entertainment_center: {
+    label: 'Centro de Entretenimiento',
+    icon: 'game-controller-outline',
+    color: 'text-cyan-600',
+    bgColor: 'bg-cyan-50',
+    borderColor: 'border-cyan-200',
+    categories: [
+      { value: 'arcade', label: 'Arcade / Juegos', icon: '🕹️' },
+      { value: 'bowling', label: 'Bowling', icon: '🎳' },
+      { value: 'billiards', label: 'Billar / Pool', icon: '🎱' },
+      { value: 'escape_room', label: 'Escape Room', icon: '🔐' },
+      { value: 'virtual_reality', label: 'Realidad Virtual', icon: '🥽' },
+    ]
+  },
+};
+
+// Configuración de tipos de spa y bienestar y sus categorías
+const spaSubtypes = {
+  day_spa: {
+    label: 'Day Spa',
+    icon: 'sparkles-outline',
+    color: 'text-pink-600',
+    bgColor: 'bg-pink-50',
+    borderColor: 'border-pink-200',
+    categories: [
+      { value: 'full_service', label: 'Servicio Completo', icon: '✨' },
+      { value: 'relaxation', label: 'Relajación', icon: '🧘' },
+      { value: 'beauty', label: 'Belleza y Estética', icon: '💅' },
+      { value: 'wellness', label: 'Bienestar Integral', icon: '🌿' },
+    ]
+  },
+  medical_spa: {
+    label: 'Medical Spa',
+    icon: 'medical-outline',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    categories: [
+      { value: 'aesthetic', label: 'Medicina Estética', icon: '💉' },
+      { value: 'dermatology', label: 'Dermatología', icon: '🔬' },
+      { value: 'anti_aging', label: 'Anti-Envejecimiento', icon: '⏰' },
+      { value: 'laser', label: 'Tratamientos Láser', icon: '✨' },
+      { value: 'body_sculpting', label: 'Escultura Corporal', icon: '💪' },
+    ]
+  },
+  wellness_center: {
+    label: 'Centro de Bienestar',
+    icon: 'fitness-outline',
+    color: 'text-green-600',
+    bgColor: 'bg-green-50',
+    borderColor: 'border-green-200',
+    categories: [
+      { value: 'holistic', label: 'Bienestar Holístico', icon: '🌸' },
+      { value: 'yoga', label: 'Yoga y Meditación', icon: '🧘‍♀️' },
+      { value: 'nutrition', label: 'Nutrición y Dietética', icon: '🥗' },
+      { value: 'fitness', label: 'Fitness y Ejercicio', icon: '🏋️' },
+      { value: 'therapy', label: 'Terapias Alternativas', icon: '🌿' },
+    ]
+  },
+  massage_center: {
+    label: 'Centro de Masajes',
+    icon: 'hand-left-outline',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-50',
+    borderColor: 'border-purple-200',
+    categories: [
+      { value: 'therapeutic', label: 'Masaje Terapéutico', icon: '💆' },
+      { value: 'sports', label: 'Masaje Deportivo', icon: '⚽' },
+      { value: 'relaxation', label: 'Masaje Relajante', icon: '😌' },
+      { value: 'hot_stone', label: 'Piedras Calientes', icon: '🪨' },
+      { value: 'aromatherapy', label: 'Aromaterapia', icon: '🌺' },
+      { value: 'reflexology', label: 'Reflexología', icon: '👣' },
+    ]
+  },
+  thermal_spa: {
+    label: 'Spa Termal / Baños Termales',
+    icon: 'water-outline',
+    color: 'text-cyan-600',
+    bgColor: 'bg-cyan-50',
+    borderColor: 'border-cyan-200',
+    categories: [
+      { value: 'hot_springs', label: 'Aguas Termales', icon: '♨️' },
+      { value: 'mud_baths', label: 'Baños de Lodo', icon: '🏞️' },
+      { value: 'hydrotherapy', label: 'Hidroterapia', icon: '💧' },
+      { value: 'sauna', label: 'Sauna y Vapor', icon: '🔥' },
+    ]
+  },
+  beauty_salon: {
+    label: 'Salón de Belleza & Spa',
+    icon: 'cut-outline',
+    color: 'text-rose-600',
+    bgColor: 'bg-rose-50',
+    borderColor: 'border-rose-200',
+    categories: [
+      { value: 'hair', label: 'Peluquería y Estilismo', icon: '💇' },
+      { value: 'nails', label: 'Manicure y Pedicure', icon: '💅' },
+      { value: 'facial', label: 'Tratamientos Faciales', icon: '🧖' },
+      { value: 'makeup', label: 'Maquillaje', icon: '💄' },
+      { value: 'waxing', label: 'Depilación', icon: '✨' },
+    ]
+  },
+  resort_spa: {
+    label: 'Resort Spa / Spa de Hotel',
+    icon: 'home-outline',
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-50',
+    borderColor: 'border-indigo-200',
+    categories: [
+      { value: 'luxury', label: 'Spa de Lujo', icon: '👑' },
+      { value: 'couples', label: 'Spa para Parejas', icon: '💑' },
+      { value: 'packages', label: 'Paquetes Spa', icon: '🎁' },
+      { value: 'pool', label: 'Spa con Piscina', icon: '🏊' },
+    ]
+  },
+  alternative_therapy: {
+    label: 'Terapias Alternativas',
+    icon: 'leaf-outline',
+    color: 'text-emerald-600',
+    bgColor: 'bg-emerald-50',
+    borderColor: 'border-emerald-200',
+    categories: [
+      { value: 'acupuncture', label: 'Acupuntura', icon: '📍' },
+      { value: 'reiki', label: 'Reiki', icon: '✋' },
+      { value: 'ayurveda', label: 'Ayurveda', icon: '🌿' },
+      { value: 'chiropractic', label: 'Quiropráctica', icon: '🦴' },
+      { value: 'naturopathy', label: 'Naturopatía', icon: '🌱' },
+    ]
+  },
+};
+
 function CreateBusiness() {
   const navigate = useNavigate();
   const { createBusiness, loading } = useBusiness();
@@ -240,6 +650,12 @@ function CreateBusiness() {
     businessType: 'hotel',
     hotelSubtype: '', // Subtipo de alojamiento (hotel, hostel, apartment, etc.)
     hotelCategory: '', // Categoría según el subtipo (estrellas, llaves, etc.)
+    restaurantSubtype: '', // Tipo de restaurante (fine_dining, casual, cevicheria, etc.)
+    restaurantCuisine: '', // Tipo de cocina / gastronomía
+    entertainmentSubtype: '', // Tipo de entretenimiento (bar, nightclub, karaoke, etc.)
+    entertainmentCategory: '', // Categoría específica del entretenimiento
+    spaSubtype: '', // Tipo de spa (day_spa, medical_spa, wellness_center, etc.)
+    spaCategory: '', // Categoría específica del spa
     address: {
       street: '',
       city: '',
@@ -585,6 +1001,39 @@ function CreateBusiness() {
           return;
         }
       }
+      // Validar campos adicionales para restaurantes
+      if (formData.businessType === 'restaurant') {
+        if (!formData.restaurantSubtype) {
+          setError('Selecciona el tipo de restaurante');
+          return;
+        }
+        if (!formData.restaurantCuisine) {
+          setError('Selecciona el tipo de cocina');
+          return;
+        }
+      }
+      // Validar campos adicionales para entretenimiento
+      if (formData.businessType === 'entertainment') {
+        if (!formData.entertainmentSubtype) {
+          setError('Selecciona el tipo de entretenimiento');
+          return;
+        }
+        if (!formData.entertainmentCategory) {
+          setError('Selecciona la categoría específica');
+          return;
+        }
+      }
+      // Validar campos adicionales para spa
+      if (formData.businessType === 'spa') {
+        if (!formData.spaSubtype) {
+          setError('Selecciona el tipo de spa');
+          return;
+        }
+        if (!formData.spaCategory) {
+          setError('Selecciona los servicios y tratamientos');
+          return;
+        }
+      }
     }
     if (step === 3) {
       if (!formData.address.city) {
@@ -602,12 +1051,13 @@ function CreateBusiness() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 max-w-3xl">
-        {/* Header */}
-        <div className="mb-8">
-          <Link to="/business/dashboard" className="text-primary hover:text-primary-dark mb-4 inline-block">
-            ← Volver al dashboard
+    <UserAccountLayout activeMenu="businesses">
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-4 max-w-3xl">
+          {/* Header */}
+          <div className="mb-8">
+          <Link to="/account/businesses" className="text-primary hover:text-primary-dark mb-4 inline-block">
+            ← Volver a mis negocios
           </Link>
           <h1 className="text-3xl font-bold text-gray-900">Crear Nuevo Negocio</h1>
           <p className="text-gray-600 mt-2">
@@ -939,9 +1389,447 @@ function CreateBusiness() {
               </div>
             )}
 
-            {/* Step 2: Descripción (para otros tipos de negocio) */}
-            {step === 2 && formData.businessType !== 'hotel' && (
+            {/* Step 2: Detalles del restaurante (solo para restaurant) */}
+            {step === 2 && formData.businessType === 'restaurant' && (
               <div className="space-y-6">
+                {/* Tipo de Restaurante */}
+                <div className="bg-orange-50 p-6 rounded-xl border border-orange-200">
+                  <label className="block text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <ion-icon name="restaurant" className="text-xl text-primary"></ion-icon>
+                    Tipo de Restaurante *
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Object.entries(restaurantSubtypes).map(([key, subtype]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            restaurantSubtype: key,
+                            restaurantCuisine: '', // Reset cuisine when subtype changes
+                          });
+                        }}
+                        className={`group relative flex items-center gap-4 p-5 rounded-xl border-2 transition-all duration-200 bg-white ${
+                          formData.restaurantSubtype === key
+                            ? `${subtype.borderColor} ring-2 ring-offset-2 ${subtype.color.replace('text-', 'ring-')}`
+                            : 'border-gray-200 hover:border-gray-400 hover:shadow-md'
+                        }`}
+                      >
+                        {/* Icono */}
+                        <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${
+                          formData.restaurantSubtype === key ? subtype.bgColor : 'bg-gray-100'
+                        }`}>
+                          <ion-icon
+                            name={subtype.icon}
+                            className={`text-3xl ${formData.restaurantSubtype === key ? subtype.color : 'text-gray-400'}`}
+                          ></ion-icon>
+                        </div>
+
+                        {/* Texto */}
+                        <div className="flex-1 text-left">
+                          <span className={`text-sm font-semibold block ${
+                            formData.restaurantSubtype === key ? subtype.color : 'text-gray-900'
+                          }`}>
+                            {subtype.label}
+                          </span>
+                        </div>
+
+                        {/* Checkmark */}
+                        {formData.restaurantSubtype === key && (
+                          <div className="flex-shrink-0">
+                            <div className={`w-8 h-8 rounded-full ${subtype.bgColor} flex items-center justify-center`}>
+                              <ion-icon name="checkmark-circle" className={`text-2xl ${subtype.color}`}></ion-icon>
+                            </div>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tipo de Cocina */}
+                {formData.restaurantSubtype && restaurantSubtypes[formData.restaurantSubtype] && (
+                  <div className="bg-amber-50 p-6 rounded-xl border border-amber-200 animate-fadeIn">
+                    <label className="block text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <ion-icon name="pizza" className="text-xl text-primary"></ion-icon>
+                      Tipo de Cocina / Gastronomía *
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {restaurantSubtypes[formData.restaurantSubtype].cuisineTypes.map((cuisine) => (
+                        <button
+                          key={cuisine.value}
+                          type="button"
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              restaurantCuisine: cuisine.value
+                            });
+                          }}
+                          className={`relative flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all duration-200 bg-white min-h-[120px] justify-center ${
+                            formData.restaurantCuisine === cuisine.value
+                              ? `${restaurantSubtypes[formData.restaurantSubtype].borderColor} ring-2 ring-offset-2 ${restaurantSubtypes[formData.restaurantSubtype].color.replace('text-', 'ring-')}`
+                              : 'border-gray-200 hover:border-gray-400 hover:shadow-md'
+                          }`}
+                        >
+                          {/* Emoji/Icono */}
+                          <div className="text-4xl">
+                            {cuisine.icon}
+                          </div>
+
+                          {/* Texto de categoría */}
+                          <span className={`text-sm font-semibold text-center ${
+                            formData.restaurantCuisine === cuisine.value
+                              ? restaurantSubtypes[formData.restaurantSubtype].color
+                              : 'text-gray-900'
+                          }`}>
+                            {cuisine.label}
+                          </span>
+
+                          {/* Checkmark cuando está seleccionado */}
+                          {formData.restaurantCuisine === cuisine.value && (
+                            <div className="absolute top-3 right-3">
+                              <ion-icon
+                                name="checkmark-circle"
+                                className={`text-2xl ${restaurantSubtypes[formData.restaurantSubtype].color}`}
+                              ></ion-icon>
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-3 flex items-center gap-2">
+                      <ion-icon name="information-circle" className="text-lg text-blue-500"></ion-icon>
+                      Tipo de cocina que ofrece tu {restaurantSubtypes[formData.restaurantSubtype].label}
+                    </p>
+                  </div>
+                )}
+
+                {/* Descripción */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Descripción
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    maxLength={200}
+                    rows="4"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                    placeholder="Describe tu negocio..."
+                  />
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-gray-500">
+                      Describe brevemente tu negocio
+                    </p>
+                    <p className={`text-xs font-medium ${
+                      200 - formData.description.length <= 20
+                        ? 'text-orange-600'
+                        : 'text-gray-500'
+                    }`}>
+                      {200 - formData.description.length} caracteres restantes
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Descripción (para otros tipos de negocio) */}
+            {step === 2 && formData.businessType !== 'hotel' && formData.businessType !== 'restaurant' && (
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Descripción
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    maxLength={200}
+                    rows="4"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                    placeholder="Describe tu negocio..."
+                  />
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-gray-500">
+                      Describe brevemente tu negocio
+                    </p>
+                    <p className={`text-xs font-medium ${
+                      200 - formData.description.length <= 20
+                        ? 'text-orange-600'
+                        : 'text-gray-500'
+                    }`}>
+                      {200 - formData.description.length} caracteres restantes
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Detalles del entretenimiento (solo para entertainment) */}
+            {step === 2 && formData.businessType === 'entertainment' && (
+              <div className="space-y-6">
+                {/* Tipo de Entretenimiento */}
+                <div className="bg-purple-50 p-6 rounded-xl border border-purple-200">
+                  <label className="block text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <ion-icon name="musical-notes" className="text-xl text-primary"></ion-icon>
+                    Tipo de Entretenimiento *
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Object.entries(entertainmentSubtypes).map(([key, subtype]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            entertainmentSubtype: key,
+                            entertainmentCategory: '', // Reset category when subtype changes
+                          });
+                        }}
+                        className={`group relative flex items-center gap-4 p-5 rounded-xl border-2 transition-all duration-200 bg-white ${
+                          formData.entertainmentSubtype === key
+                            ? `${subtype.borderColor} ring-2 ring-offset-2 ${subtype.color.replace('text-', 'ring-')}`
+                            : 'border-gray-200 hover:border-gray-400 hover:shadow-md'
+                        }`}
+                      >
+                        {/* Icono */}
+                        <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${
+                          formData.entertainmentSubtype === key ? subtype.bgColor : 'bg-gray-100'
+                        }`}>
+                          <ion-icon
+                            name={subtype.icon}
+                            className={`text-3xl ${formData.entertainmentSubtype === key ? subtype.color : 'text-gray-400'}`}
+                          ></ion-icon>
+                        </div>
+
+                        {/* Texto */}
+                        <div className="flex-1 text-left">
+                          <span className={`text-sm font-semibold block ${
+                            formData.entertainmentSubtype === key ? subtype.color : 'text-gray-900'
+                          }`}>
+                            {subtype.label}
+                          </span>
+                        </div>
+
+                        {/* Checkmark */}
+                        {formData.entertainmentSubtype === key && (
+                          <div className="flex-shrink-0">
+                            <div className={`w-8 h-8 rounded-full ${subtype.bgColor} flex items-center justify-center`}>
+                              <ion-icon name="checkmark-circle" className={`text-2xl ${subtype.color}`}></ion-icon>
+                            </div>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Categoría Específica */}
+                {formData.entertainmentSubtype && entertainmentSubtypes[formData.entertainmentSubtype] && (
+                  <div className="bg-violet-50 p-6 rounded-xl border border-violet-200 animate-fadeIn">
+                    <label className="block text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <ion-icon name="star" className="text-xl text-primary"></ion-icon>
+                      Categoría Específica *
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {entertainmentSubtypes[formData.entertainmentSubtype].categories.map((category) => (
+                        <button
+                          key={category.value}
+                          type="button"
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              entertainmentCategory: category.value
+                            });
+                          }}
+                          className={`relative flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all duration-200 bg-white min-h-[120px] justify-center ${
+                            formData.entertainmentCategory === category.value
+                              ? `${entertainmentSubtypes[formData.entertainmentSubtype].borderColor} ring-2 ring-offset-2 ${entertainmentSubtypes[formData.entertainmentSubtype].color.replace('text-', 'ring-')}`
+                              : 'border-gray-200 hover:border-gray-400 hover:shadow-md'
+                          }`}
+                        >
+                          {/* Emoji/Icono */}
+                          <div className="text-4xl">
+                            {category.icon}
+                          </div>
+
+                          {/* Texto de categoría */}
+                          <span className={`text-sm font-semibold text-center ${
+                            formData.entertainmentCategory === category.value
+                              ? entertainmentSubtypes[formData.entertainmentSubtype].color
+                              : 'text-gray-900'
+                          }`}>
+                            {category.label}
+                          </span>
+
+                          {/* Checkmark cuando está seleccionado */}
+                          {formData.entertainmentCategory === category.value && (
+                            <div className="absolute top-3 right-3">
+                              <ion-icon
+                                name="checkmark-circle"
+                                className={`text-2xl ${entertainmentSubtypes[formData.entertainmentSubtype].color}`}
+                              ></ion-icon>
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-3 flex items-center gap-2">
+                      <ion-icon name="information-circle" className="text-lg text-blue-500"></ion-icon>
+                      Categoría específica de tu {entertainmentSubtypes[formData.entertainmentSubtype].label}
+                    </p>
+                  </div>
+                )}
+
+                {/* Descripción */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Descripción
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    maxLength={200}
+                    rows="4"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                    placeholder="Describe tu negocio..."
+                  />
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-gray-500">
+                      Describe brevemente tu negocio
+                    </p>
+                    <p className={`text-xs font-medium ${
+                      200 - formData.description.length <= 20
+                        ? 'text-orange-600'
+                        : 'text-gray-500'
+                    }`}>
+                      {200 - formData.description.length} caracteres restantes
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Detalles del spa (solo para spa) */}
+            {step === 2 && formData.businessType === 'spa' && (
+              <div className="space-y-6">
+                {/* Tipo de Spa */}
+                <div className="bg-pink-50 p-6 rounded-xl border border-pink-200">
+                  <label className="block text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <ion-icon name="sparkles" className="text-xl text-primary"></ion-icon>
+                    Tipo de Spa y Bienestar *
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Object.entries(spaSubtypes).map(([key, subtype]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            spaSubtype: key,
+                            spaCategory: '', // Reset category when subtype changes
+                          });
+                        }}
+                        className={`group relative flex items-center gap-4 p-5 rounded-xl border-2 transition-all duration-200 bg-white ${
+                          formData.spaSubtype === key
+                            ? `${subtype.borderColor} ring-2 ring-offset-2 ${subtype.color.replace('text-', 'ring-')}`
+                            : 'border-gray-200 hover:border-gray-400 hover:shadow-md'
+                        }`}
+                      >
+                        {/* Icono */}
+                        <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${
+                          formData.spaSubtype === key ? subtype.bgColor : 'bg-gray-100'
+                        }`}>
+                          <ion-icon
+                            name={subtype.icon}
+                            className={`text-3xl ${formData.spaSubtype === key ? subtype.color : 'text-gray-400'}`}
+                          ></ion-icon>
+                        </div>
+
+                        {/* Texto */}
+                        <div className="flex-1 text-left">
+                          <span className={`text-sm font-semibold block ${
+                            formData.spaSubtype === key ? subtype.color : 'text-gray-900'
+                          }`}>
+                            {subtype.label}
+                          </span>
+                        </div>
+
+                        {/* Checkmark */}
+                        {formData.spaSubtype === key && (
+                          <div className="flex-shrink-0">
+                            <div className={`w-8 h-8 rounded-full ${subtype.bgColor} flex items-center justify-center`}>
+                              <ion-icon name="checkmark-circle" className={`text-2xl ${subtype.color}`}></ion-icon>
+                            </div>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Categoría Específica */}
+                {formData.spaSubtype && spaSubtypes[formData.spaSubtype] && (
+                  <div className="bg-purple-50 p-6 rounded-xl border border-purple-200 animate-fadeIn">
+                    <label className="block text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <ion-icon name="heart" className="text-xl text-primary"></ion-icon>
+                      Servicios y Tratamientos *
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {spaSubtypes[formData.spaSubtype].categories.map((category) => (
+                        <button
+                          key={category.value}
+                          type="button"
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              spaCategory: category.value
+                            });
+                          }}
+                          className={`relative flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all duration-200 bg-white min-h-[120px] justify-center ${
+                            formData.spaCategory === category.value
+                              ? `${spaSubtypes[formData.spaSubtype].borderColor} ring-2 ring-offset-2 ${spaSubtypes[formData.spaSubtype].color.replace('text-', 'ring-')}`
+                              : 'border-gray-200 hover:border-gray-400 hover:shadow-md'
+                          }`}
+                        >
+                          {/* Emoji/Icono */}
+                          <div className="text-4xl">
+                            {category.icon}
+                          </div>
+
+                          {/* Texto de categoría */}
+                          <span className={`text-sm font-semibold text-center ${
+                            formData.spaCategory === category.value
+                              ? spaSubtypes[formData.spaSubtype].color
+                              : 'text-gray-900'
+                          }`}>
+                            {category.label}
+                          </span>
+
+                          {/* Checkmark cuando está seleccionado */}
+                          {formData.spaCategory === category.value && (
+                            <div className="absolute top-3 right-3">
+                              <ion-icon
+                                name="checkmark-circle"
+                                className={`text-2xl ${spaSubtypes[formData.spaSubtype].color}`}
+                              ></ion-icon>
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-3 flex items-center gap-2">
+                      <ion-icon name="information-circle" className="text-lg text-blue-500"></ion-icon>
+                      Especialidad principal de tu {spaSubtypes[formData.spaSubtype].label}
+                    </p>
+                  </div>
+                )}
+
+                {/* Descripción */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Descripción
@@ -1232,8 +2120,9 @@ function CreateBusiness() {
             </div>
           </form>
         </div>
+        </div>
       </div>
-    </div>
+    </UserAccountLayout>
   );
 }
 

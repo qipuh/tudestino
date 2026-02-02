@@ -1,6 +1,16 @@
+import { useEffect } from 'react';
 import BusinessLayout from '../components/BusinessLayout';
+import { useSidebar } from '../../../contexts/SidebarContext';
 
 function BusinessAnalytics() {
+  const { setSidebarVisible } = useSidebar();
+
+  // Disable sidebar on this page
+  useEffect(() => {
+    setSidebarVisible(false);
+    return () => setSidebarVisible(false);
+  }, [setSidebarVisible]);
+
   return (
     <BusinessLayout activeMenu="analytics">
       <div className="bg-white rounded-lg shadow-md p-8 text-center">

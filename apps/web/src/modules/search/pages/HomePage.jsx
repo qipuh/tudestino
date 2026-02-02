@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Star, TrendingUp, Home, Building2, Castle, TreePine, Map, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, Star, TrendingUp, Home, Building2, Castle, TreePine, Map, Calendar, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import SearchHero from '@components/SearchHero';
 import ReelsSidebar from '../../../components/social/ReelsSidebar';
 import api, { getImageUrl } from '../../../services/api';
@@ -31,8 +31,8 @@ function HomePage() {
 
   const fetchBusinesses = async () => {
     try {
-      // Obtener todas las propiedades usando el endpoint de search/all
-      // Este endpoint devuelve propiedades, restaurantes, eventos y entretenimiento
+      // Obtener todos los negocios usando el endpoint de search/all
+      // Este endpoint devuelve: propiedades, restaurantes, eventos, entretenimiento, spa y tours (aleatorio)
       const searchResult = await api.get('/search/all?limit=100&category=all');
       let businessesData = [];
 
@@ -143,6 +143,8 @@ function HomePage() {
     { name: 'Restaurantes', icon: Home, type: 'restaurant', link: '/search?category=restaurant', searchParam: 'category=restaurant' },
     { name: 'Eventos', icon: Castle, type: 'event', link: '/events', searchParam: 'category=event' },
     { name: 'Entretenimiento', icon: TreePine, type: 'entertainment', link: '/search?category=entertainment', searchParam: 'category=entertainment' },
+    { name: 'Spa y Bienestar', icon: Sparkles, type: 'spa', link: '/search?category=spa', searchParam: 'category=spa' },
+    { name: 'Tours y Excursiones', icon: Map, type: 'tours', link: '/search?category=tours', searchParam: 'category=tours' },
     { name: 'Información Turística', icon: MapPin, type: 'attractions', link: '/search?businessType=tour', searchParam: 'businessType=tour' },
   ];
 
@@ -152,6 +154,8 @@ function HomePage() {
     restaurant: businesses.filter(p => p.type === 'restaurant'),
     event: businesses.filter(p => p.type === 'event'),
     entertainment: businesses.filter(p => p.type === 'entertainment'),
+    spa: businesses.filter(p => p.type === 'spa'),
+    tours: businesses.filter(p => p.type === 'tours'),
   };
 
   // Función para obtener la URL del negocio (usando slug cuando sea posible)
@@ -213,23 +217,6 @@ function HomePage() {
       <ReelsSidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-8 sm:py-12 pr-3 sm:pr-4 lg:pr-8">
-        {/* Categorías */}
-        <section className="mb-16">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-primary-dark">Explora por tipo de alojamiento</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-            {categories.map((category) => (
-              <Link
-                key={category.type}
-                to={category.link}
-                className="flex flex-col items-center p-4 sm:p-6 rounded-xl bg-white border border-gray-100 hover:border-primary shadow-sm hover:shadow-md transition-all duration-300 group"
-              >
-                <category.icon className="text-gray-600 group-hover:text-primary mb-2 sm:mb-3 transition-colors" size={28} />
-                <span className="text-xs sm:text-sm font-medium text-gray-900 text-center">{category.name}</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-
         {/* Items destacados */}
         {featuredItems.length > 0 && (
           <section className="mb-16">
@@ -354,7 +341,7 @@ function HomePage() {
               {tours.map((tour) => (
                 <Link
                   key={tour.id}
-                  to={`/tours/${tour.id}`}
+                  to={`/business/${tour.businessId}`}
                   className="group bg-white border border-gray-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
                 >
                   <div className="h-40 sm:h-48 bg-gradient-to-br from-teal-500 to-teal-700 relative overflow-hidden">
@@ -500,7 +487,9 @@ function HomePage() {
             property: 'hotel',
             restaurant: 'restaurant',
             event: 'event',
-            entertainment: 'entertainment'
+            entertainment: 'entertainment',
+            spa: 'spa',
+            tours: 'tours'
           };
           const categoryType = typeToCategory[type];
           const categoryInfo = categories.find(c => c.type === categoryType);

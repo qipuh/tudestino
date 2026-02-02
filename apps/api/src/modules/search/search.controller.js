@@ -615,10 +615,11 @@ export const searchAll = async (req, res) => {
 
         results = results.concat(events.map(e => {
           const data = e.toJSON();
+          const addressData = typeof data.address === 'string' ? JSON.parse(data.address) : data.address;
           let distance = null;
 
-          if (lat && lng && data.latitude && data.longitude) {
-            distance = calculateDistance(lat, lng, parseFloat(data.latitude), parseFloat(data.longitude));
+          if (lat && lng && addressData?.latitude && addressData?.longitude) {
+            distance = calculateDistance(lat, lng, parseFloat(addressData.latitude), parseFloat(addressData.longitude));
           }
 
           return {
@@ -628,11 +629,11 @@ export const searchAll = async (req, res) => {
             description: data.description,
             image: data.images && data.images.length > 0 ? data.images[0] : null,
             location: {
-              city: data.city,
-              state: data.address?.state,
-              country: data.address?.country,
-              latitude: data.address?.latitude,
-              longitude: data.address?.longitude
+              city: addressData?.city || data.city,
+              state: addressData?.state,
+              country: addressData?.country,
+              latitude: addressData?.latitude,
+              longitude: addressData?.longitude
             },
             category: data.category,
             eventDate: data.eventDate,
@@ -700,6 +701,110 @@ export const searchAll = async (req, res) => {
       }
     }
 
+    // Buscar en Spa desde businesses table
+    if (!category || category === 'all' || category === 'spa') {
+      try {
+        const spaWhere = {
+          status: 'active',
+          isActive: true,
+          businessType: 'spa'
+        };
+
+        if (minRating) {
+          spaWhere.ratingAverage = { [Op.gte]: parseFloat(minRating) };
+        }
+
+        const spas = await Business.findAll({
+          where: spaWhere,
+          limit: limitNum,
+          offset
+        });
+
+        results = results.concat(spas.map(s => {
+          const data = s.toJSON();
+          const addressData = typeof data.address === 'string' ? JSON.parse(data.address) : data.address;
+          let distance = null;
+
+          if (lat && lng && addressData?.latitude && addressData?.longitude) {
+            distance = calculateDistance(lat, lng, parseFloat(addressData.latitude), parseFloat(addressData.longitude));
+          }
+
+          return {
+            id: data.id,
+            type: 'spa',
+            name: data.name,
+            description: data.description,
+            image: data.logo || data.coverImage,
+            location: {
+              city: addressData?.city,
+              state: addressData?.state,
+              country: addressData?.country,
+              latitude: addressData?.latitude,
+              longitude: addressData?.longitude
+            },
+            rating: data.ratingAverage || 0,
+            reviewCount: data.reviewCount || 0,
+            distance: distance ? Math.round(distance * 10) / 10 : null,
+            url: `/businesses/${data.id}`
+          };
+        }));
+      } catch (error) {
+        console.error('Error fetching spa:', error.message);
+      }
+    }
+
+    // Buscar en Tours desde businesses table
+    if (!category || category === 'all' || category === 'tours') {
+      try {
+        const toursWhere = {
+          status: 'active',
+          isActive: true,
+          businessType: 'tours'
+        };
+
+        if (minRating) {
+          toursWhere.ratingAverage = { [Op.gte]: parseFloat(minRating) };
+        }
+
+        const toursBusinesses = await Business.findAll({
+          where: toursWhere,
+          limit: limitNum,
+          offset
+        });
+
+        results = results.concat(toursBusinesses.map(t => {
+          const data = t.toJSON();
+          const addressData = typeof data.address === 'string' ? JSON.parse(data.address) : data.address;
+          let distance = null;
+
+          if (lat && lng && addressData?.latitude && addressData?.longitude) {
+            distance = calculateDistance(lat, lng, parseFloat(addressData.latitude), parseFloat(addressData.longitude));
+          }
+
+          return {
+            id: data.id,
+            type: 'tours',
+            name: data.name,
+            description: data.description,
+            image: data.logo || data.coverImage,
+            location: {
+              city: addressData?.city,
+              state: addressData?.state,
+              country: addressData?.country,
+              latitude: addressData?.latitude,
+              longitude: addressData?.longitude
+            },
+            rating: data.ratingAverage || 0,
+            reviewCount: data.reviewCount || 0,
+            distance: distance ? Math.round(distance * 10) / 10 : null,
+            url: `/businesses/${data.id}`
+          };
+        }));
+      } catch (error) {
+        console.error('Error fetching tours businesses:', error.message);
+      }
+    }
+
     // Also search legacy Entertainment table if it exists
     if (!category || category === 'all' || category === 'entertainment') {
       try {
@@ -762,13 +867,21 @@ export const searchAll = async (req, res) => {
         results.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         break;
       case 'relevance':
-      default:
         // Ordenar por rating y número de reviews
         results.sort((a, b) => {
           const scoreA = (a.rating || 0) * (a.reviewCount || 1);
           const scoreB = (b.rating || 0) * (b.reviewCount || 1);
           return scoreB - scoreA;
         });
+        break;
+      case 'random':
+      default:
+        // Ordenamiento aleatorio (shuffle)
+        // Algoritmo Fisher-Yates para mezclar array aleatoriamente
+        for (let i = results.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [results[i], results[j]] = [results[j], results[i]];
+        }
     }
 
     // Aplicar paginación a resultados combinados

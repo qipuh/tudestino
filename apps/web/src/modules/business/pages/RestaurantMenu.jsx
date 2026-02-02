@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Upload, Clock, Image as ImageIcon } from 'lucide-react';
 import useBusiness from '../hooks/useBusiness';
 import api, { getImageUrl } from '../../../services/api';
+import BusinessLayout from '../components/BusinessLayout';
+import { useSidebar } from '../../../contexts/SidebarContext';
 
 const MENU_CATEGORIES = {
   restaurant: [
@@ -28,6 +30,7 @@ const MENU_CATEGORIES = {
 
 function RestaurantMenu() {
   const { id } = useParams();
+  const { setSidebarVisible } = useSidebar();
   const { business, fetchBusiness } = useBusiness();
   const businessType = business?.businessType || 'restaurant';
   const categories = MENU_CATEGORIES[businessType] || MENU_CATEGORIES.restaurant;
@@ -38,6 +41,12 @@ function RestaurantMenu() {
   const [showItemModal, setShowItemModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Disable sidebar on this page
+  useEffect(() => {
+    setSidebarVisible(false);
+    return () => setSidebarVisible(false);
+  }, [setSidebarVisible]);
   const getDefaultCategory = () => {
     return businessType === 'entertainment' ? 'drinks' : 'main_courses';
   };
@@ -59,6 +68,16 @@ function RestaurantMenu() {
       loadPhotos();
     }
   }, [id]);
+
+  // Actualizar categoría por defecto cuando el businessType cambia
+  useEffect(() => {
+    if (business?.businessType) {
+      setFormData(prev => ({
+        ...prev,
+        category: business.businessType === 'entertainment' ? 'drinks' : 'main_courses'
+      }));
+    }
+  }, [business?.businessType]);
 
   const loadBusiness = async () => {
     await fetchBusiness(id);
@@ -294,21 +313,8 @@ function RestaurantMenu() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
-        <div className="mb-6">
-          <Link to="/business/dashboard" className="text-primary hover:text-primary-dark">
-            Dashboard
-          </Link>
-          <span className="mx-2 text-gray-400">/</span>
-          <Link to={`/business/${id}`} className="text-primary hover:text-primary-dark">
-            {business.name}
-          </Link>
-          <span className="mx-2 text-gray-400">/</span>
-          <span className="text-gray-600">Menú y Contenido</span>
-        </div>
-
+    <BusinessLayout activeMenu="menu">
+      <div>
         {/* Header */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-start justify-between">
@@ -709,8 +715,9 @@ function RestaurantMenu() {
           </div>
         </div>
       )}
-    </div>
+  </BusinessLayout>
   );
 }
+
 
 export default RestaurantMenu;

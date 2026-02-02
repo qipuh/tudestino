@@ -6,6 +6,7 @@ import { connectDB } from './config/database-mysql.js';
 import { setupAssociations } from './config/associations.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initializeSocket } from './config/socket.js';
+import passport from './config/passport.js';
 
 // Routes
 
@@ -31,6 +32,7 @@ import countriesRoutes from './modules/countries/countries.routes.js';
 import slidersRoutes from './modules/sliders/slider.routes.js';
 import attractionsRoutes from './modules/attractions/attraction.routes.js';
 import notificationRoutes from './modules/notifications/notification.routes.js';
+import verificationRoutes from './modules/verification/verification.routes.js';
 
 const app = express();
 const server = createServer(app);
@@ -43,6 +45,9 @@ const io = initializeSocket(server);
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Initialize Passport
+app.use(passport.initialize());
 
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
@@ -80,6 +85,7 @@ app.use('/api/countries', countriesRoutes);
 app.use('/api/sliders', slidersRoutes);
 app.use('/api/attractions', attractionsRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/verification', verificationRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -97,6 +103,3 @@ server.listen(PORT, () => {
 });
 
 export default app;
-
-
- 

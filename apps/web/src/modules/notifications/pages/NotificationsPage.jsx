@@ -9,6 +9,7 @@ import {
 } from '../../../services/notificationService';
 import { getImageUrl } from '../../../services/api';
 import useAuthStore from '../../../store/authStore';
+import UserAccountLayout from '../../../layouts/UserAccountLayout';
 
 function NotificationsPage() {
   const { user } = useAuthStore();
@@ -167,8 +168,8 @@ function NotificationsPage() {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <UserAccountLayout activeMenu="notifications">
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -321,7 +322,7 @@ function NotificationsPage() {
           )}
         </div>
       </div>
-    </div>
+    </UserAccountLayout>
   );
 }
 

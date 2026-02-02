@@ -6,6 +6,8 @@ import useAuthStore from '../../../store/authStore';
 import * as businessReservationService from '../../../services/businessReservationService';
 import api, { getImageUrl } from '../../../services/api';
 import UserAccountLayout from '../../../layouts/UserAccountLayout';
+import useVerification from '../../../hooks/useVerification';
+import VerificationAlert from '../../../components/VerificationAlert';
 
 const STATUS_CONFIG = {
   pending: {
@@ -38,6 +40,7 @@ const STATUS_CONFIG = {
 function BookingsPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { isVerified, status, loading: verificationLoading } = useVerification();
   const { bookings, loading, error, fetchMyBookings, updateBookingStatus } = useBookingStore();
   const [filter, setFilter] = useState('all'); // all, upcoming, past, cancelled
   const [cancellingId, setCancellingId] = useState(null);
@@ -294,11 +297,18 @@ function BookingsPage() {
           </p>
         </div>
 
+        {/* Verification Alert */}
+        {!verificationLoading && !isVerified && status !== 'verified' && (
+          <div className="mb-6">
+            <VerificationAlert action="hacer nuevas reservas" />
+          </div>
+        )}
+
       {/* Booking Type Tabs */}
-      <div className="flex gap-4 mb-6 border-b">
+      <div className="flex gap-2 md:gap-4 mb-6 border-b overflow-x-auto">
         <button
           onClick={() => setBookingType('properties')}
-          className={`flex items-center gap-2 px-6 py-3 font-medium transition -mb-px ${
+          className={`flex items-center gap-2 px-4 md:px-6 py-3 font-medium transition -mb-px whitespace-nowrap ${
             bookingType === 'properties'
               ? 'text-primary border-b-2 border-primary'
               : 'text-gray-600 hover:text-gray-900'
@@ -314,7 +324,7 @@ function BookingsPage() {
         </button>
         <button
           onClick={() => setBookingType('businesses')}
-          className={`flex items-center gap-2 px-6 py-3 font-medium transition -mb-px ${
+          className={`flex items-center gap-2 px-4 md:px-6 py-3 font-medium transition -mb-px whitespace-nowrap ${
             bookingType === 'businesses'
               ? 'text-primary border-b-2 border-primary'
               : 'text-gray-600 hover:text-gray-900'

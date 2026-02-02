@@ -111,9 +111,85 @@ class AuthService {
     return { message: 'Email verified successfully' };
   }
 
+  async forgotPassword(email) {
+    // Buscar usuario por email
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      // Por seguridad, no revelar si el email existe o no
+      return {
+        message: 'Si el email existe, recibirás instrucciones para restablecer tu contraseña',
+      };
+    }
+
+    // Generar token seguro usando crypto
+    const crypto = await import('crypto');
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    // Hash del token para almacenar en BD
+    const hashedToken = await bcrypt.hash(resetToken, 10);
+
+    // Establecer expiración (1 hora)
+    const resetExpires = new Date(Date.now() + 3600000); // 1 hora
+
+    // Guardar token y expiración en BD
+    await user.update({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: resetExpires,
+    });
+
+    // Crear URL de reset
+    const resetUrl = `${process.env.WEB_URL}/reset-password?token=${resetToken}&email=${email}`;
+
+    // Enviar email (por ahora solo log, necesitarás configurar servicio de email)
+    console.log('🔐 Reset Password URL:', resetUrl);
+    console.log('Token expires at:', resetExpires);
+
+    // TODO: Enviar email con el link de recuperación
+    // await emailService.sendPasswordResetEmail(email, resetUrl);
+
+    return {
+      message: 'Si el email existe, recibirás instrucciones para restablecer tu contraseña',
+    };
+  }
+
   async resetPassword(data) {
-    // TODO: Implementar reset password
-    return { message: 'Password reset successfully' };
+    const { email, token, newPassword } = data;
+
+    // Buscar usuario
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      throw new AppError('Token inválido o expirado', 400);
+    }
+
+    // Verificar que tenga token de reset
+    if (!user.resetPasswordToken || !user.resetPasswordExpires) {
+      throw new AppError('Token inválido o expirado', 400);
+    }
+
+    // Verificar que no haya expirado
+    if (new Date() > user.resetPasswordExpires) {
+      throw new AppError('El token ha expirado', 400);
+    }
+
+    // Verificar token
+    const isTokenValid = await bcrypt.compare(token, user.resetPasswordToken);
+    if (!isTokenValid) {
+      throw new AppError('Token inválido o expirado', 400);
+    }
+
+    // Hash nueva contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    // Actualizar contraseña y limpiar token
+    await user.update({
+      password: hashedPassword,
+      resetPasswordToken: null,
+      resetPasswordExpires: null,
+    });
+
+    return {
+      message: 'Contraseña restablecida exitosamente',
+    };
   }
 
   async sendEmailVerificationCode(email) {

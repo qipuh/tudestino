@@ -281,7 +281,14 @@
       "Bash(powershell \"Stop-Process -Id 11620 -Force\")",
       "Bash(npx sequelize-cli:*)",
       "Bash(\"/c/laragon/bin/mysql/mysql-8.0.30-winx64/bin/mysql.exe\" -u root tudestino -e \"ALTER TABLE messages MODIFY COLUMN id INT NOT NULL AUTO_INCREMENT;\")",
-      "Bash(pm2 restart:*)"
+      "Bash(pm2 restart:*)",
+      "Bash(pm2 logs:*)",
+      "Bash(pm2 list:*)",
+      "Bash(pm2 start:*)",
+      "Bash(move:*)",
+      "Bash(npm cache clean:*)",
+      "Bash(test:*)",
+      "Bash(copy /b srcmodulessocialsocial.service.js +,,)"
     ],
     "deny": [],
     "ask": []

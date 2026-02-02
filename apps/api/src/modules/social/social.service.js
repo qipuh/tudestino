@@ -1,4 +1,4 @@
-import User from '../users/user.model.js'; // MongoDB model
+import User from '../users/user.model-mysql.js'; // MySQL model
 import UserFollow from './userFollow.model.js';
 import { Op } from 'sequelize';
 import sequelize from '../../config/database-mysql.js';
@@ -281,8 +281,14 @@ export const checkUsernameAvailability = async (username, currentUserId = null) 
 
 // Obtener perfil por username
 export const getProfileByUsername = async (username, currentUserId = null) => {
+  // Normalizar username a minúsculas para búsqueda case-insensitive
+  const normalizedUsername = username.toLowerCase().trim();
+
   const user = await User.findOne({
-    where: { username },
+    where: sequelize.where(
+      sequelize.fn('LOWER', sequelize.col('username')),
+      normalizedUsername
+    ),
     attributes: [
       'id', 'name', 'avatar', 'username', 'bio', 'travelInterests',
       'visitedDestinations', 'travelStyle', 'followersCount',
@@ -320,3 +326,4 @@ export const getProfileByUsername = async (username, currentUserId = null) => {
 
   return profileData;
 };
+

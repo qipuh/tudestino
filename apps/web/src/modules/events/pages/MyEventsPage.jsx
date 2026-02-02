@@ -4,6 +4,7 @@ import { Calendar, Plus, MapPin, Clock, Users, Building2, User } from 'lucide-re
 import useEvents from '../hooks/useEvents';
 import { getImageUrl } from '../../../services/api';
 import UserAccountLayout from '../../../layouts/UserAccountLayout';
+import { useSidebar } from '../../../contexts/SidebarContext';
 
 const categoryIcons = {
   concert: '🎵',
@@ -19,11 +20,18 @@ const categoryIcons = {
 
 function MyEventsPage() {
   const { getMyEvents, loading } = useEvents();
+  const { setSidebarVisible } = useSidebar();
   const [events, setEvents] = useState([]);
   const [registrations, setRegistrations] = useState([]);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('created'); // created, registered
   const [filter, setFilter] = useState('all'); // all, upcoming, past, draft
+
+  // Disable sidebar on this page
+  useEffect(() => {
+    setSidebarVisible(false);
+    return () => setSidebarVisible(false);
+  }, [setSidebarVisible]);
 
   useEffect(() => {
     const fetchMyEvents = async () => {

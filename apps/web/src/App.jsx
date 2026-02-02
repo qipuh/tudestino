@@ -7,11 +7,15 @@ import PropertyDetail from '@modules/properties/pages/PropertyDetail';
 import LoginPage from '@modules/auth/pages/LoginPage';
 import RegisterPage from '@modules/auth/pages/RegisterPage';
 import VerifyEmailPage from '@modules/auth/pages/VerifyEmailPage';
+import OAuthCallbackPage from '@modules/auth/pages/OAuthCallbackPage';
+import ForgotPasswordPage from '@modules/auth/pages/ForgotPasswordPage';
+import ResetPasswordPage from '@modules/auth/pages/ResetPasswordPage';
 import AccountPage from '@modules/auth/pages/AccountPage';
 import AccountDashboard from '@modules/account/pages/AccountDashboard';
 import AccountBusinesses from '@modules/account/pages/AccountBusinesses';
 import AccountProfile from '@modules/account/pages/AccountProfile';
 import AccountFavorites from '@modules/account/pages/AccountFavorites';
+import VerifyIdentityPage from '@modules/account/pages/VerifyIdentityPage';
 import NotificationsPage from '@modules/notifications/pages/NotificationsPage';
 import BookingsPage from '@modules/bookings/pages/BookingsPage';
 import BookingDetailPage from '@modules/bookings/pages/BookingDetailPage';
@@ -53,6 +57,7 @@ import MyEventsPage from '@modules/events/pages/MyEventsPage';
 import EventCheckoutPage from '@modules/events/pages/EventCheckoutPage';
 import AttractionDetail from '@modules/attractions/pages/AttractionDetail';
 import AdminPage from '@modules/admin/pages/AdminPage';
+import VerificationsPage from '@modules/admin/pages/VerificationsPage';
 import AboutPage from '@modules/legal/pages/AboutPage';
 import TermsPage from '@modules/legal/pages/TermsPage';
 import PrivacyPage from '@modules/legal/pages/PrivacyPage';
@@ -82,6 +87,9 @@ function App() {
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="verify-email" element={<VerifyEmailPage />} />
+        <Route path="forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="reset-password" element={<ResetPasswordPage />} />
+        <Route path="auth/callback" element={<OAuthCallbackPage />} />
 
         {/* Account Routes - New unified account system */}
         <Route path="account" element={<AccountDashboard />} />
@@ -89,6 +97,7 @@ function App() {
         <Route path="account/profile" element={<AccountProfile />} />
         <Route path="account/events" element={<MyEventsPage />} />
         <Route path="account/favorites" element={<AccountFavorites />} />
+        <Route path="verify-identity" element={<VerifyIdentityPage />} />
 
         {/* Notifications */}
         <Route path="notifications" element={<NotificationsPage />} />
@@ -121,8 +130,6 @@ function App() {
         {/* Business Routes */}
         {/* Redirect old business dashboard to new account businesses */}
         <Route path="business/dashboard" element={<AccountBusinesses />} />
-        <Route path="business/create" element={<CreateBusiness />} />
-        <Route path="business/:id/edit" element={<EditBusiness />} />
         <Route path="business/:id/manage" element={<BusinessManagementDashboard />} />
         <Route path="business/:id/services" element={<BusinessServices />} />
         <Route path="business/:id/reservations" element={<BusinessReservations />} />
@@ -132,8 +139,8 @@ function App() {
         <Route path="business/:id" element={<BusinessDetail />} />
         <Route path="business/:id/menu" element={<RestaurantMenu />} />
         <Route path="business/:id/spa-services" element={<SpaServices />} />
-        <Route path="business/:businessId/property/create" element={<CreatePropertySimplified />} />
-        <Route path="business/:businessId/property/create-rooms" element={<CreateRoomsSimplified />} />
+        <Route path="business/:id/property/create" element={<CreatePropertySimplified />} />
+        <Route path="business/:id/property/create-rooms" element={<CreateRoomsSimplified />} />
         <Route path="business/:id/tours" element={<BusinessTours />} />
         <Route path="business/:id/tours/create" element={<CreateTourSteps />} />
         <Route path="business/:id/tours/:tourId/edit" element={<CreateTourSteps />} />
@@ -157,6 +164,7 @@ function App() {
 
         {/* Admin Routes */}
         <Route path="admin" element={<AdminPage />} />
+        <Route path="admin/verifications" element={<VerificationsPage />} />
 
         {/* Legal & Static Pages */}
         <Route path="about" element={<AboutPage />} />
@@ -171,6 +179,10 @@ function App() {
         {/* Username Route (must be last to avoid conflicts) */}
         <Route path=":username" element={<UsernameProfilePage />} />
       </Route>
+
+      {/* Business Management Routes - Outside MainLayout (no header) */}
+      <Route path="business/create" element={<CreateBusiness />} />
+      <Route path="business/:id/edit" element={<EditBusiness />} />
     </Routes>
   );
 }

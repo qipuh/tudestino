@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapPin, Calendar, Eye, ArrowLeft, Share2, Heart } from 'lucide-react';
 import api, { getImageUrl } from '../../../services/api';
+import { useSidebar } from '../../../contexts/SidebarContext';
+import ReelsSidebar from '../../../components/social/ReelsSidebar';
 
 const CATEGORIES = {
   naturaleza: { label: 'Naturaleza', emoji: '🌿', color: 'green' },
@@ -14,10 +16,17 @@ const CATEGORIES = {
 function AttractionDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { sidebarOpen, toggleSidebar, setSidebarVisible } = useSidebar();
   const [attraction, setAttraction] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
+
+  // Enable sidebar on this page
+  useEffect(() => {
+    setSidebarVisible(true);
+    return () => setSidebarVisible(false);
+  }, [setSidebarVisible]);
 
   useEffect(() => {
     fetchAttraction();
@@ -298,6 +307,9 @@ function AttractionDetail() {
           </div>
         </div>
       </div>
+
+      {/* Reels Sidebar */}
+      <ReelsSidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
     </div>
   );
 }

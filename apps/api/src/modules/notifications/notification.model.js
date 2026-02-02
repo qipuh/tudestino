@@ -31,7 +31,10 @@ const Notification = sequelize.define('Notification', {
       'comment_liked',
       'comment_received',
       'post_shared',
-      'user_mentioned'
+      'user_mentioned',
+      'identity_verified',
+      'identity_rejected',
+      'verification_pending'
     ),
     allowNull: false,
   },

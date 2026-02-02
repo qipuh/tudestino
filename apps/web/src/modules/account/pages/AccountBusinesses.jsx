@@ -3,10 +3,18 @@ import { Link } from 'react-router-dom';
 import useBusiness from '../../business/hooks/useBusiness';
 import BusinessCard from '../../business/components/BusinessCard';
 import UserAccountLayout from '../../../layouts/UserAccountLayout';
+import { useSidebar } from '../../../contexts/SidebarContext';
 
 function AccountBusinesses() {
   const { businesses, loading, error, fetchMyBusinesses, deleteBusiness } = useBusiness();
+  const { setSidebarVisible } = useSidebar();
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+  // Disable sidebar on this page
+  useEffect(() => {
+    setSidebarVisible(false);
+    return () => setSidebarVisible(false);
+  }, [setSidebarVisible]);
 
   useEffect(() => {
     loadBusinesses();

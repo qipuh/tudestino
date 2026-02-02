@@ -32,6 +32,12 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  googleId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true,
+    field: 'google_id',
+  },
   role: {
     type: DataTypes.ENUM('guest', 'host', 'business_owner', 'admin'),
     defaultValue: 'guest',
@@ -238,6 +244,17 @@ const User = sequelize.define('User', {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
     comment: 'Si permite mensajes de usuarios que no sigue'
+  },
+  // Password Reset
+  resetPasswordToken: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    field: 'reset_password_token',
+  },
+  resetPasswordExpires: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'reset_password_expires',
   },
 }, {
   tableName: 'users',

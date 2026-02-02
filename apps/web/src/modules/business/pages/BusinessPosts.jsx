@@ -6,9 +6,11 @@ import CreateContentSidebar from '../../social/components/CreateContentSidebar';
 import ReelViewer from '../../../components/social/ReelViewer';
 import { getBusinessPosts, createBusinessPost } from '../../../services/businessService';
 import { getImageUrl } from '../../../services/api';
+import { useSidebar } from '../../../contexts/SidebarContext';
 
 function BusinessPosts() {
   const { id } = useParams();
+  const { setSidebarVisible } = useSidebar();
   const [showCreateSidebar, setShowCreateSidebar] = useState(false);
   const [contentType, setContentType] = useState('post'); // 'post' | 'reel'
   const [posts, setPosts] = useState([]);
@@ -16,6 +18,12 @@ function BusinessPosts() {
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'posts' | 'reels'
   const [selectedPost, setSelectedPost] = useState(null);
   const [selectedPostIndex, setSelectedPostIndex] = useState(0);
+
+  // Disable sidebar on this page
+  useEffect(() => {
+    setSidebarVisible(false);
+    return () => setSidebarVisible(false);
+  }, [setSidebarVisible]);
 
   useEffect(() => {
     loadPosts();

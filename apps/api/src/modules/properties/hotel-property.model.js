@@ -253,9 +253,9 @@ const Room = sequelize.define('Room', {
     defaultValue: [],
   },
   view: {
-    type: DataTypes.STRING(50),
+    type: DataTypes.JSON,
     allowNull: true,
-    comment: 'Tipo de vista: interior, exterior, garden, pool, sea, mountain, city',
+    comment: 'Array de tipos de vista: ["interior", "city", "sea", "mountain", etc.]',
   },
   mealPlan: {
     type: DataTypes.STRING(50),

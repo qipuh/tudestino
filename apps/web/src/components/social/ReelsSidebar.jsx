@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { X, Play, Heart, MessageCircle, ChevronUp, ChevronDown, Video, Sparkles, Image as ImageIcon, Grid3x3 } from 'lucide-react';
+import { Play, Heart, MessageCircle, ChevronUp, ChevronDown, ChevronRight, Video, Sparkles, Image as ImageIcon, Grid3x3 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import api, { getImageUrl } from '../../services/api';
 import ReelViewer from './ReelViewer';
@@ -324,13 +324,6 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
           <div className="relative text-white p-4 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-110" style={{ backgroundColor: '#002c91' }}>
             <Grid3x3 size={28} className="animate-pulse" />
 
-            {/* Badge with content count */}
-            {(reels.length + posts.length) > 0 && (
-              <div className="absolute -top-1 -right-1 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center border-2 border-white" style={{ backgroundColor: '#ffb548' }}>
-                {(reels.length + posts.length) > 99 ? '99+' : (reels.length + posts.length)}
-              </div>
-            )}
-
             {/* Sparkle effect */}
             <Sparkles className="absolute -top-1 -left-1 animate-bounce" style={{ color: '#ffb548' }} size={16} />
           </div>
@@ -366,24 +359,9 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
         }}
       >
         <div className="h-full bg-white shadow-2xl flex flex-col">
-          {/* Header with Tabs */}
+          {/* Tabs with collapse button */}
           <div className="border-b border-gray-200">
-            <div className="flex items-center justify-between p-4 pb-0">
-              <div className="flex items-center gap-2">
-                <Grid3x3 size={24} className="text-primary" />
-                <h2 className="text-lg font-bold text-gray-900">Contenido</h2>
-              </div>
-              <button
-                onClick={onToggle}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                aria-label="Cerrar"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex gap-0 px-4 pt-2">
+            <div className="flex gap-0 px-4 pt-4 relative">
               <button
                 onClick={() => setActiveTab('posts')}
                 className={`flex-1 flex items-center justify-center gap-2 pb-3 border-b-2 transition-colors ${
@@ -394,11 +372,6 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
               >
                 <ImageIcon size={18} />
                 <span className="font-medium text-sm">Posts</span>
-                {posts.length > 0 && (
-                  <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
-                    {posts.length}
-                  </span>
-                )}
               </button>
               <button
                 onClick={() => setActiveTab('reels')}
@@ -410,24 +383,9 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
               >
                 <Video size={18} />
                 <span className="font-medium text-sm">Reels</span>
-                {reels.length > 0 && (
-                  <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
-                    {reels.length}
-                  </span>
-                )}
               </button>
-            </div>
-          </div>
 
-          {/* Content placeholder for removed button */}
-          <div className="hidden">
-            <button
-              onClick={onToggle}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              title="Cerrar"
-            >
-              <X size={20} className="text-gray-600" />
-            </button>
+            </div>
           </div>
 
           {/* Content */}
@@ -728,6 +686,19 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
               </div>
             )}
           </div>
+
+          {/* Collapse button - bottom positioned, only visible when sidebar is open */}
+          {isOpen && (
+            <button
+              onClick={onToggle}
+              className="absolute bottom-6 -left-10 p-3 rounded-l-lg shadow-lg transition-all duration-300 hover:shadow-xl"
+              style={{ backgroundColor: '#002c91' }}
+              aria-label="Ocultar panel"
+              title="Ocultar panel"
+            >
+              <ChevronRight size={20} className="text-white" />
+            </button>
+          )}
         </div>
       </div>
 

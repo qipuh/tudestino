@@ -7,10 +7,12 @@ import useAuthStore from '../../../store/authStore';
 import UserAccountLayout from '../../../layouts/UserAccountLayout';
 import api from '../../../services/api';
 import useBusiness from '../../business/hooks/useBusiness';
+import { useSidebar } from '../../../contexts/SidebarContext';
 
 function AccountDashboard() {
   const { user } = useAuthStore();
   const { businesses, fetchMyBusinesses } = useBusiness();
+  const { setSidebarVisible } = useSidebar();
   const [stats, setStats] = useState({
     bookings: 0,
     businesses: 0,
@@ -19,6 +21,12 @@ function AccountDashboard() {
     favorites: 0
   });
   const [loading, setLoading] = useState(true);
+
+  // Disable sidebar on account page
+  useEffect(() => {
+    setSidebarVisible(false);
+    return () => setSidebarVisible(false);
+  }, [setSidebarVisible]);
 
   useEffect(() => {
     loadDashboardData();

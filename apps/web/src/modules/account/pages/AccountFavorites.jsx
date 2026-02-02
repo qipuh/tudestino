@@ -1,7 +1,17 @@
+import { useEffect } from 'react';
 import UserAccountLayout from '../../../layouts/UserAccountLayout';
 import { Heart, MapPin, Star } from 'lucide-react';
+import { useSidebar } from '../../../contexts/SidebarContext';
 
 function AccountFavorites() {
+  const { setSidebarVisible } = useSidebar();
+
+  // Disable sidebar on this page
+  useEffect(() => {
+    setSidebarVisible(false);
+    return () => setSidebarVisible(false);
+  }, [setSidebarVisible]);
+
   return (
     <UserAccountLayout activeMenu="favorites">
       <div>

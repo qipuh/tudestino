@@ -1,13 +1,16 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { MessageCircle, Send, User, Search } from 'lucide-react';
+import { MessageCircle, Send, User, Search, ArrowLeft } from 'lucide-react';
 import useMessagingStore from '../../../store/messagingStore';
 import useAuthStore from '../../../store/authStore';
 import useSocket from '../../../hooks/useSocket';
+import { useSidebar } from '../../../contexts/SidebarContext';
+import UserAccountLayout from '../../../layouts/UserAccountLayout';
 
 function MessagesPage() {
   const { user } = useAuthStore();
   const socket = useSocket();
+  const { setSidebarVisible } = useSidebar();
   const {
     conversations,
     currentConversation,
@@ -76,6 +79,12 @@ function MessagesPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Ocultar sidebar de reels en esta página
+  useEffect(() => {
+    setSidebarVisible(false);
+    return () => setSidebarVisible(true);
+  }, [setSidebarVisible]);
+
   const handleSelectConversation = async (conversation) => {
     setCurrentConversation(conversation);
     await fetchMessages(conversation.id);
@@ -114,9 +123,10 @@ function MessagesPage() {
   );
 
   return (
-    <div className="h-[calc(100vh-64px)] flex bg-gray-50">
+    <UserAccountLayout activeMenu="messages">
+      <div className="h-[calc(100vh-7rem)] flex bg-white rounded-lg shadow-sm overflow-hidden -mx-4 -mt-6">
       {/* Sidebar - Lista de conversaciones */}
-      <div className="w-full md:w-96 bg-white border-r flex flex-col">
+      <div className={`${currentConversation ? 'hidden md:flex' : 'flex'} w-full md:w-96 bg-white border-r flex-col`}>
         {/* Header */}
         <div className="p-4 border-b">
           <h1 className="text-2xl font-bold mb-4">Mensajes</h1>
@@ -204,11 +214,18 @@ function MessagesPage() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className={`${currentConversation ? 'flex' : 'hidden md:flex'} flex-1 flex-col`}>
         {currentConversation ? (
           <>
             {/* Chat Header */}
             <div className="bg-white border-b p-4 flex items-center gap-3">
+              {/* Botón volver en móvil */}
+              <button
+                onClick={() => setCurrentConversation(null)}
+                className="md:hidden p-2 hover:bg-gray-100 rounded-full"
+              >
+                <ArrowLeft size={20} />
+              </button>
               {currentConversation.otherUser?.avatar ? (
                 <img
                   src={currentConversation.otherUser.avatar}
@@ -290,7 +307,8 @@ function MessagesPage() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </UserAccountLayout>
   );
 }
 

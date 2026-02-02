@@ -3,9 +3,11 @@ import { useParams } from 'react-router-dom';
 import { Calendar, Plus, X, Save, Trash2 } from 'lucide-react';
 import BusinessLayout from '../components/BusinessLayout';
 import api from '../../../services/api';
+import { useSidebar } from '../../../contexts/SidebarContext';
 
 function BusinessSettings() {
   const { id: businessId } = useParams();
+  const { setSidebarVisible } = useSidebar();
   const [seasons, setSeasons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -17,6 +19,12 @@ function BusinessSettings() {
     endDate: '',
     type: 'high' // high, low, custom
   });
+
+  // Disable sidebar on this page
+  useEffect(() => {
+    setSidebarVisible(false);
+    return () => setSidebarVisible(false);
+  }, [setSidebarVisible]);
 
   useEffect(() => {
     loadSeasons();

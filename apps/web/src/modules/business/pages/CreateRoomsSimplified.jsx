@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import BusinessLayout from '../components/BusinessLayout';
 
 // Tipos de habitación con iconos
 const roomTypes = [
@@ -122,7 +123,7 @@ const extraAmenities = [
 function CreateRoomsSimplified() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { businessId } = useParams();
+  const { id: businessId } = useParams();
   const propertyData = location.state?.propertyData || {};
   const editingRoom = location.state?.editingRoom || null;
 
@@ -145,7 +146,7 @@ function CreateRoomsSimplified() {
         beds: editingRoom.beds || [{ type: 'double', quantity: 1 }],
         basicAmenities: basicAmenities,
         bathroomAmenities: bathroomAmenities,
-        view: editingRoom.view || 'interior',
+        view: Array.isArray(editingRoom.view) ? editingRoom.view : (editingRoom.view ? [editingRoom.view] : ['interior']),
         mealPlan: editingRoom.mealPlan || 'none',
         extras: extras,
         description: editingRoom.description || '',
@@ -163,7 +164,7 @@ function CreateRoomsSimplified() {
       beds: [{ type: 'double', quantity: 1 }],
       basicAmenities: ['wifi', 'tv', 'private_bathroom', 'hot_water'],
       bathroomAmenities: ['private_bathroom', 'hot_water', 'shower', 'towels'],
-      view: 'interior',
+      view: ['interior'],
       mealPlan: 'none',
       extras: [],
       description: '',
@@ -374,7 +375,7 @@ function CreateRoomsSimplified() {
       beds: [{ type: 'double', quantity: 1 }],
       basicAmenities: ['wifi', 'tv', 'private_bathroom', 'hot_water'],
       bathroomAmenities: ['private_bathroom', 'hot_water', 'shower', 'towels'],
-      view: 'interior',
+      view: ['interior'],
       mealPlan: 'none',
       extras: [],
       description: '',
@@ -400,7 +401,7 @@ function CreateRoomsSimplified() {
       beds: [{ type: 'double', quantity: 1 }],
       basicAmenities: ['wifi', 'tv', 'private_bathroom', 'hot_water'],
       bathroomAmenities: ['private_bathroom', 'hot_water', 'shower', 'towels'],
-      view: 'interior',
+      view: ['interior'],
       mealPlan: 'none',
       extras: [],
       description: '',
@@ -515,7 +516,7 @@ function CreateRoomsSimplified() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <BusinessLayout activeMenu="services">
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Header */}
         <div className="mb-8">
@@ -716,16 +717,22 @@ function CreateRoomsSimplified() {
               <div>
                 <label className="block text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <ion-icon name="eye-outline" className="text-xl text-primary"></ion-icon>
-                  Vista de la habitación
+                  Vista de la habitación (puedes seleccionar múltiples)
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {viewTypes.map((view) => (
                     <button
                       key={view.value}
                       type="button"
-                      onClick={() => setCurrentRoom({ ...currentRoom, view: view.value })}
+                      onClick={() => {
+                        if (currentRoom.view.includes(view.value)) {
+                          setCurrentRoom({ ...currentRoom, view: currentRoom.view.filter(v => v !== view.value) });
+                        } else {
+                          setCurrentRoom({ ...currentRoom, view: [...currentRoom.view, view.value] });
+                        }
+                      }}
                       className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition ${
-                        currentRoom.view === view.value
+                        currentRoom.view.includes(view.value)
                           ? 'border-primary bg-primary bg-opacity-5'
                           : 'border-gray-200 hover:border-gray-400'
                       }`}
@@ -1055,6 +1062,12 @@ function CreateRoomsSimplified() {
                                   {mealOptions.find(m => m.value === room.mealPlan)?.label}
                                 </div>
                               )}
+                              {Array.isArray(room.view) && room.view.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <ion-icon name="eye-outline"></ion-icon>
+                                  {room.view.map(v => viewTypes.find(vt => vt.value === v)?.label).filter(Boolean).join(', ')}
+                                </div>
+                              )}
                             </div>
                             <div className="text-xl font-bold text-primary mt-2">
                               S/. {room.pricePerNight}/noche
@@ -1113,7 +1126,7 @@ function CreateRoomsSimplified() {
           )}
         </div>
       </div>
-    </div>
+    </BusinessLayout>
   );
 }
 

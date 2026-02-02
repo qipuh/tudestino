@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Key, Save, Loader, CheckCircle, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Key, Save, Loader, CheckCircle, AlertCircle, UserCheck } from 'lucide-react';
 import api from '../../../services/api';
 import useAuthStore from '../../../store/authStore';
 
@@ -101,6 +102,27 @@ function AdminPage() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Panel de Administración</h1>
           <p className="text-gray-600">Configura las integraciones y APIs del sistema</p>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <Link
+            to="/admin/verifications"
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border-2 border-transparent hover:border-primary"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <UserCheck size={24} className="text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Verificaciones de Identidad</h3>
+                <p className="text-sm text-gray-600">Revisar solicitudes pendientes</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-500">
+              Aprueba o rechaza las solicitudes de verificación de identidad de los usuarios
+            </p>
+          </Link>
         </div>
 
         {/* WhatsApp API Configuration */}

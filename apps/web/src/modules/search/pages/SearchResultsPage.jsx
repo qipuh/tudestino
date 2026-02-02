@@ -9,14 +9,18 @@ function SearchResultsPage() {
   const navigate = useNavigate();
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list' | 'map'
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true); // Mostrar filtros por defecto
   const [hoveredItemId, setHoveredItemId] = useState(null);
   const [showMap, setShowMap] = useState(true); // Mostrar mapa por defecto
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalResults, setTotalResults] = useState(0);
 
   // Filtros adicionales
   const [filters, setFilters] = useState({
-    category: 'all', // all, hotel, restaurant, event, entertainment
+    category: 'all', // all, hotel, restaurant, event, entertainment, spa, tours
     businessType: '', // tour, etc.
     query: '', // búsqueda por texto/nombre
     minRating: '',
@@ -50,15 +54,25 @@ function SearchResultsPage() {
 
   // Debounce para búsqueda por texto
   useEffect(() => {
+    // Reset cuando cambian los filtros
+    setPage(1);
+    setResults([]);
+    setHasMore(true);
+
     const timeoutId = setTimeout(() => {
-      fetchSearchResults();
+      fetchSearchResults(1, true);
     }, filters.query ? 500 : 0); // 500ms de debounce solo cuando hay query
 
     return () => clearTimeout(timeoutId);
   }, [searchParams, filters]);
 
-  const fetchSearchResults = async () => {
-    setLoading(true);
+  const fetchSearchResults = async (pageNum = 1, isNewSearch = false) => {
+    if (isNewSearch) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+
     try {
       // Construir query params para la API
       const params = new URLSearchParams();
@@ -74,30 +88,55 @@ function SearchResultsPage() {
       if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
       if (filters.sortBy) params.append('sortBy', filters.sortBy);
 
+      // Paginación
+      params.append('page', pageNum);
+      params.append('limit', '24'); // 24 resultados por página (3 columnas x 8 filas)
+
       const response = await api.get(`/search/all?${params.toString()}`);
 
       if (response.success && response.data) {
-        const results = response.data.results || [];
+        const newResults = response.data.results || [];
+        const total = response.data.total || newResults.length;
+        const totalPages = Math.ceil(total / 24);
 
         // Debug: Log resultados de búsqueda
         console.log('🔍 Search Results Debug:', {
-          totalResults: results.length,
-          firstResult: results[0],
-          pricesInResults: results.map(r => ({
-            id: r.id,
-            name: r.name,
-            type: r.type,
-            price: r.price
-          }))
+          page: pageNum,
+          totalResults: newResults.length,
+          total: total,
+          hasMore: pageNum < totalPages
         });
 
-        setResults(results);
+        if (isNewSearch) {
+          setResults(newResults);
+        } else {
+          setResults(prev => [...prev, ...newResults]);
+        }
+
+        setTotalResults(total);
+        setHasMore(pageNum < totalPages);
+        setPage(pageNum);
       }
     } catch (error) {
       console.error('Error fetching search results:', error);
-      setResults([]);
+      if (isNewSearch) {
+        setResults([]);
+      }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  // Infinite scroll handler
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+
+    // Cargar más cuando esté cerca del final (200px antes)
+    if (scrollHeight - scrollTop <= clientHeight + 200) {
+      if (!loadingMore && hasMore) {
+        fetchSearchResults(page + 1, false);
+      }
     }
   };
 
@@ -167,7 +206,7 @@ function SearchResultsPage() {
             {/* Izquierda: Resumen compacto */}
             <div className="flex items-center gap-4">
               <h1 className="text-lg font-semibold whitespace-nowrap">
-                {results.length} resultados
+                {totalResults > 0 ? totalResults : results.length} resultados
                 {location && ` • ${location.split(',')[0]}`}
               </h1>
               {totalGuests > 0 && (
@@ -286,6 +325,8 @@ function SearchResultsPage() {
                     <option value="restaurant">Restaurantes</option>
                     <option value="event">Eventos</option>
                     <option value="entertainment">Entretenimiento</option>
+                    <option value="spa">Spa y Bienestar</option>
+                    <option value="tours">Tours y Excursiones</option>
                   </select>
                 </div>
                 <div>
@@ -364,19 +405,20 @@ function SearchResultsPage() {
           <>
             {/* Lista de resultados - Scrolleable sin scrollbar visible */}
             <div
-              className={showMap ? 'w-1/2 overflow-y-scroll scrollbar-hide' : 'w-full overflow-y-scroll scrollbar-hide'}
+              className={showMap ? 'w-[60%] overflow-y-scroll scrollbar-hide' : 'w-full overflow-y-scroll scrollbar-hide'}
               style={{
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none'
               }}
+              onScroll={handleScroll}
             >
               <div className="max-w-screen-2xl mx-auto px-6 py-6">
                 <div
                   className={
                     viewMode === 'grid'
                       ? showMap
-                        ? 'grid grid-cols-1 xl:grid-cols-2 gap-5'
-                        : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                        ? 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 relative'
+                        : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative'
                       : 'space-y-4'
                   }
                 >
@@ -388,6 +430,8 @@ function SearchResultsPage() {
                     case 'restaurant': return '🍽️';
                     case 'event': return '🎉';
                     case 'entertainment': return '🎵';
+                    case 'spa': return '💆';
+                    case 'tours': return '🗺️';
                     default: return '📍';
                   }
                 };
@@ -399,6 +443,8 @@ function SearchResultsPage() {
                     case 'restaurant': return 'Restaurante';
                     case 'event': return 'Evento';
                     case 'entertainment': return 'Entretenimiento';
+                    case 'spa': return 'Spa y Bienestar';
+                    case 'tours': return 'Tours';
                     default: return '';
                   }
                 };
@@ -409,8 +455,10 @@ function SearchResultsPage() {
                   to={getBusinessUrl(item)}
                   onMouseEnter={() => setHoveredItemId(`${item.type}-${item.id}`)}
                   onMouseLeave={() => setHoveredItemId(null)}
-                  className={`group border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-primary hover:shadow-2xl transition-all duration-300 ${
-                    hoveredItemId === `${item.type}-${item.id}` ? 'ring-2 ring-primary' : ''
+                  className={`group border-2 rounded-2xl overflow-hidden transition-all duration-300 ${
+                    hoveredItemId === `${item.type}-${item.id}`
+                      ? 'border-primary ring-4 ring-primary ring-opacity-30 shadow-2xl scale-[1.02] z-10'
+                      : 'border-gray-200 hover:border-primary hover:shadow-xl'
                   }`}
                 >
                   <div className="h-48 bg-gray-200 relative overflow-hidden">
@@ -517,28 +565,62 @@ function SearchResultsPage() {
                           )}
                         </div>
                       )}
+
+                      {item.type === 'spa' && (
+                        <div className="flex items-center gap-2">
+                          {item.description && (
+                            <span className="text-sm text-gray-600 line-clamp-2">{item.description}</span>
+                          )}
+                        </div>
+                      )}
+
+                      {item.type === 'tours' && (
+                        <div className="flex items-center gap-2">
+                          {item.price && (
+                            <span className="text-lg font-bold text-primary-dark">S/{item.price}</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Link>
                 );
               })}
                 </div>
+
+                {/* Indicador de carga infinita */}
+                {loadingMore && (
+                  <div className="flex justify-center items-center py-8">
+                    <Loader2 className="animate-spin text-primary" size={32} />
+                    <span className="ml-3 text-gray-600">Cargando más resultados...</span>
+                  </div>
+                )}
+
+                {/* Mensaje de fin de resultados */}
+                {!hasMore && results.length > 0 && (
+                  <div className="text-center py-8 text-gray-500 text-sm">
+                    ✓ Has visto todos los resultados ({totalResults})
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Mapa lateral sticky - 100% altura */}
             {showMap && (
-              <div className="w-1/2 h-full relative">
+              <div className="w-[40%] h-full relative">
                 <PropertiesMap
-                  properties={results.filter(item => item.location?.latitude && item.location?.longitude).map(item => ({
-                    id: `${item.type}-${item.id}`, // ID único por tipo
-                    addressLatitude: item.location.latitude,
-                    addressLongitude: item.location.longitude,
-                    addressCity: item.location.city,
-                    addressCountry: item.location.country,
-                    price: item.price || 0, // Asegurar que price esté presente
-                    ...item
-                  }))}
+                  properties={results.filter(item => item.location?.latitude && item.location?.longitude).map(item => {
+                    const uniqueId = `${item.type}-${item.id}`;
+                    return {
+                      ...item,
+                      id: uniqueId, // ID único por tipo (debe sobrescribir el original)
+                      addressLatitude: item.location.latitude,
+                      addressLongitude: item.location.longitude,
+                      addressCity: item.location.city,
+                      addressCountry: item.location.country,
+                      price: item.price || 0, // Asegurar que price esté presente
+                    };
+                  })}
                   hoveredPropertyId={hoveredItemId}
                   onMarkerHover={setHoveredItemId}
                 />

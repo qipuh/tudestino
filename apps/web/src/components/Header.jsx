@@ -66,14 +66,70 @@ function Header() {
           </div> */}
 
           {/* User Menu */}
-          <div className="flex items-center gap-4">
-            {!user && (
-              <Link to="/host" className="hidden md:block text-sm font-medium hover:bg-gray-100 px-3 py-2 rounded-full">
-                Publica tu negocio
-              </Link>
-            )}
+          <div className="flex items-center gap-3">
+            {!user ? (
+              <>
+                {/* Botones visibles cuando NO está logueado */}
+                <Link
+                  to="/host"
+                  className="hidden md:block text-sm font-medium hover:bg-gray-100 px-4 py-2 rounded-lg transition"
+                >
+                  Publica tu negocio
+                </Link>
+                <Link
+                  to="/login"
+                  className="hidden md:block text-sm font-medium hover:bg-gray-100 px-4 py-2 rounded-lg transition"
+                >
+                  Iniciar sesión
+                </Link>
+                <Link
+                  to="/register"
+                  className="hidden md:block text-sm font-semibold bg-primary text-white px-5 py-2 rounded-lg hover:bg-primary-dark transition shadow-sm"
+                >
+                  Registrarse
+                </Link>
 
-            {user ? (
+                {/* Mobile Menu - Solo para móviles */}
+                <div className="md:hidden flex items-center gap-2">
+                  <Link
+                    to="/login"
+                    className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full font-medium text-sm shadow-sm hover:bg-primary-dark transition"
+                  >
+                    <User size={16} />
+                    Iniciar
+                  </Link>
+
+                  {/* Menú adicional */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setIsMenuOpen(!isMenuOpen)}
+                      className="flex items-center gap-2 border border-gray-300 rounded-full p-2 hover:shadow-md transition"
+                    >
+                      <Menu size={18} />
+                    </button>
+
+                    {isMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                        <Link
+                          to="/host"
+                          className="block px-4 py-3 text-sm hover:bg-gray-50"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          Publica tu negocio
+                        </Link>
+                        <Link
+                          to="/help"
+                          className="block px-4 py-3 text-sm hover:bg-gray-50"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          Ayuda
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
               <>
                 {/* Logged in - Show direct links */}
                 <Link
@@ -162,51 +218,6 @@ function Header() {
                   )}
                 </div>
               </>
-            ) : (
-              <div className="relative">
-                <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="flex items-center gap-2 border border-gray-300 rounded-full px-3 py-2 hover:shadow-md transition"
-                >
-                  <Menu size={16} />
-                  <User size={20} className="text-gray-600" />
-                </button>
-
-                {/* Dropdown Menu for non-logged users */}
-                {isMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                      <Link
-                        to="/login"
-                        className="block px-4 py-3 text-sm font-medium hover:bg-gray-50"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Iniciar sesión
-                      </Link>
-                      <Link
-                        to="/register"
-                        className="block px-4 py-3 text-sm hover:bg-gray-50"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Registrarse
-                      </Link>
-                      <hr className="my-2" />
-                      <Link
-                        to="/host"
-                        className="block px-4 py-2 text-sm hover:bg-gray-50"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Publica tu negocio
-                      </Link>
-                      <Link
-                        to="/help"
-                        className="block px-4 py-2 text-sm hover:bg-gray-50"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Ayuda
-                      </Link>
-                  </div>
-                )}
-              </div>
             )}
           </div>
         </div>

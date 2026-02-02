@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import useBusiness from '../hooks/useBusiness';
 import useAuthStore from '../../../store/authStore';
-import { MapPin, Star, Clock, Phone, Mail, Globe, ChevronLeft, ArrowLeft, MessageCircle, Calendar, Users, Heart, Grid, FileText, UtensilsCrossed, Info, Image as ImageIcon, Newspaper, Home, Bed } from 'lucide-react';
+import { MapPin, Star, Clock, Phone, Mail, Globe, ChevronLeft, ArrowLeft, MessageCircle, Calendar, Users, Heart, Grid, FileText, UtensilsCrossed, Info, Image as ImageIcon, Newspaper, Home, Bed, Route, DollarSign } from 'lucide-react';
 import api, { getImageUrl } from '../../../services/api';
 import ReservationModal from '../components/ReservationModal';
 import BookingFlow from '../../bookings/components/BookingFlow';
 import ReelsSidebar from '../../../components/social/ReelsSidebar';
 import { useSidebar } from '../../../contexts/SidebarContext';
+import useVerification from '../../../hooks/useVerification';
 
 const businessTypeIcons = {
   hotel: '🏨',
@@ -73,6 +74,7 @@ function BusinessDetail({ businessIdProp }) {
   const { id: urlId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { isVerified, status, loading: verificationLoading } = useVerification();
   const { sidebarOpen, toggleSidebar, setSidebarVisible } = useSidebar();
   const { business, loading, error, fetchBusiness, deleteBusiness } = useBusiness();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -93,15 +95,20 @@ function BusinessDetail({ businessIdProp }) {
   const [property, setProperty] = useState(null);
   const [rooms, setRooms] = useState([]);
   const [loadingProperty, setLoadingProperty] = useState(false);
+  const [tours, setTours] = useState([]);
+  const [loadingTours, setLoadingTours] = useState(false);
 
   // Usar businessIdProp si está disponible, de lo contrario usar el ID de la URL
   const id = businessIdProp || urlId;
 
-  // Enable sidebar when BusinessDetail mounts, disable when unmounts
+  // Verificar si el usuario actual es el dueño del negocio
+  const isOwner = business && user && business.ownerId === user.id;
+
+  // Enable sidebar on public view, disable on owner view
   useEffect(() => {
-    setSidebarVisible(true);
+    setSidebarVisible(!isOwner);
     return () => setSidebarVisible(false);
-  }, [setSidebarVisible]);
+  }, [setSidebarVisible, isOwner]);
 
   useEffect(() => {
     if (id) {
@@ -120,6 +127,9 @@ function BusinessDetail({ businessIdProp }) {
       } else if (business.businessType === 'spa') {
         setActiveTab('spa-services');
         loadSpaServices();
+      } else if (business.businessType === 'tours') {
+        setActiveTab('tours');
+        loadTours();
       } else {
         setActiveTab('info');
       }
@@ -157,6 +167,19 @@ function BusinessDetail({ businessIdProp }) {
       setSpaServices([]);
     } finally {
       setLoadingSpaServices(false);
+    }
+  };
+
+  const loadTours = async () => {
+    try {
+      setLoadingTours(true);
+      const response = await api.get(`/businesses/${id}/tours`);
+      setTours(response.data || []);
+    } catch (error) {
+      console.error('Error loading tours:', error);
+      setTours([]);
+    } finally {
+      setLoadingTours(false);
     }
   };
 
@@ -260,7 +283,7 @@ function BusinessDetail({ businessIdProp }) {
   const handleDelete = async () => {
     const result = await deleteBusiness(id);
     if (result.success) {
-      navigate('/business/dashboard');
+      navigate('/account/businesses');
     }
   };
 
@@ -273,11 +296,14 @@ function BusinessDetail({ businessIdProp }) {
       alert('No puedes contactarte a ti mismo');
       return;
     }
+    // Check verification status
+    if (!verificationLoading && !isVerified && status !== 'verified') {
+      alert('Debes verificar tu identidad para contactar negocios. Serás redirigido a la página de verificación.');
+      navigate('/verify-identity');
+      return;
+    }
     navigate(`/messages?user=${business.ownerId}`);
   };
-
-  // Verificar si el usuario actual es el dueño del negocio
-  const isOwner = business && user && business.ownerId === user.id;
 
   // Si es el dueño, redirigir al panel de gestión
   useEffect(() => {
@@ -786,6 +812,19 @@ function BusinessDetail({ businessIdProp }) {
                   💆 Servicios
                 </button>
               )}
+              {business.businessType === 'tours' && (
+                <button
+                  onClick={() => setActiveTab('tours')}
+                  className={`px-4 py-3 text-sm font-medium border-b-2 transition flex items-center gap-2 ${
+                    activeTab === 'tours'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <Route size={18} />
+                  Tours Disponibles
+                </button>
+              )}
               <button
                 onClick={() => setActiveTab('info')}
                 className={`px-4 py-3 text-sm font-medium border-b-2 transition flex items-center gap-2 ${
@@ -1200,6 +1239,118 @@ function BusinessDetail({ businessIdProp }) {
             </div>
           )}
 
+          {/* TAB: Tours */}
+          {activeTab === 'tours' && business.businessType === 'tours' && (
+            <div>
+              {loadingTours ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-gray-600">Cargando tours...</p>
+                </div>
+              ) : tours.length > 0 ? (
+                <div className="space-y-6">
+                  <div className="mb-6">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Tours Disponibles</h3>
+                    <p className="text-gray-600">Descubre nuestras experiencias turísticas</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {tours.map((tour) => (
+                      <Link
+                        key={tour.id}
+                        to={`/tours/${tour.id}`}
+                        className="group border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all bg-white"
+                      >
+                        {/* Tour Image */}
+                        {tour.gallery && tour.gallery.length > 0 ? (
+                          <div className="relative h-56 overflow-hidden">
+                            <img
+                              src={getImageUrl(tour.gallery[0], 'tours')}
+                              alt={tour.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                            {/* Duration Badge */}
+                            {tour.durationDays && (
+                              <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg">
+                                <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-900">
+                                  <Calendar size={14} />
+                                  <span>{tour.durationDays}D/{tour.durationNights || tour.durationDays - 1}N</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="h-56 bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center">
+                            <span className="text-7xl">🗺️</span>
+                          </div>
+                        )}
+
+                        {/* Tour Info */}
+                        <div className="p-5">
+                          <h3 className="font-bold text-xl text-gray-900 mb-2 group-hover:text-primary transition line-clamp-1">
+                            {tour.name}
+                          </h3>
+
+                          {/* Location */}
+                          {tour.mainDestination && (
+                            <div className="flex items-center gap-1.5 text-sm text-gray-600 mb-3">
+                              <MapPin size={14} />
+                              <span>{tour.mainDestination}</span>
+                            </div>
+                          )}
+
+                          {/* Description */}
+                          {tour.description && (
+                            <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                              {tour.description}
+                            </p>
+                          )}
+
+                          {/* Tour Details */}
+                          <div className="flex flex-wrap items-center gap-3 mb-4 text-xs text-gray-500">
+                            {tour.maxGroupSize && (
+                              <div className="flex items-center gap-1">
+                                <Users size={14} />
+                                <span>Hasta {tour.maxGroupSize} pax</span>
+                              </div>
+                            )}
+                            {tour.difficulty && (
+                              <div className="flex items-center gap-1">
+                                <Star size={14} />
+                                <span>{tour.difficulty}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Price & CTA */}
+                          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                            <div>
+                              <p className="text-xs text-gray-500">Desde</p>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-2xl font-bold text-primary">
+                                  {tour.priceCurrency || tour.currency} {tour.basePricePerPerson}
+                                </span>
+                                <span className="text-xs text-gray-500">/ persona</span>
+                              </div>
+                            </div>
+                            <div className="px-4 py-2 bg-primary text-white rounded-lg font-medium text-sm group-hover:bg-primary-dark transition">
+                              Ver detalles
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-16 bg-white rounded-lg border-2 border-dashed">
+                  <span className="text-6xl mb-4 block">🗺️</span>
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">Tours no disponibles</h3>
+                  <p className="text-gray-600">Este negocio aún no ha agregado tours.</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* TAB: Galería */}
           {activeTab === 'gallery' && (
             <div>
@@ -1295,8 +1446,8 @@ function BusinessDetail({ businessIdProp }) {
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <div className="mb-6 flex items-center justify-between">
-          <Link to="/business/dashboard" className="text-primary hover:text-primary-dark">
-            ← Volver al dashboard
+          <Link to="/account/businesses" className="text-primary hover:text-primary-dark">
+            ← Volver a mis negocios
           </Link>
           <a
             href={`/businesses/${business.id}`}

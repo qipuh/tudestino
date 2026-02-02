@@ -14,9 +14,11 @@ import StatsCard from '../components/StatsCard';
 import ReservationList from '../components/ReservationList';
 import ActivityFeed from '../components/ActivityFeed';
 import BusinessLayout from '../components/BusinessLayout';
+import { useSidebar } from '../../../contexts/SidebarContext';
 
 function BusinessManagementDashboard() {
   const { id } = useParams();
+  const { setSidebarVisible } = useSidebar();
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -29,6 +31,12 @@ function BusinessManagementDashboard() {
   });
   const [recentReservations, setRecentReservations] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
+
+  // Disable sidebar on this page
+  useEffect(() => {
+    setSidebarVisible(false);
+    return () => setSidebarVisible(false);
+  }, [setSidebarVisible]);
 
   useEffect(() => {
     loadBusinessData();

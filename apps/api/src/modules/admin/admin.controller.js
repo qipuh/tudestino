@@ -1,4 +1,5 @@
 import adminService from './admin.service.js';
+import * as verificationService from '../verification/verification.service.js';
 import { asyncHandler } from '../../middleware/errorHandler.js';
 
 /**
@@ -105,5 +106,55 @@ export const setWhatsAppConfig = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     message: 'Configuración de WhatsApp guardada correctamente'
+  });
+});
+
+/**
+ * Get pending identity verifications
+ */
+export const getPendingVerifications = asyncHandler(async (req, res) => {
+  const pendingUsers = await verificationService.getPendingVerifications();
+
+  res.json({
+    success: true,
+    data: { users: pendingUsers }
+  });
+});
+
+/**
+ * Approve identity verification
+ */
+export const approveVerification = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const adminId = req.user.id;
+
+  const result = await verificationService.approveVerification(userId, adminId);
+
+  res.json({
+    success: true,
+    message: result.message
+  });
+});
+
+/**
+ * Reject identity verification
+ */
+export const rejectVerification = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { reason } = req.body;
+  const adminId = req.user.id;
+
+  if (!reason || !reason.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: 'Debes proporcionar una razón para el rechazo'
+    });
+  }
+
+  const result = await verificationService.rejectVerification(userId, adminId, reason.trim());
+
+  res.json({
+    success: true,
+    message: result.message
   });
 });

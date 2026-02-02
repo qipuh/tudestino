@@ -1,43 +1,47 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   MapPin, Calendar, Users, DollarSign, Clock, Star,
   CheckCircle, XCircle, Building2, Phone, Mail, Globe,
-  Coffee, Utensils, Car, User, Ticket, Shield, ChevronDown, ChevronUp,
-  X as CloseIcon, ChevronLeft, ChevronRight
+  Coffee, Utensils, Car, User, Ticket, Shield,
+  X as CloseIcon, ChevronLeft, ChevronRight, MessageCircle, Heart,
+  Info, Image as ImageIcon, Newspaper, Route
 } from 'lucide-react';
 import api, { getImageUrl } from '../../../services/api';
+import useAuthStore from '../../../store/authStore';
+import ReelsSidebar from '../../../components/social/ReelsSidebar';
+import { useSidebar } from '../../../contexts/SidebarContext';
 
 function TourDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const { sidebarOpen, toggleSidebar, setSidebarVisible } = useSidebar();
   const [tour, setTour] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [expandedDay, setExpandedDay] = useState(null);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('info');
+
+  // Enable sidebar when component mounts
+  useEffect(() => {
+    setSidebarVisible(true);
+    return () => setSidebarVisible(false);
+  }, [setSidebarVisible]);
 
   useEffect(() => {
-    loadTourData();
+    if (id) {
+      loadTourData();
+    }
   }, [id]);
 
-  // Keyboard navigation for lightbox
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (!lightboxOpen) return;
-
-      if (e.key === 'Escape') {
-        closeLightbox();
-      } else if (e.key === 'ArrowRight') {
-        nextImage();
-      } else if (e.key === 'ArrowLeft') {
-        prevImage();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxOpen, lightboxIndex, tour]);
+    if (tour?.businessId && user) {
+      checkFollowStatus();
+    }
+  }, [tour, user]);
 
   const loadTourData = async () => {
     try {
@@ -53,29 +57,55 @@ function TourDetailPage() {
     }
   };
 
-  const toggleDay = (dayNumber) => {
-    setExpandedDay(expandedDay === dayNumber ? null : dayNumber);
-  };
-
-  const openLightbox = (index) => {
-    setLightboxIndex(index);
-    setLightboxOpen(true);
-  };
-
-  const closeLightbox = () => {
-    setLightboxOpen(false);
-  };
-
-  const nextImage = () => {
-    if (tour.gallery) {
-      setLightboxIndex((lightboxIndex + 1) % tour.gallery.length);
+  const checkFollowStatus = async () => {
+    if (!tour?.businessId) return;
+    try {
+      const response = await api.get(`/businesses/${tour.businessId}/following`);
+      setIsFollowing(response.data.data?.isFollowing || false);
+    } catch (error) {
+      console.error('Error checking follow status:', error);
+      setIsFollowing(false);
     }
   };
 
-  const prevImage = () => {
-    if (tour.gallery) {
-      setLightboxIndex((lightboxIndex - 1 + tour.gallery.length) % tour.gallery.length);
+  const handleFollowToggle = async () => {
+    if (!user) {
+      navigate('/login?redirect=/tours/' + id);
+      return;
     }
+
+    if (!tour?.businessId) return;
+
+    try {
+      setFollowLoading(true);
+
+      if (isFollowing) {
+        await api.delete(`/businesses/${tour.businessId}/follow`);
+      } else {
+        await api.post(`/businesses/${tour.businessId}/follow`);
+      }
+
+      await checkFollowStatus();
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+      alert(error.response?.data?.message || 'Error al actualizar seguimiento');
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const handleContactBusiness = () => {
+    if (!user) {
+      navigate('/login?redirect=/tours/' + id);
+      return;
+    }
+
+    if (tour?.Business?.ownerId === user.id) {
+      alert('No puedes contactarte a ti mismo');
+      return;
+    }
+
+    navigate(`/messages?user=${tour.Business.ownerId}`);
   };
 
   const getServiceIcon = (service) => {
@@ -104,10 +134,10 @@ function TourDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando tour...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando tour...</p>
         </div>
       </div>
     );
@@ -115,10 +145,11 @@ function TourDetailPage() {
 
   if (error || !tour) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error || 'Tour no encontrado'}</p>
-          <Link to="/" className="text-primary hover:underline">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Tour no encontrado</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Link to="/" className="text-primary hover:text-primary-dark">
             Volver al inicio
           </Link>
         </div>
@@ -126,207 +157,459 @@ function TourDetailPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="relative h-96 bg-gradient-to-br from-teal-500 to-teal-700">
-        {tour.coverImage ? (
-          <img
-            src={getImageUrl(tour.coverImage, 'tours')}
-            alt={tour.name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-white text-9xl">
-            🗺️
-          </div>
-        )}
-        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+  // Prepare data
+  const images = tour.gallery || [];
+  const businessLogo = tour.Business?.logo;
+  const businessName = tour.Business?.name || tour.name;
+  const businessFollowers = tour.Business?.followersCount || 0;
 
-        {/* Title Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8">
-          <div className="container mx-auto">
-            <h1 className="text-4xl font-bold text-white mb-2">{tour.name}</h1>
-            <div className="flex items-center gap-4 text-white/90">
-              <div className="flex items-center gap-2">
-                <MapPin size={20} />
-                <span>{tour.mainDestination}</span>
-              </div>
-              {tour.durationDays && (
-                <div className="flex items-center gap-2">
-                  <Calendar size={20} />
-                  <span>{tour.durationDays}D/{tour.durationNights || tour.durationDays - 1}N</span>
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Images Gallery */}
+      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        {images.length > 0 ? (
+          <>
+            {/* Main Cover Image */}
+            <div className="w-full h-[300px] sm:h-[400px] lg:h-[500px] bg-gray-200 rounded-b-xl overflow-hidden relative mb-4">
+              <img
+                src={getImageUrl(images[selectedImage], 'tours')}
+                alt={tour.name}
+                className="w-full h-full object-cover"
+              />
+
+              {/* Info y Botones superpuestos - Diseño Premium */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-3 sm:p-4 lg:p-6">
+                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                  {/* Lado izquierdo: Logo, nombre, seguidores, ubicación */}
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                    {businessLogo ? (
+                      <img
+                        src={getImageUrl(businessLogo, 'business')}
+                        alt={businessName}
+                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover shadow-lg ring-2 ring-white/30"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl sm:text-2xl shadow-lg ring-2 ring-white/30">
+                        🗺️
+                      </div>
+                    )}
+
+                    <div className="flex-1 min-w-0">
+                      <h1 className="text-base sm:text-lg lg:text-xl font-bold text-white mb-0.5 sm:mb-1 line-clamp-1 leading-tight drop-shadow-md">{tour.name}</h1>
+                      {tour.Business && (
+                        <p className="text-xs sm:text-sm text-white/80 mb-1">
+                          Por {businessName}
+                        </p>
+                      )}
+
+                      <div className="flex items-center gap-2 sm:gap-3 flex-wrap text-xs sm:text-sm">
+                        {/* Duración */}
+                        {tour.durationDays && (
+                          <div className="flex items-center gap-1 text-white/90">
+                            <Calendar size={14} />
+                            <span className="font-semibold">{tour.durationDays}D/{tour.durationNights || tour.durationDays - 1}N</span>
+                          </div>
+                        )}
+
+                        {/* Seguidores */}
+                        {tour.Business && (
+                          <div className="flex items-center gap-1 text-white/90">
+                            <Users size={14} />
+                            <span className="font-semibold">{businessFollowers}</span>
+                            <span className="text-white/70">seguidores</span>
+                          </div>
+                        )}
+
+                        {/* Ubicación */}
+                        {tour.mainDestination && (
+                          <>
+                            <span className="text-white/30">•</span>
+                            <div className="flex items-center gap-1 text-white/90">
+                              <MapPin size={13} />
+                              <span>{tour.mainDestination}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Lado derecho: Botones */}
+                  <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
+                    {tour.Business && (!user || user.id !== tour.Business.ownerId) && (
+                      <button
+                        onClick={handleContactBusiness}
+                        className="px-3 py-2 sm:px-4 bg-white/90 hover:bg-white text-gray-900 rounded-lg font-medium text-xs sm:text-sm flex-1 sm:flex-initial justify-center flex items-center gap-1.5 sm:gap-2 transition-all shadow-lg hover:shadow-xl"
+                      >
+                        <MessageCircle size={14} className="sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Contactar</span>
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (!user) {
+                          navigate('/login?redirect=/tours/' + id);
+                          return;
+                        }
+                        document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="px-3 py-2 sm:px-4 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold text-xs sm:text-sm flex-1 sm:flex-initial justify-center flex items-center gap-1.5 sm:gap-2 transition-all shadow-lg hover:shadow-xl"
+                    >
+                      <Calendar size={14} className="sm:w-4 sm:h-4" />
+                      Reservar
+                    </button>
+                    {tour.Business && (
+                      <button
+                        onClick={handleFollowToggle}
+                        disabled={followLoading}
+                        className={`px-3 py-2 sm:px-4 rounded-lg text-xs sm:text-sm flex-1 sm:flex-initial justify-center font-semibold transition-all shadow-lg flex items-center gap-1.5 sm:gap-2 ${
+                          isFollowing
+                            ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            : 'text-black hover:opacity-90'
+                        } ${followLoading ? 'opacity-50' : ''}`}
+                        style={!isFollowing ? { backgroundColor: '#ffb649' } : {}}
+                      >
+                        <Heart size={14} className={`sm:w-4 sm:h-4 ${isFollowing ? 'fill-current' : ''}`} />
+                        <span className="hidden sm:inline">{isFollowing ? 'Dejar de seguir' : 'Seguir'}</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
-              )}
+              </div>
+            </div>
+
+            {/* Thumbnail Navigation */}
+            {images.length > 1 && (
+              <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+                {images.map((img, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition ${
+                      selectedImage === index ? 'border-primary' : 'border-transparent'
+                    }`}
+                  >
+                    <img src={getImageUrl(img, 'tours')} alt={`Thumb ${index + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="h-96 bg-gray-200 rounded-b-xl flex items-center justify-center relative">
+            <div className="text-center">
+              <span className="text-6xl mb-2 block">🗺️</span>
+              <p className="text-gray-500">Sin imágenes disponibles</p>
+            </div>
+
+            {/* Info y Botones superpuestos */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-3 sm:p-4 lg:p-6">
+              <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                  {businessLogo ? (
+                    <img
+                      src={getImageUrl(businessLogo, 'business')}
+                      alt={businessName}
+                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover shadow-lg ring-2 ring-white/30"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl sm:text-2xl shadow-lg ring-2 ring-white/30">
+                      🗺️
+                    </div>
+                  )}
+
+                  <div className="flex-1 min-w-0">
+                    <h1 className="text-base sm:text-lg lg:text-xl font-bold text-white mb-0.5 sm:mb-1 line-clamp-1 leading-tight drop-shadow-md">{tour.name}</h1>
+                    {tour.Business && (
+                      <p className="text-xs sm:text-sm text-white/80 mb-1">
+                        Por {businessName}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap text-xs sm:text-sm">
+                      {tour.durationDays && (
+                        <div className="flex items-center gap-1 text-white/90">
+                          <Calendar size={14} />
+                          <span className="font-semibold">{tour.durationDays}D/{tour.durationNights || tour.durationDays - 1}N</span>
+                        </div>
+                      )}
+                      {tour.Business && (
+                        <div className="flex items-center gap-1 text-white/90">
+                          <Users size={14} />
+                          <span className="font-semibold">{businessFollowers}</span>
+                          <span className="text-white/70">seguidores</span>
+                        </div>
+                      )}
+                      {tour.mainDestination && (
+                        <>
+                          <span className="text-white/30">•</span>
+                          <div className="flex items-center gap-1 text-white/90">
+                            <MapPin size={13} />
+                            <span>{tour.mainDestination}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
+                  {tour.Business && (!user || user.id !== tour.Business.ownerId) && (
+                    <button
+                      onClick={handleContactBusiness}
+                      className="px-3 py-2 sm:px-4 bg-white/90 hover:bg-white text-gray-900 rounded-lg font-medium text-xs sm:text-sm flex-1 sm:flex-initial justify-center flex items-center gap-1.5 sm:gap-2 transition-all shadow-lg hover:shadow-xl"
+                    >
+                      <MessageCircle size={16} />
+                      Contactar
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (!user) {
+                        navigate('/login?redirect=/tours/' + id);
+                        return;
+                      }
+                      document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="px-3 py-2 sm:px-4 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold text-xs sm:text-sm flex-1 sm:flex-initial justify-center flex items-center gap-1.5 sm:gap-2 transition-all shadow-lg hover:shadow-xl"
+                  >
+                    <Calendar size={16} />
+                    Reservar
+                  </button>
+                  {tour.Business && (
+                    <button
+                      onClick={handleFollowToggle}
+                      disabled={followLoading}
+                      className={`px-3 py-2 sm:px-4 rounded-lg text-xs sm:text-sm flex-1 sm:flex-initial justify-center font-semibold transition-all shadow-lg flex items-center gap-1.5 sm:gap-2 ${
+                        isFollowing
+                          ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          : 'text-black hover:opacity-90'
+                      } ${followLoading ? 'opacity-50' : ''}`}
+                      style={!isFollowing ? { backgroundColor: '#ffb649' } : {}}
+                    >
+                      <Heart size={16} className={isFollowing ? 'fill-current' : ''} />
+                      {isFollowing ? 'Dejar de seguir' : 'Seguir'}
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
+        )}
+      </div>
+
+      {/* Tabs Navigation */}
+      <div className="bg-white sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex gap-1 overflow-x-auto">
+            <button
+              onClick={() => setActiveTab('info')}
+              className={`px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 font-medium border-b-2 transition flex items-center gap-2 ${
+                activeTab === 'info'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Info size={18} />
+              Información
+            </button>
+            {tour.itinerary && tour.itinerary.length > 0 && (
+              <button
+                onClick={() => setActiveTab('itinerary')}
+                className={`px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 font-medium border-b-2 transition flex items-center gap-2 ${
+                  activeTab === 'itinerary'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Route size={18} />
+                Itinerario
+              </button>
+            )}
+            <button
+              onClick={() => setActiveTab('requirements')}
+              className={`px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 font-medium border-b-2 transition flex items-center gap-2 ${
+                activeTab === 'requirements'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <CheckCircle size={18} />
+              Requisitos
+            </button>
+            <button
+              onClick={() => setActiveTab('gallery')}
+              className={`px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 font-medium border-b-2 transition flex items-center gap-2 ${
+                activeTab === 'gallery'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <ImageIcon size={18} />
+              Galería
+            </button>
+            <button
+              onClick={() => setActiveTab('posts')}
+              className={`px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm whitespace-nowrap flex-shrink-0 font-medium border-b-2 transition flex items-center gap-2 ${
+                activeTab === 'posts'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Newspaper size={18} />
+              Publicaciones
+            </button>
+          </nav>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      {/* Tab Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Business Info */}
-            {tour.Business && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Building2 className="text-primary" size={32} />
+          <div className="lg:col-span-2">
+            {/* TAB: Información */}
+            {activeTab === 'info' && (
+              <div className="space-y-6">
+
+                {/* Description */}
+                {(tour.description || tour.fullDescription) && (
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h3 className="text-lg font-bold mb-3 text-gray-900">Acerca de este tour</h3>
+                    <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+                      {tour.fullDescription || tour.description}
+                    </p>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-gray-900">{tour.Business.name}</h3>
-                    <p className="text-sm text-gray-600">Operador Turístico</p>
-                    {tour.Business.verificationStatus === 'verified' && (
-                      <div className="mt-2 inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold">
-                        <CheckCircle size={12} />
-                        Verificado
+                )}
+
+                {/* Business Info */}
+                {tour.Business && (
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h3 className="text-lg font-bold mb-4 text-gray-900">Operador Turístico</h3>
+                    <div className="flex items-start gap-4">
+                      <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Building2 className="text-primary" size={32} />
                       </div>
-                    )}
-                  </div>
-                  <Link
-                    to={`/business/${tour.businessId}`}
-                    className="text-primary hover:text-primary-dark text-sm font-medium"
-                  >
-                    Ver agencia →
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {/* Description */}
-            {(tour.description || tour.fullDescription) && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Descripción</h2>
-                <p className="text-gray-700 whitespace-pre-line">
-                  {tour.fullDescription || tour.description}
-                </p>
-              </div>
-            )}
-
-            {/* Gallery */}
-            {tour.gallery && tour.gallery.length > 0 && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Galería de Fotos</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {tour.gallery.map((image, index) => (
-                    <div
-                      key={index}
-                      onClick={() => openLightbox(index)}
-                      className="aspect-square rounded-lg overflow-hidden hover:shadow-xl transition cursor-pointer bg-gray-100 group relative"
-                    >
-                      <img
-                        src={getImageUrl(image, 'tours')}
-                        alt={`${tour.name} - Foto ${index + 1}`}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Itinerary */}
-            {tour.itinerary && tour.itinerary.length > 0 && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Itinerario</h2>
-                <div className="space-y-4">
-                  {tour.itinerary.map((day, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
-                      <button
-                        onClick={() => toggleDay(day.day)}
-                        className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-bold">
-                            {day.day}
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900">{tour.Business.name}</h4>
+                        {tour.Business.verificationStatus === 'verified' && (
+                          <div className="mt-2 inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold">
+                            <CheckCircle size={12} />
+                            Verificado
                           </div>
-                          <div className="text-left">
-                            <h3 className="font-bold text-gray-900">{day.title || `Día ${day.day}`}</h3>
-                          </div>
-                        </div>
-                        {expandedDay === day.day ? (
-                          <ChevronUp className="text-gray-600" />
-                        ) : (
-                          <ChevronDown className="text-gray-600" />
                         )}
-                      </button>
+                      </div>
+                      <Link
+                        to={`/business/${tour.businessId}`}
+                        className="text-primary hover:text-primary-dark text-sm font-medium whitespace-nowrap"
+                      >
+                        Ver agencia →
+                      </Link>
+                    </div>
+                  </div>
+                )}
 
-                      {expandedDay === day.day && (
-                        <div className="p-4 bg-white">
-                          <p className="text-gray-700 mb-3">{day.description}</p>
-                          {day.activities && day.activities.length > 0 && (
-                            <div>
-                              <h4 className="font-semibold text-gray-900 mb-2">Actividades:</h4>
-                              <ul className="list-disc list-inside space-y-1">
-                                {day.activities.map((activity, idx) => (
-                                  <li key={idx} className="text-gray-700">{activity}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
+                {/* Included Services */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h3 className="text-lg font-bold mb-4 text-gray-900">Incluye</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {tour.includes && Object.entries(tour.includes).map(([key, value]) => {
+                      const Icon = getServiceIcon(key);
+                      return value ? (
+                        <div key={key} className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <Icon className="text-green-600" size={20} />
+                          </div>
+                          <span className="text-gray-700">{getServiceLabel(key)}</span>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+
+                  {tour.mealsIncluded && tour.mealsIncluded.length > 0 && (
+                    <div className="mt-6">
+                      <h4 className="font-semibold text-gray-900 mb-2">Comidas incluidas:</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {tour.mealsIncluded.map((meal, idx) => (
+                          <span key={idx} className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm">
+                            {meal}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Not Included */}
+                {tour.notIncluded && tour.notIncluded.length > 0 && (
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h3 className="text-lg font-bold mb-4 text-gray-900">No Incluye</h3>
+                    <div className="space-y-2">
+                      {tour.notIncluded.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-3">
+                          <XCircle className="text-red-500 flex-shrink-0" size={20} />
+                          <span className="text-gray-700">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB: Itinerario */}
+            {activeTab === 'itinerary' && tour.itinerary && tour.itinerary.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Itinerario del Tour</h3>
+                {tour.itinerary.map((day, index) => (
+                  <div key={index} className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+                    <div className="p-6 bg-gray-50">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-bold">
+                          {day.day}
+                        </div>
+                        <h3 className="font-bold text-gray-900 text-lg">{day.title || `Día ${day.day}`}</h3>
+                      </div>
+                      <p className="text-gray-700 mb-3">{day.description}</p>
+                      {day.activities && day.activities.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-2">Actividades:</h4>
+                          <ul className="space-y-3">
+                            {day.activities.map((activity, idx) => (
+                              <li key={idx} className="flex gap-3">
+                                {typeof activity === 'object' ? (
+                                  <div className="flex-1">
+                                    <div className="flex items-baseline gap-2">
+                                      {activity.time && (
+                                        <span className="text-primary font-semibold text-sm">{activity.time}</span>
+                                      )}
+                                      {activity.title && (
+                                        <span className="font-medium text-gray-900">{activity.title}</span>
+                                      )}
+                                    </div>
+                                    {activity.description && (
+                                      <p className="text-gray-700 text-sm mt-1">{activity.description}</p>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-700">{activity}</span>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       )}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Included Services */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Incluye</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {tour.includes && Object.entries(tour.includes).map(([key, value]) => {
-                  const Icon = getServiceIcon(key);
-                  return value ? (
-                    <div key={key} className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                        <Icon className="text-green-600" size={20} />
-                      </div>
-                      <span className="text-gray-700">{getServiceLabel(key)}</span>
-                    </div>
-                  ) : null;
-                })}
-              </div>
-
-              {tour.mealsIncluded && tour.mealsIncluded.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="font-semibold text-gray-900 mb-2">Comidas incluidas:</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {tour.mealsIncluded.map((meal, idx) => (
-                      <span key={idx} className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm">
-                        {meal}
-                      </span>
-                    ))}
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* Not Included */}
-            {tour.notIncluded && tour.notIncluded.length > 0 && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">No Incluye</h2>
-                <div className="space-y-2">
-                  {tour.notIncluded.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-3">
-                      <XCircle className="text-red-500 flex-shrink-0" size={20} />
-                      <span className="text-gray-700">{item}</span>
-                    </div>
-                  ))}
-                </div>
+                ))}
               </div>
             )}
 
-            {/* Requirements & Policies */}
-            {(tour.requirements || tour.cancellationPolicy || tour.guideLanguages) && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Información Importante</h2>
-
+            {/* TAB: Requisitos */}
+            {activeTab === 'requirements' && (
+              <div className="space-y-6">
                 {tour.requirements && tour.requirements.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="font-semibold text-gray-900 mb-3">Requisitos:</h3>
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h3 className="text-lg font-bold mb-4 text-gray-900">Requisitos</h3>
                     <ul className="space-y-2">
                       {tour.requirements.map((req, idx) => (
                         <li key={idx} className="flex items-start gap-2">
@@ -339,8 +622,8 @@ function TourDetailPage() {
                 )}
 
                 {tour.guideLanguages && tour.guideLanguages.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="font-semibold text-gray-900 mb-2">Idiomas del guía:</h3>
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h3 className="text-lg font-bold mb-4 text-gray-900">Idiomas del guía</h3>
                     <div className="flex flex-wrap gap-2">
                       {tour.guideLanguages.map((lang, idx) => (
                         <span key={idx} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
@@ -352,18 +635,61 @@ function TourDetailPage() {
                 )}
 
                 {tour.cancellationPolicy && (
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Política de cancelación:</h3>
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h3 className="text-lg font-bold mb-4 text-gray-900">Política de cancelación</h3>
                     <p className="text-gray-700">{tour.cancellationPolicy}</p>
+                  </div>
+                )}
+
+                {!tour.requirements && !tour.guideLanguages && !tour.cancellationPolicy && (
+                  <div className="bg-white rounded-lg shadow-sm p-12 text-center text-gray-500">
+                    <CheckCircle size={48} className="mx-auto mb-4 text-gray-300" />
+                    <p>No hay información de requisitos disponible</p>
                   </div>
                 )}
               </div>
             )}
+
+            {/* TAB: Galería */}
+            {activeTab === 'gallery' && (
+              <div className="space-y-6">
+                {images.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {images.map((img, index) => (
+                      <div key={index} className="aspect-square rounded-lg overflow-hidden bg-gray-200">
+                        <img
+                          src={getImageUrl(img, 'tours')}
+                          alt={`Galería ${index + 1}`}
+                          className="w-full h-full object-cover hover:scale-110 transition-transform duration-300 cursor-pointer"
+                          onClick={() => setSelectedImage(index)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-lg shadow-sm p-12 text-center text-gray-500">
+                    <ImageIcon size={48} className="mx-auto mb-4 text-gray-300" />
+                    <p>No hay imágenes en la galería</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB: Publicaciones */}
+            {activeTab === 'posts' && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-lg shadow-sm p-12 text-center text-gray-500">
+                  <Newspaper size={48} className="mx-auto mb-4 text-gray-300" />
+                  <p>No hay publicaciones disponibles</p>
+                  <p className="text-sm mt-2">Las publicaciones del negocio aparecerán aquí</p>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-8 space-y-6">
+          {/* Sidebar - Booking Section */}
+          <div className="lg:col-span-1" id="booking-section">
+            <div className="sticky top-24 space-y-6">
               {/* Pricing Card */}
               <div className="bg-white rounded-lg shadow-lg p-6">
                 <div className="text-center mb-6">
@@ -482,63 +808,8 @@ function TourDetailPage() {
         </div>
       </div>
 
-      {/* Lightbox Modal */}
-      {lightboxOpen && tour.gallery && tour.gallery.length > 0 && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center"
-          onClick={closeLightbox}
-        >
-          {/* Close Button */}
-          <button
-            onClick={closeLightbox}
-            className="absolute top-4 right-4 text-white hover:text-gray-300 transition z-10"
-          >
-            <CloseIcon size={32} />
-          </button>
-
-          {/* Previous Button */}
-          {tour.gallery.length > 1 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                prevImage();
-              }}
-              className="absolute left-4 text-white hover:text-gray-300 transition z-10"
-            >
-              <ChevronLeft size={48} />
-            </button>
-          )}
-
-          {/* Image */}
-          <div
-            className="max-w-7xl max-h-[90vh] px-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={getImageUrl(tour.gallery[lightboxIndex], 'tours')}
-              alt={`${tour.name} - Foto ${lightboxIndex + 1}`}
-              className="max-w-full max-h-[90vh] object-contain rounded-lg"
-            />
-            {/* Image Counter */}
-            <div className="text-center mt-4 text-white">
-              {lightboxIndex + 1} / {tour.gallery.length}
-            </div>
-          </div>
-
-          {/* Next Button */}
-          {tour.gallery.length > 1 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                nextImage();
-              }}
-              className="absolute right-4 text-white hover:text-gray-300 transition z-10"
-            >
-              <ChevronRight size={48} />
-            </button>
-          )}
-        </div>
-      )}
+      {/* Reels Sidebar */}
+      <ReelsSidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
     </div>
   );
 }

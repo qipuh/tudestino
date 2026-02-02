@@ -1,5 +1,6 @@
 import express from 'express';
 import { authenticate } from '../../middleware/auth.middleware.js';
+import { requireVerifiedIdentity } from '../../middleware/verifyIdentity.middleware.js';
 import {
   getConversations,
   getOrCreateConversation,
@@ -16,14 +17,14 @@ router.use(authenticate);
 // Obtener todas las conversaciones del usuario
 router.get('/conversations', getConversations);
 
-// Obtener o crear una conversación
-router.post('/conversations', getOrCreateConversation);
+// Obtener o crear una conversación - requiere verificación de identidad
+router.post('/conversations', requireVerifiedIdentity, getOrCreateConversation);
 
 // Obtener mensajes de una conversación específica
 router.get('/conversations/:conversationId/messages', getMessages);
 
-// Enviar un mensaje en una conversación
-router.post('/conversations/:conversationId/messages', sendMessage);
+// Enviar un mensaje en una conversación - requiere verificación de identidad
+router.post('/conversations/:conversationId/messages', requireVerifiedIdentity, sendMessage);
 
 // Marcar mensajes como leídos
 router.patch('/conversations/:conversationId/read', markAsRead);

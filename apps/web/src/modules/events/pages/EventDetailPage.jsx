@@ -7,6 +7,8 @@ import 'leaflet/dist/leaflet.css';
 import useEvents from '../hooks/useEvents';
 import useAuthStore from '../../../store/authStore';
 import { getImageUrl } from '../../../services/api';
+import { useSidebar } from '../../../contexts/SidebarContext';
+import ReelsSidebar from '../../../components/social/ReelsSidebar';
 import EventImageGallery from '../components/EventImageGallery';
 import TicketManagement from '../components/TicketManagement';
 import EventRegistration from '../components/EventRegistration';
@@ -38,6 +40,7 @@ function EventDetailPage() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const { getEvent, deleteEvent, loading } = useEvents();
+  const { sidebarOpen, toggleSidebar, setSidebarVisible } = useSidebar();
 
   const [event, setEvent] = useState(null);
   const [error, setError] = useState(null);
@@ -45,6 +48,12 @@ function EventDetailPage() {
   const [activeTab, setActiveTab] = useState('info'); // info, tickets, stats, gallery
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
+
+  // Enable sidebar on this page
+  useEffect(() => {
+    setSidebarVisible(true);
+    return () => setSidebarVisible(false);
+  }, [setSidebarVisible]);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -552,6 +561,9 @@ function EventDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Reels Sidebar */}
+      <ReelsSidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
     </div>
   );
 }

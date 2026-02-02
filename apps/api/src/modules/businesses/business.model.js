@@ -128,7 +128,7 @@ const Business = sequelize.define('Business', {
   },
   status: {
     type: DataTypes.ENUM('draft', 'pending_verification', 'active', 'suspended', 'inactive'),
-    defaultValue: 'pending_verification'
+    defaultValue: 'active'
   },
   isActive: {
     type: DataTypes.BOOLEAN,

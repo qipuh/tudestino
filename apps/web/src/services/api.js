@@ -57,16 +57,16 @@ export const getImageUrl = (imagePath, context = 'auto') => {
   // Si empieza con /, removerlo
   const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
 
-  let subfolder = 'menu'; // Default cambiado a menu (más común en búsquedas)
+  let subfolder = 'business'; // Default para logos/imágenes de negocios
 
   // Detectar automáticamente la carpeta basándose en el patrón del nombre
   if (context === 'auto') {
-    // Menu images: "menu-timestamp-random.jpg" o "d-timestamp-random.jpg" (legacy)
-    if (cleanPath.startsWith('menu-') || cleanPath.startsWith('d-')) {
+    // Menu images: "menu-timestamp-random.jpg"
+    if (cleanPath.startsWith('menu-')) {
       subfolder = 'menu';
     }
-    // Business images: "images-timestamp-random.jpeg" o "19-timestamp-random.jpg" (número >= 10)
-    else if (cleanPath.startsWith('images-') || /^[0-9]{2,}-/.test(cleanPath)) {
+    // Business images: "d-timestamp-random.jpg" (logos), "images-timestamp-random.jpeg" o "19-timestamp-random.jpg" (número >= 10)
+    else if (cleanPath.startsWith('d-') || cleanPath.startsWith('images-') || /^[0-9]{2,}-/.test(cleanPath)) {
       subfolder = 'business';
     }
     // Room images: "1-timestamp-random.jpg" (número < 10)

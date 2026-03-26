@@ -1,4 +1,5 @@
 import axios from 'axios';
+import useAuthStore from '../store/authStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const SERVER_BASE_URL = import.meta.env.VITE_SERVER_URL || API_BASE_URL.replace('/api', '');
@@ -28,10 +29,12 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       const hadToken = localStorage.getItem('token');
+      // Clear both localStorage and Zustand state to prevent App.jsx from restoring the token
       localStorage.removeItem('token');
+      useAuthStore.getState().logout();
       // Only redirect to login if user had a token (meaning it expired)
       // Don't redirect if user simply wasn't logged in
-      if (hadToken) {
+      if (hadToken && window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
     }

@@ -74,7 +74,7 @@ const Notification = sequelize.define('Notification', {
     allowNull: true,
   },
 }, {
-  tableName: 'Notifications',
+  tableName: 'notifications',
   timestamps: true,
 });
 

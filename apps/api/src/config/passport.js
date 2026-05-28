@@ -3,7 +3,8 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '../modules/users/user.model-mysql.js';
 import bcrypt from 'bcryptjs';
 
-passport.use(
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
@@ -60,5 +61,6 @@ passport.use(
     }
   )
 );
+}
 
 export default passport;

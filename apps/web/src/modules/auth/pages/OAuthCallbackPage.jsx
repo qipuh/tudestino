@@ -26,6 +26,9 @@ function OAuthCallbackPage() {
         // Guardar token en localStorage
         localStorage.setItem('token', token);
 
+        // Sacar el token de la URL para que no quede en el historial del navegador
+        window.history.replaceState({}, document.title, window.location.pathname);
+
         // Actualizar store de autenticación
         setUser({
           id: payload.id,

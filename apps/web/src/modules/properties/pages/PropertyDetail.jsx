@@ -172,13 +172,20 @@ function PropertyDetail({ propertyIdProp }) {
   const rooms = property.rooms || [];
   const hasRooms = rooms.length > 0;
 
-  // Imágenes: de las habitaciones o de la propiedad
+  // Imágenes: de las habitaciones, de la propiedad, o del business como fallback
   let images = [];
+  let imageContext = 'rooms';
   if (hasRooms && rooms[0].images && rooms[0].images.length > 0) {
-    // Combinar imágenes de todas las habitaciones
     images = rooms.flatMap(room => room.images || []);
-  } else if (property.images) {
+    imageContext = 'rooms';
+  } else if (property.images && property.images.length > 0) {
     images = property.images;
+    imageContext = 'property';
+  } else {
+    const biz = property.business || {};
+    if (biz.coverImage) images.push(biz.coverImage);
+    if (biz.logo && biz.logo !== biz.coverImage) images.push(biz.logo);
+    imageContext = 'business';
   }
 
   // Amenidades
@@ -210,7 +217,7 @@ function PropertyDetail({ propertyIdProp }) {
             {/* Main Cover Image */}
             <div className="w-full h-[300px] sm:h-[400px] lg:h-[500px] bg-gray-200 rounded-b-xl overflow-hidden relative mb-4">
               <img
-                src={getImageUrl(images[selectedImage])}
+                src={getImageUrl(images[selectedImage], imageContext)}
                 alt={title}
                 className="w-full h-full object-cover"
               />
@@ -323,7 +330,7 @@ function PropertyDetail({ propertyIdProp }) {
                       selectedImage === index ? 'border-primary' : 'border-transparent'
                     }`}
                   >
-                    <img src={getImageUrl(img)} alt={`Thumb ${index + 1}`} className="w-full h-full object-cover" />
+                    <img src={getImageUrl(img, imageContext)} alt={`Thumb ${index + 1}`} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -771,7 +778,7 @@ function PropertyDetail({ propertyIdProp }) {
                     {images.map((img, index) => (
                       <div key={index} className="aspect-square rounded-lg overflow-hidden bg-gray-200">
                         <img
-                          src={getImageUrl(img)}
+                          src={getImageUrl(img, imageContext)}
                           alt={`Galería ${index + 1}`}
                           className="w-full h-full object-cover hover:scale-110 transition-transform duration-300 cursor-pointer"
                           onClick={() => setSelectedImage(index)}

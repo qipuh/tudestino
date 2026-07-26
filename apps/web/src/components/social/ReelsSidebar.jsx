@@ -102,14 +102,8 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
       }
 
       const response = await api.get(endpoint);
-      console.log('🎬 ReelsSidebar: Response completo:', response);
-
       // El interceptor de axios ya extrae response.data
       const reelsData = response;
-      console.log('🎬 ReelsSidebar: Reels data:', reelsData);
-      console.log('🎬 ReelsSidebar: Reels data.data:', reelsData.data);
-      console.log('🎬 ReelsSidebar: Tiene reels en data?', reelsData.data?.reels);
-      console.log('🎬 ReelsSidebar: Keys de data:', reelsData.data ? Object.keys(reelsData.data) : 'no data');
 
       // Extraer el array de reels correctamente
       let reelsArray = [];
@@ -177,14 +171,8 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
       }
 
       const response = await api.get(endpoint);
-      console.log('📸 ReelsSidebar: Response completo:', response);
-
       // El interceptor de axios ya extrae response.data
       const postsData = response;
-      console.log('📸 ReelsSidebar: Posts data:', postsData);
-      console.log('📸 ReelsSidebar: Posts data.data:', postsData.data);
-      console.log('📸 ReelsSidebar: Tiene posts en data?', postsData.data?.posts);
-      console.log('📸 ReelsSidebar: Keys de data:', postsData.data ? Object.keys(postsData.data) : 'no data');
 
       // Extraer el array de posts correctamente
       let postsArray = [];

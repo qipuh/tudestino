@@ -40,11 +40,23 @@ class PropertiesService {
           model: Room,
           as: 'rooms',
           attributes: ['id', 'roomType', 'name', 'quantity', 'guestCapacity', 'beds', 'pricePerNight', 'amenities', 'view', 'mealPlan', 'description', 'images', 'isAvailable']
+        },
+        {
+          model: Business,
+          as: 'business',
+          attributes: ['id', 'name', 'logo', 'coverImage', 'slug']
         }
       ]
     });
 
-    return properties;
+    // Agregar campo image con path completo para el frontend
+    return properties.map(p => {
+      const plain = p.toJSON();
+      const biz = plain.business || {};
+      const filename = biz.coverImage || biz.logo || null;
+      plain.image = filename ? `/uploads/business/${filename}` : null;
+      return plain;
+    });
   }
 
   async getPropertyById(propertyId) {
@@ -63,7 +75,7 @@ class PropertiesService {
         {
           model: Business,
           as: 'business',
-          attributes: ['id', 'name', 'logo', 'slug', 'ownerId', 'followersCount', 'address']
+          attributes: ['id', 'name', 'logo', 'coverImage', 'slug', 'ownerId', 'followersCount', 'address']
         }
       ]
     });

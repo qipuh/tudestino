@@ -74,6 +74,8 @@ import BusinessDetailPage from '@modules/businesses/pages/BusinessDetailPage';
 import ReservationsPage from '@modules/reservations/pages/ReservationsPage';
 import ServicesPage from '@modules/services/pages/ServicesPage';
 import ServiceFormPage from '@modules/services/pages/ServiceFormPage';
+import OffersPage from '@modules/offers/pages/OffersPage';
+import OfferFormPage from '@modules/offers/pages/OfferFormPage';
 import useAuthStore from './store/authStore';
 
 function App() {
@@ -165,6 +167,9 @@ function App() {
         <Route path="businesses/:businessId/services" element={<ServicesPage />} />
         <Route path="businesses/:businessId/services/new" element={<ServiceFormPage />} />
         <Route path="businesses/:businessId/services/:serviceId/edit" element={<ServiceFormPage />} />
+        <Route path="businesses/:businessId/offers" element={<OffersPage />} />
+        <Route path="businesses/:businessId/offers/new" element={<OfferFormPage />} />
+        <Route path="businesses/:businessId/offers/:offerId/edit" element={<OfferFormPage />} />
 
         {/* Events Routes */}
         <Route path="events" element={<EventsListPage />} />

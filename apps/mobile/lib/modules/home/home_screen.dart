@@ -1156,7 +1156,8 @@ class _HomeScreenState extends State<HomeScreen> {
           .pushNamed(authProvider.isAuthenticated ? route : '/login');
     }
 
-    final menuItems = <_DrawerMenuItem>[
+    // Navegación general - visible para cualquiera, con o sin sesión.
+    final navItems = <_DrawerMenuItem>[
       _DrawerMenuItem(Ionicons.home_outline, 'Inicio',
           () => Navigator.of(context).pop()),
       _DrawerMenuItem(Ionicons.bed_outline, 'Hoteles',
@@ -1171,6 +1172,11 @@ class _HomeScreenState extends State<HomeScreen> {
           Ionicons.trail_sign_outline, 'Rutas', () => goto('/routes-feed')),
       _DrawerMenuItem(
           Ionicons.play_circle_outline, 'Reels', () => goto('/reels')),
+    ];
+
+    // Sección de cuenta - requiere sesión, separada visualmente de la
+    // navegación general.
+    final accountItems = <_DrawerMenuItem>[
       _DrawerMenuItem(
           Ionicons.person_outline, 'Perfil', () => gotoAuthed('/profile')),
       _DrawerMenuItem(Ionicons.heart_outline, 'Favoritos',
@@ -1183,6 +1189,55 @@ class _HomeScreenState extends State<HomeScreen> {
           () => gotoAuthed('/notifications')),
     ];
 
+    Widget buildGrid(List<_DrawerMenuItem> items) {
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 8,
+          childAspectRatio: 0.85,
+        ),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          return GestureDetector(
+            onTap: item.onTap,
+            behavior: HitTestBehavior.opaque,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.sand,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(item.icon,
+                      color: AppTheme.primaryColor, size: 22),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  item.label,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.ink,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
     return Drawer(
       backgroundColor: Colors.white,
       child: SafeArea(
@@ -1190,15 +1245,15 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
               child: SvgPicture.asset(
                 'assets/images/logo.svg',
-                height: 36,
-                alignment: Alignment.centerLeft,
+                height: 64,
+                alignment: Alignment.center,
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
               child: Row(
                 children: [
                   CircleAvatar(
@@ -1214,31 +1269,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          authProvider.isAuthenticated
-                              ? (user?.name ?? 'Usuario')
-                              : 'Invitado',
-                          style: GoogleFonts.bricolageGrotesque(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.ink,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (!authProvider.isAuthenticated)
-                          GestureDetector(
-                            onTap: () => goto('/login'),
-                            child: const Text(
-                              'Iniciar sesión',
-                              style:
-                                  TextStyle(color: AppTheme.primaryColor),
-                            ),
-                          ),
-                      ],
+                    child: Text(
+                      authProvider.isAuthenticated
+                          ? (user?.name ?? 'Usuario')
+                          : 'Invitado',
+                      style: GoogleFonts.bricolageGrotesque(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.ink,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -1246,54 +1287,47 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const Divider(height: 1),
             Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.all(16),
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 8,
-                  childAspectRatio: 0.85,
-                ),
-                itemCount: menuItems.length,
-                itemBuilder: (context, index) {
-                  final item = menuItems[index];
-                  return GestureDetector(
-                    onTap: item.onTap,
-                    behavior: HitTestBehavior.opaque,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 52,
-                          height: 52,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.sand,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(item.icon,
-                              color: AppTheme.primaryColor, size: 22),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          item.label,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.ink,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(top: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    buildGrid(navItems),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Divider(height: 1),
                     ),
-                  );
-                },
+                    buildGrid(accountItems),
+                    if (!authProvider.isAuthenticated) ...[
+                      const SizedBox(height: 24),
+                      Padding(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 20),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () => goto('/login'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                            ),
+                            child: const Text('Iniciar sesión'),
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
-            const Divider(height: 1),
-            if (authProvider.isAuthenticated)
+            if (authProvider.isAuthenticated) ...[
+              const Divider(height: 1),
               ListTile(
                 leading: const Icon(Ionicons.log_out_outline,
                     color: AppTheme.ink),
@@ -1305,7 +1339,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   await authProvider.logout();
                 },
               ),
-            const SizedBox(height: 8),
+              const SizedBox(height: 8),
+            ],
           ],
         ),
       ),

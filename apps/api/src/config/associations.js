@@ -227,9 +227,11 @@ export const setupAssociations = () => {
   Business.belongsTo(District, { foreignKey: 'districtId', as: 'district' });
   District.hasMany(Business, { foreignKey: 'districtId', as: 'businesses' });
 
-  // Business - Address
-  Business.belongsTo(Address, { foreignKey: 'addressId', as: 'addressRecord' });
-  Address.hasMany(Business, { foreignKey: 'addressId', as: 'businesses' });
+  // Business - Address: no association here. businesses.address is a JSON
+  // column (see business.model.js), not an addressId FK - there is no such
+  // column on the table. A prior belongsTo(Address, {foreignKey:'addressId'})
+  // implicitly injected a non-existent 'addressId' attribute onto every
+  // Business query, breaking all business.findAll() calls app-wide.
 
   // ---- Media (Polymorphic) ----
   // Media no tiene FK hardcodeado (es polimórfica vía mediableType + mediableId)

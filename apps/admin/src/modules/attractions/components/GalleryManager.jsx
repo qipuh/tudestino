@@ -50,6 +50,14 @@ function GalleryManager({ images = [], onChange }) {
     }
   };
 
+  const handleCreditChange = (index, field, value) => {
+    const updatedPreviews = previews.map((img, i) =>
+      i === index ? { ...img, [field]: value } : img
+    );
+    setPreviews(updatedPreviews);
+    onChange(updatedPreviews);
+  };
+
   const handleRemove = (index) => {
     const updatedPreviews = previews.filter((_, i) => i !== index);
     setPreviews(updatedPreviews);
@@ -169,6 +177,24 @@ function GalleryManager({ images = [], onChange }) {
                   Nueva
                 </div>
               )}
+
+              {/* Credit / Source */}
+              <div className="p-2 space-y-1 bg-white border-t">
+                <input
+                  type="text"
+                  value={image.credit || ''}
+                  onChange={(e) => handleCreditChange(index, 'credit', e.target.value)}
+                  placeholder="Crédito / autor de la foto"
+                  className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <input
+                  type="text"
+                  value={image.sourceUrl || ''}
+                  onChange={(e) => handleCreditChange(index, 'sourceUrl', e.target.value)}
+                  placeholder="URL fuente original"
+                  className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
             </div>
           ))}
         </div>

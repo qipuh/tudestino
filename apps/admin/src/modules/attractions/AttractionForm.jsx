@@ -19,6 +19,9 @@ const CATEGORIES = [
 function AttractionForm({ attraction, onSuccess, onCancel }) {
   const [formData, setFormData] = useState({
     title: '',
+    slug: '',
+    metaTitle: '',
+    metaDescription: '',
     description: '',
     videoUrl: '',
     category: 'naturaleza',
@@ -39,6 +42,7 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
     endPoint: '',
     whatToDo: '',
     recommendations: '',
+    howToGetThere: '',
     isPublished: false,
   });
 
@@ -53,6 +57,9 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
     if (attraction) {
       setFormData({
         title: attraction.title || '',
+        slug: attraction.slug || '',
+        metaTitle: attraction.metaTitle || '',
+        metaDescription: attraction.metaDescription || '',
         description: attraction.description || '',
         videoUrl: attraction.videoUrl || '',
         category: attraction.category || 'naturaleza',
@@ -73,6 +80,7 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
         endPoint: attraction.endPoint ? JSON.stringify(attraction.endPoint) : '',
         whatToDo: attraction.whatToDo || '',
         recommendations: attraction.recommendations || '',
+        howToGetThere: attraction.howToGetThere || '',
         isPublished: attraction.isPublished || false,
       });
 
@@ -87,6 +95,8 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
       if (attraction.images && attraction.images.length > 0) {
         const images = attraction.images.map(img => ({
           url: img.url,
+          credit: img.credit || '',
+          sourceUrl: img.sourceUrl || '',
           isNew: false,
         }));
         setGalleryImages(images);
@@ -195,6 +205,8 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
     try {
       const submitFormData = new FormData();
       submitFormData.append('title', formData.title);
+      if (formData.metaTitle) submitFormData.append('metaTitle', formData.metaTitle);
+      if (formData.metaDescription) submitFormData.append('metaDescription', formData.metaDescription);
       submitFormData.append('description', formData.description);
       submitFormData.append('videoUrl', formData.videoUrl);
       submitFormData.append('category', formData.category);
@@ -213,6 +225,7 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
 
       if (formData.whatToDo) submitFormData.append('whatToDo', formData.whatToDo);
       if (formData.recommendations) submitFormData.append('recommendations', formData.recommendations);
+      if (formData.howToGetThere) submitFormData.append('howToGetThere', formData.howToGetThere);
 
       submitFormData.append('isPublished', formData.isPublished);
 
@@ -241,6 +254,8 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
         newGalleryImages.forEach((img) => {
           galleryFormData.append('images', img.file);
         });
+        galleryFormData.append('credits', JSON.stringify(newGalleryImages.map(img => img.credit || '')));
+        galleryFormData.append('sources', JSON.stringify(newGalleryImages.map(img => img.sourceUrl || '')));
         await attractionsService.uploadGallery(attractionId, galleryFormData);
       }
 
@@ -412,6 +427,54 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
             </div>
           </div>
 
+          {/* SEO */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">SEO (Opcional)</h2>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="metaTitle" className="block text-sm font-medium text-gray-700 mb-2">
+                  Título SEO
+                </label>
+                <input
+                  type="text"
+                  id="metaTitle"
+                  name="metaTitle"
+                  value={formData.metaTitle}
+                  onChange={handleChange}
+                  maxLength={160}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Palabra clave + año + atractivo emocional"
+                />
+              </div>
+              <div>
+                <label htmlFor="metaDescription" className="block text-sm font-medium text-gray-700 mb-2">
+                  Meta Descripción
+                </label>
+                <textarea
+                  id="metaDescription"
+                  name="metaDescription"
+                  value={formData.metaDescription}
+                  onChange={handleChange}
+                  maxLength={160}
+                  rows="2"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Resumen de 160 caracteres con llamado a la acción"
+                />
+              </div>
+              {formData.slug && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Slug</label>
+                  <input
+                    type="text"
+                    value={formData.slug}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-500"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Ubicación y Mapa */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-6">Ubicación y Mapa</h2>
@@ -507,6 +570,21 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
                   rows="4"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Recomendaciones para los visitantes..."
+                />
+              </div>
+
+              <div>
+                <label htmlFor="howToGetThere" className="block text-sm font-medium text-gray-700 mb-2">
+                  Cómo Llegar
+                </label>
+                <textarea
+                  id="howToGetThere"
+                  name="howToGetThere"
+                  value={formData.howToGetThere}
+                  onChange={handleChange}
+                  rows="4"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Cómo llegar en avión, bus, transporte local..."
                 />
               </div>
             </div>

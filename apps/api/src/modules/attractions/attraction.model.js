@@ -12,6 +12,22 @@ const Attraction = sequelize.define('Attraction', {
     allowNull: false,
     comment: 'Título del atractivo turístico'
   },
+  slug: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    unique: true,
+    comment: 'Slug SEO único (ej: santa-apolonia-cajamarca-guia)'
+  },
+  metaTitle: {
+    type: DataTypes.STRING(160),
+    allowNull: true,
+    comment: 'Título SEO (H1) para buscadores'
+  },
+  metaDescription: {
+    type: DataTypes.STRING(160),
+    allowNull: true,
+    comment: 'Meta descripción SEO (max 160 caracteres)'
+  },
   description: {
     type: DataTypes.TEXT,
     allowNull: true,
@@ -98,6 +114,11 @@ const Attraction = sequelize.define('Attraction', {
     allowNull: true,
     comment: 'Recomendaciones para visitantes'
   },
+  howToGetThere: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    comment: 'Cómo llegar: avión, bus, transporte local'
+  },
 
   // Metadata
   isPublished: {
@@ -135,6 +156,10 @@ const Attraction = sequelize.define('Attraction', {
     },
     {
       fields: ['latitude', 'longitude']
+    },
+    {
+      unique: true,
+      fields: ['slug']
     }
   ]
 });

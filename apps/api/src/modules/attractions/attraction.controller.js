@@ -5,6 +5,31 @@ import { Op } from 'sequelize';
 
 class AttractionController {
   /**
+   * Generar slug único a partir del título
+   */
+  async generateSlug(title, excludeId = null) {
+    const base = title
+      .toString()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+
+    let slug = base;
+    let counter = 1;
+    while (true) {
+      const where = { slug };
+      if (excludeId) where.id = { [Op.ne]: excludeId };
+      const existing = await Attraction.findOne({ where });
+      if (!existing) return slug;
+      counter += 1;
+      slug = `${base}-${counter}`;
+    }
+  }
+
+  /**
    * Calcular distancia usando fórmula de Haversine
    */
   calculateDistance(lat1, lon1, lat2, lon2) {
@@ -47,7 +72,7 @@ class AttractionController {
           {
             model: AttractionImage,
             as: 'images',
-            attributes: ['id', 'url', 'caption', 'type', 'displayOrder']
+            attributes: ['id', 'url', 'caption', 'credit', 'sourceUrl', 'type', 'displayOrder']
           }
         ],
         limit: parseInt(limit),
@@ -84,7 +109,7 @@ class AttractionController {
           {
             model: AttractionImage,
             as: 'images',
-            attributes: ['id', 'url', 'caption', 'type', 'displayOrder']
+            attributes: ['id', 'url', 'caption', 'credit', 'sourceUrl', 'type', 'displayOrder']
           }
         ],
         order: [['createdAt', 'DESC']]
@@ -114,7 +139,7 @@ class AttractionController {
           {
             model: AttractionImage,
             as: 'images',
-            attributes: ['id', 'url', 'caption', 'type', 'displayOrder'],
+            attributes: ['id', 'url', 'caption', 'credit', 'sourceUrl', 'type', 'displayOrder'],
             order: [['displayOrder', 'ASC']]
           },
           {
@@ -150,7 +175,7 @@ class AttractionController {
   }
 
   // POST /api/attractions - Crear nuevo atractivo
-  async createAttraction(req, res) {
+  createAttraction = async (req, res) => {
     try {
       const {
         title,
@@ -168,6 +193,9 @@ class AttractionController {
         endPoint,
         whatToDo,
         recommendations,
+        howToGetThere,
+        metaTitle,
+        metaDescription,
         isPublished
       } = req.body;
 
@@ -214,8 +242,13 @@ class AttractionController {
         }
       }
 
+      const slug = await this.generateSlug(title);
+
       const attraction = await Attraction.create({
         title,
+        slug,
+        metaTitle: metaTitle || null,
+        metaDescription: metaDescription || null,
         description,
         coverImage: req.file ? req.file.filename : null,
         videoUrl,
@@ -232,6 +265,7 @@ class AttractionController {
         distance,
         whatToDo,
         recommendations,
+        howToGetThere: howToGetThere || null,
         isPublished: isPublished === 'true',
         publishedAt: isPublished === 'true' ? new Date() : null,
         createdBy: req.user?.id
@@ -253,7 +287,7 @@ class AttractionController {
   }
 
   // PUT /api/attractions/:id - Actualizar atractivo
-  async updateAttraction(req, res) {
+  updateAttraction = async (req, res) => {
     try {
       const { id } = req.params;
       const {
@@ -272,6 +306,9 @@ class AttractionController {
         endPoint,
         whatToDo,
         recommendations,
+        howToGetThere,
+        metaTitle,
+        metaDescription,
         isPublished
       } = req.body;
 
@@ -320,8 +357,16 @@ class AttractionController {
         }
       }
 
+      const newTitle = title || attraction.title;
+      const slug = (title && title !== attraction.title)
+        ? await this.generateSlug(title, attraction.id)
+        : attraction.slug;
+
       const updateData = {
-        title: title || attraction.title,
+        title: newTitle,
+        slug,
+        metaTitle: metaTitle !== undefined ? metaTitle : attraction.metaTitle,
+        metaDescription: metaDescription !== undefined ? metaDescription : attraction.metaDescription,
         description: description !== undefined ? description : attraction.description,
         videoUrl: videoUrl !== undefined ? videoUrl : attraction.videoUrl,
         category: category || attraction.category,
@@ -337,6 +382,7 @@ class AttractionController {
         distance,
         whatToDo: whatToDo !== undefined ? whatToDo : attraction.whatToDo,
         recommendations: recommendations !== undefined ? recommendations : attraction.recommendations,
+        howToGetThere: howToGetThere !== undefined ? howToGetThere : attraction.howToGetThere,
         isPublished: isPublished !== undefined ? isPublished === 'true' : attraction.isPublished,
         publishedAt: (isPublished === 'true' && !attraction.publishedAt) ? new Date() : attraction.publishedAt
       };
@@ -419,11 +465,22 @@ class AttractionController {
         });
       }
 
+      let credits = [];
+      let sources = [];
+      try {
+        credits = req.body.credits ? JSON.parse(req.body.credits) : [];
+        sources = req.body.sources ? JSON.parse(req.body.sources) : [];
+      } catch (e) {
+        console.error('Error parsing credits/sources:', e);
+      }
+
       const images = await Promise.all(
         req.files.map((file, index) =>
           AttractionImage.create({
             attractionId: id,
             url: file.filename,
+            credit: credits[index] || null,
+            sourceUrl: sources[index] || null,
             type: 'gallery',
             displayOrder: index
           })

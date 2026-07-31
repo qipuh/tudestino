@@ -22,6 +22,16 @@ const AttractionImage = sequelize.define('AttractionImage', {
     allowNull: true,
     comment: 'Descripción de la imagen'
   },
+  credit: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Crédito/autor de la imagen'
+  },
+  sourceUrl: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: 'URL de la fuente original de la imagen'
+  },
   type: {
     type: DataTypes.ENUM('gallery', 'cover'),
     defaultValue: 'gallery',

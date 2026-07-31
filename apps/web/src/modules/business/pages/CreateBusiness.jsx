@@ -814,6 +814,74 @@ function CreateBusiness() {
     }));
   };
 
+  // Sincroniza address.city/state/country/lat/lng (y el mapa) cuando se
+  // completa el picker jerárquico - dirección contraria al fix anterior
+  // (que llenaba el picker desde el buscador de texto). Sin esto,
+  // address.city queda vacío si el usuario solo usa país/departamento/
+  // provincia/distrito, y el efecto que geocodifica "Dirección específica"
+  // nunca corre (exige address.city truthy) - el mapa no se movía nunca
+  // aunque la ubicación jerárquica estuviera completa.
+  useEffect(() => {
+    const { countryId, departmentId, districtId } = formData.location;
+    if (!districtId && !departmentId) return;
+
+    let cancelled = false;
+
+    const syncAddressFromHierarchy = async () => {
+      try {
+        if (districtId) {
+          const response = await locationsService.getDistrictById(districtId);
+          const district = response.data;
+          if (!district || cancelled) return;
+
+          const department = district.province?.department;
+          const country = department?.country;
+          const lat = district.latitude ? parseFloat(district.latitude) : null;
+          const lng = district.longitude ? parseFloat(district.longitude) : null;
+
+          setFormData(prev => ({
+            ...prev,
+            address: {
+              ...prev.address,
+              city: district.name || prev.address.city,
+              state: department?.name || prev.address.state,
+              country: country?.name || prev.address.country,
+              latitude: lat ?? prev.address.latitude,
+              longitude: lng ?? prev.address.longitude,
+            }
+          }));
+
+          if (lat && lng) setMapMarker({ lat, lng });
+        } else if (departmentId) {
+          const response = await locationsService.getDepartments(countryId);
+          const dept = (response.data || []).find((d) => d.id === departmentId);
+          if (!dept || cancelled) return;
+
+          const lat = dept.latitude ? parseFloat(dept.latitude) : null;
+          const lng = dept.longitude ? parseFloat(dept.longitude) : null;
+
+          setFormData(prev => ({
+            ...prev,
+            address: {
+              ...prev.address,
+              state: dept.name || prev.address.state,
+              country: dept.country?.name || prev.address.country,
+              latitude: lat ?? prev.address.latitude,
+              longitude: lng ?? prev.address.longitude,
+            }
+          }));
+
+          if (lat && lng) setMapMarker({ lat, lng });
+        }
+      } catch (error) {
+        console.error('Error syncing address from location hierarchy:', error);
+      }
+    };
+
+    syncAddressFromHierarchy();
+    return () => { cancelled = true; };
+  }, [formData.location.districtId, formData.location.departmentId]);
+
   const normalizeForMatch = (str) =>
     (str || '')
       .normalize('NFD')

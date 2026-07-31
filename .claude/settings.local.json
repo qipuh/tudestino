@@ -334,7 +334,17 @@
       "Bash(wc -l /c/laragon/www/tudestino/apps/web/src/modules/business/pages/CreateProperty.jsx /c/laragon/www/tudestino/apps/web/src/modules/business/pages/CreatePropertySimplified.jsx)",
       "Read(//c/laragon/www/tudestino/apps/web/src/modules/business/pages/**)",
       "Bash(find /c/laragon/www/tudestino/apps/api/src/modules -maxdepth 1 -type d | sort)",
-      "Read(//c/laragon/www/tudestino/apps/api/src/modules/**)"
+      "Read(//c/laragon/www/tudestino/apps/api/src/modules/**)",
+      "Bash(curl -s http://localhost:3000/health)",
+      "Bash(curl -X POST http://localhost:3000/api/migrations/create-location-hierarchy -H \"Content-Type: application/json\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/migrations/create-location-hierarchy -H \"Content-Type: application/json\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/migrations/add-district-fk-to-entities -H \"Content-Type: application/json\")",
+      "Bash(mysql -u root tudestino)",
+      "Bash(find /c/laragon -name \"mysql.exe\" -o -name \"mysql\" 2>/dev/null | head -5)",
+      "Read(//c/laragon/**)",
+      "Bash(/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql -u root tudestino)",
+      "Bash(/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql -u root tudestino -e \"SELECT 'Departments:' as label, COUNT\\(*\\) as total FROM departments UNION ALL SELECT 'Provinces:' as label, COUNT\\(*\\) FROM provinces UNION ALL SELECT 'Districts:' as label, COUNT\\(*\\) FROM districts;\")",
+      "Bash(/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql -u root tudestino -e \"SHOW COLUMNS FROM hotel_properties LIKE '%city%';\")"
     ],
     "deny": [],
     "ask": []

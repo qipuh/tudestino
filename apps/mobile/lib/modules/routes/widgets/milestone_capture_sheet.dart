@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/image_compressor.dart';
 
 /// Hoja para capturar o editar un hito (foto + comentario pinchado en un
 /// punto del recorrido). Sin `milestoneId` es modo "agregar" (durante o
@@ -47,12 +48,15 @@ class _MilestoneCaptureSheetState extends State<MilestoneCaptureSheet> {
   Future<void> _pickImage(ImageSource source) async {
     setState(() => _picking = true);
     try {
-      final image = await ImagePicker().pickImage(source: source, imageQuality: 80);
+      final image = await ImagePicker().pickImage(source: source);
       if (image != null) {
-        setState(() {
-          _photoPath = image.path;
-          _existingPhotoRemoved = false;
-        });
+        final compressed = await ImageCompressor.toWebp(image.path);
+        if (mounted) {
+          setState(() {
+            _photoPath = compressed.path;
+            _existingPhotoRemoved = false;
+          });
+        }
       }
     } finally {
       if (mounted) setState(() => _picking = false);

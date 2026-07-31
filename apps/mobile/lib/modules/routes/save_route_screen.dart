@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../providers/route_provider.dart';
 import '../../models/gps_route.dart';
 import '../../core/services/route_tracking_service.dart';
+import '../../core/utils/image_compressor.dart';
 
 class SaveRouteScreen extends StatefulWidget {
   final List<TrackPoint> trackPoints;
@@ -64,9 +65,16 @@ class _SaveRouteScreenState extends State<SaveRouteScreen> {
     );
     if (source == null) return;
 
-    final picked = await ImagePicker().pickImage(source: source, imageQuality: 80);
-    if (picked != null) {
-      setState(() => _coverImagePath = picked.path);
+    final picked = await ImagePicker().pickImage(source: source);
+    if (picked == null) return;
+
+    // Redimensiona y convierte a WebP - antes solo bajaba la calidad JPEG
+    // (imageQuality:80), una foto de 4000x3000 de cámara seguía pesando
+    // varios MB con las mismas dimensiones. WebP a igual calidad visual
+    // pesa bastante menos que JPEG.
+    final compressed = await ImageCompressor.toWebp(picked.path);
+    if (mounted) {
+      setState(() => _coverImagePath = compressed.path);
     }
   }
 

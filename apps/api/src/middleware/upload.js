@@ -142,6 +142,13 @@ export const uploadRouteCover = multer({
   storage: routeCoverStorage,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB max file size
+    // El default de multer/busboy para campos de texto es 1MB - el campo
+    // trackPoints (JSON con todos los puntos GPS) de una ruta real de
+    // varias horas lo supera fácil, multer tira el campo en silencio y
+    // Route.create() falla con trackPoints vacío/corrupto (la foto de
+    // portada ya quedó escrita en disco para ese momento - archivo
+    // huérfano sin fila en la tabla routes).
+    fieldSize: 25 * 1024 * 1024, // 25MB para trackPoints
   },
   fileFilter: imageFilter,
 });

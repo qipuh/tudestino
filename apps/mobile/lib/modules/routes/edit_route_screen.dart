@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/route_provider.dart';
 import '../../models/gps_route.dart';
+import '../../core/utils/image_compressor.dart';
 
 /// Editar título/descripción/ciudad/portada de una ruta ya guardada.
 /// Mismo formulario que save_route_screen.dart pero pre-llenado, sin
@@ -57,9 +58,12 @@ class _EditRouteScreenState extends State<EditRouteScreen> {
     );
     if (source == null) return;
 
-    final picked = await ImagePicker().pickImage(source: source, imageQuality: 80);
-    if (picked != null) {
-      setState(() => _newCoverImagePath = picked.path);
+    final picked = await ImagePicker().pickImage(source: source);
+    if (picked == null) return;
+
+    final compressed = await ImageCompressor.toWebp(picked.path);
+    if (mounted) {
+      setState(() => _newCoverImagePath = compressed.path);
     }
   }
 

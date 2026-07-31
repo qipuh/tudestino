@@ -5,6 +5,7 @@ import {
   getAvailableAmenitiesByType,
   PROPERTY_AMENITY_CATEGORY_LABELS,
 } from '@tudestino/shared';
+import LocationPicker from '../../../../components/LocationPicker';
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoidHVkZXN0aW5vIiwiYSI6ImNtZ3lucTYzNjBjM3YybHBwdmlrNDF0Y24ifQ.p6uS0CGkHOhLxSE8ad8guw';
 
@@ -19,6 +20,12 @@ function AccommodationDataStep({ formData, updateFormData }) {
         ...formData.address,
         [field]: value,
       },
+    });
+  };
+
+  const handleLocationChange = (locationData) => {
+    updateFormData({
+      location: locationData,
     });
   };
 
@@ -206,42 +213,11 @@ function AccommodationDataStep({ formData, updateFormData }) {
               required
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ciudad *
-            </label>
-            <input
-              type="text"
-              value={formData.address.city}
-              onChange={(e) => handleAddressChange('city', e.target.value)}
-              placeholder="Ej: Buenos Aires"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Estado/Provincia *
-            </label>
-            <input
-              type="text"
-              value={formData.address.state}
-              onChange={(e) => handleAddressChange('state', e.target.value)}
-              placeholder="Ej: CABA"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              País *
-            </label>
-            <input
-              type="text"
-              value={formData.address.country}
-              onChange={(e) => handleAddressChange('country', e.target.value)}
-              placeholder="Ej: Argentina"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+          <div className="col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <LocationPicker
+              value={formData.location || {}}
+              onChange={handleLocationChange}
+              label="Ubicación (Búsqueda jerárquica)"
               required
             />
           </div>

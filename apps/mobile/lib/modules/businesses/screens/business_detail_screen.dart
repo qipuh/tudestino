@@ -86,6 +86,8 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
                         child: _buildContactInfo(business),
                       ),
                       const SizedBox(height: 24),
+                      _buildActionButtons(context, business),
+                      const SizedBox(height: 24),
                       if (business.images.isNotEmpty) ...[
                         _buildSection(
                           title: 'Galería',
@@ -463,5 +465,70 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     }
+  }
+
+  Widget _buildActionButtons(BuildContext context, BusinessModel business) {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pushNamed(
+                context,
+                '/create-reservation',
+                arguments: {
+                  'businessId': business.id,
+                  'businessName': business.name,
+                  'businessType': business.type,
+                  'serviceIds':
+                      business.services?.map((s) => s.id).toList() ?? [],
+                },
+              );
+            },
+            icon: const Icon(Icons.calendar_today),
+            label: const Text('Hacer Reserva'),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/business-services',
+                    arguments: {
+                      'businessId': business.id,
+                      'businessName': business.name,
+                    },
+                  );
+                },
+                icon: const Icon(Icons.room_service),
+                label: const Text('Servicios'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/business-offers',
+                    arguments: {
+                      'businessId': business.id,
+                      'businessName': business.name,
+                    },
+                  );
+                },
+                icon: const Icon(Icons.local_offer),
+                label: const Text('Ofertas'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }

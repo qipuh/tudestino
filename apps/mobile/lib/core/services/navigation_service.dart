@@ -26,6 +26,9 @@ import '../../modules/properties/tour_detail_screen.dart';
 import '../../modules/social/create_post_screen.dart';
 import '../../modules/properties/attraction_detail_screen.dart';
 import '../../modules/businesses/screens/business_detail_screen.dart';
+import '../../modules/services/screens/business_services_screen.dart';
+import '../../modules/offers/screens/business_offers_screen.dart';
+import '../../modules/reservations/screens/create_reservation_screen.dart';
 import '../../modules/profile/account_settings_screen.dart';
 import '../../modules/profile/help_support_screen.dart';
 import '../../modules/bookings/payment_method_screen.dart';
@@ -229,6 +232,35 @@ class NavigationService {
         final businessId = settings.arguments as String;
         return MaterialPageRoute(
           builder: (_) => BusinessDetailScreen(businessId: businessId),
+        );
+
+      case '/business-services':
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => BusinessServicesScreen(
+            businessId: args['businessId'] as String,
+            businessName: args['businessName'] as String?,
+          ),
+        );
+
+      case '/business-offers':
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => BusinessOffersScreen(
+            businessId: args['businessId'] as String,
+            businessName: args['businessName'] as String?,
+          ),
+        );
+
+      case '/create-reservation':
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => CreateReservationScreen(
+            businessId: args['businessId'] as String,
+            businessName: args['businessName'] as String?,
+            businessType: args['businessType'] as String?,
+            serviceIds: (args['serviceIds'] as List?)?.cast<String>(),
+          ),
         );
 
       case '/account-settings':

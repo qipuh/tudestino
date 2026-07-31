@@ -125,6 +125,14 @@ class Country {
   }
 }
 
+// Los campos decimales (latitude/longitude) vienen serializados como
+// String desde Sequelize (DECIMAL -> string en JSON), no como number.
+double? _parseDecimal(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value as String);
+}
+
 class Department {
   final String id;
   final int countryId;
@@ -147,12 +155,16 @@ class Department {
   factory Department.fromJson(Map<String, dynamic> json) {
     return Department(
       id: json['id'] as String,
-      countryId: json['country_id'] as int,
+      // Backend: Department/Province/District usan atributos camelCase
+      // (countryId), a diferencia de Country que usa snake_case
+      // (native_name, phone_code) - son modelos Sequelize distintos con
+      // convenciones distintas, confirmado contra la API real.
+      countryId: json['countryId'] as int,
       code: json['code'] as String,
       name: json['name'] as String,
-      nativeName: json['native_name'] as String?,
-      latitude: json['latitude'] as double?,
-      longitude: json['longitude'] as double?,
+      nativeName: json['nativeName'] as String?,
+      latitude: _parseDecimal(json['latitude']),
+      longitude: _parseDecimal(json['longitude']),
     );
   }
 }
@@ -179,12 +191,12 @@ class Province {
   factory Province.fromJson(Map<String, dynamic> json) {
     return Province(
       id: json['id'] as String,
-      departmentId: json['department_id'] as String,
+      departmentId: json['departmentId'] as String,
       code: json['code'] as String,
       name: json['name'] as String,
-      nativeName: json['native_name'] as String?,
-      latitude: json['latitude'] as double?,
-      longitude: json['longitude'] as double?,
+      nativeName: json['nativeName'] as String?,
+      latitude: _parseDecimal(json['latitude']),
+      longitude: _parseDecimal(json['longitude']),
     );
   }
 }
@@ -211,12 +223,12 @@ class District {
   factory District.fromJson(Map<String, dynamic> json) {
     return District(
       id: json['id'] as String,
-      provinceId: json['province_id'] as String,
+      provinceId: json['provinceId'] as String,
       code: json['code'] as String,
       name: json['name'] as String,
-      nativeName: json['native_name'] as String?,
-      latitude: json['latitude'] as double?,
-      longitude: json['longitude'] as double?,
+      nativeName: json['nativeName'] as String?,
+      latitude: _parseDecimal(json['latitude']),
+      longitude: _parseDecimal(json['longitude']),
     );
   }
 }

@@ -303,7 +303,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Perfil de ${widget.reel.user?.name ?? "usuario"}'),
+                      content: Text('Perfil de ${widget.reel.authorName}'),
                       duration: const Duration(seconds: 1),
                     ),
                   );
@@ -362,13 +362,13 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Perfil de ${widget.reel.user?.name ?? "usuario"}'),
+                      content: Text('Perfil de ${widget.reel.authorName}'),
                       duration: const Duration(seconds: 1),
                     ),
                   );
                 },
                 child: Text(
-                  '@${widget.reel.user?.name ?? "usuario"}',
+                  '@${widget.reel.authorName}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,

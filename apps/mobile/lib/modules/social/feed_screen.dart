@@ -188,7 +188,7 @@ class PostCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        post.user?.name ?? 'Usuario',
+                        post.authorName,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
@@ -302,7 +302,7 @@ class PostCard extends StatelessWidget {
                   style: const TextStyle(color: Colors.black, fontSize: 14),
                   children: [
                     TextSpan(
-                      text: post.user?.name ?? 'Usuario',
+                      text: post.authorName,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const TextSpan(text: ' '),

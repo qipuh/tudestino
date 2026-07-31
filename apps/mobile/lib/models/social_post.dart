@@ -1,6 +1,35 @@
 import 'user.dart';
 import '../core/utils/url_helper.dart';
 
+/// Autor mínimo cuando el post lo publicó un negocio (no un usuario) - el
+/// feed polimórfico de businesses devuelve `business` en vez de `user` en
+/// ese caso, no ambos.
+class PostBusiness {
+  final String id;
+  final String name;
+  final String slug;
+  final String? logo;
+
+  PostBusiness({
+    required this.id,
+    required this.name,
+    required this.slug,
+    this.logo,
+  });
+
+  factory PostBusiness.fromJson(Map<String, dynamic> json) {
+    final rawLogo = json['logo']?.toString();
+    return PostBusiness(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      slug: json['slug'] ?? '',
+      logo: (rawLogo != null && rawLogo.isNotEmpty)
+          ? UrlHelper.getFullImageUrl(rawLogo)
+          : null,
+    );
+  }
+}
+
 class SocialPost {
   final String id;
   final String userId;
@@ -10,6 +39,7 @@ class SocialPost {
   final int commentsCount;
   final bool isLiked;
   final User? user;
+  final PostBusiness? business;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -22,9 +52,14 @@ class SocialPost {
     required this.commentsCount,
     required this.isLiked,
     this.user,
+    this.business,
     required this.createdAt,
     required this.updatedAt,
   });
+
+  /// Nombre a mostrar como autor del post - el negocio si lo publicó un
+  /// negocio, si no el usuario, si no el fallback genérico.
+  String get authorName => business?.name ?? user?.name ?? 'Usuario';
 
   factory SocialPost.fromJson(Map<String, dynamic> json) {
     // Parsear el campo 'media' que viene como array de objetos
@@ -45,6 +80,9 @@ class SocialPost {
       commentsCount: json['commentsCount'] ?? 0,
       isLiked: json['isLiked'] ?? false,
       user: json['user'] != null ? User.fromJson(json['user']) : null,
+      business: json['business'] != null
+          ? PostBusiness.fromJson(json['business'])
+          : null,
       createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
       updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
     );
@@ -64,6 +102,7 @@ class SocialPost {
       commentsCount: commentsCount ?? this.commentsCount,
       isLiked: isLiked ?? this.isLiked,
       user: user,
+      business: business,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -83,8 +122,13 @@ class Reel {
   final int sharesCount;
   final bool isLiked;
   final User? user;
+  final PostBusiness? business;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// Nombre a mostrar como autor - el negocio si lo publicó un negocio, si
+  /// no el usuario, si no el fallback genérico (ver SocialPost.authorName).
+  String get authorName => business?.name ?? user?.name ?? 'Usuario';
 
   Reel({
     required this.id,
@@ -99,6 +143,7 @@ class Reel {
     required this.sharesCount,
     required this.isLiked,
     this.user,
+    this.business,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -119,6 +164,9 @@ class Reel {
       sharesCount: json['sharesCount'] ?? 0,
       isLiked: json['isLiked'] ?? false,
       user: json['user'] != null ? User.fromJson(json['user']) : null,
+      business: json['business'] != null
+          ? PostBusiness.fromJson(json['business'])
+          : null,
       createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
       updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
     );
@@ -144,6 +192,7 @@ class Reel {
       sharesCount: sharesCount ?? this.sharesCount,
       isLiked: isLiked ?? this.isLiked,
       user: user,
+      business: business,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

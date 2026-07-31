@@ -29,7 +29,6 @@ const District = sequelize.define('District', {
   nativeName: {
     type: DataTypes.STRING(100),
     allowNull: true,
-    field: 'native_name',
     comment: 'Native language name',
   },
   latitude: {
@@ -43,6 +42,7 @@ const District = sequelize.define('District', {
 }, {
   tableName: 'districts',
   timestamps: true,
+  underscored: true,
   indexes: [
     { fields: ['provinceId'] },
     { fields: ['code'] },

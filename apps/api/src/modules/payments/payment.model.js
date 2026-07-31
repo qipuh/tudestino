@@ -76,7 +76,7 @@ const Payment = sequelize.define('Payment', {
     defaultValue: 'pending'
   },
   paidAt: {
-    type: DataTypes.DATETIME,
+    type: DataTypes.DATE,
     allowNull: true
   },
   metadata: {

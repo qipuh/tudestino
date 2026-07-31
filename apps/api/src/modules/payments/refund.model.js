@@ -62,7 +62,7 @@ const Refund = sequelize.define('Refund', {
     comment: 'Cuánto se descuenta del negocio (si es distinto del reembolso total)'
   },
   processedAt: {
-    type: DataTypes.DATETIME,
+    type: DataTypes.DATE,
     allowNull: true
   },
   processedByUserId: {

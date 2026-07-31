@@ -54,11 +54,11 @@ const Offer = sequelize.define('Offer', {
     comment: 'Cuántas veces se ha usado (requiere atomicidad en update)'
   },
   validFrom: {
-    type: DataTypes.DATETIME,
+    type: DataTypes.DATE,
     allowNull: false
   },
   validUntil: {
-    type: DataTypes.DATETIME,
+    type: DataTypes.DATE,
     allowNull: false
   },
   isActive: {

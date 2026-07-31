@@ -163,7 +163,7 @@ import User from '../users/user.model-mysql.js';
 import BusinessService from './business-service.model.js';
 
 BusinessReservation.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
-Business.hasMany(BusinessReservation, { foreignKey: 'businessId', as: 'reservations' });
+Business.hasMany(BusinessReservation, { foreignKey: 'businessId', as: 'businessReservationsLegacy' });
 
 BusinessReservation.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 User.hasMany(BusinessReservation, { foreignKey: 'userId', as: 'businessReservations' });

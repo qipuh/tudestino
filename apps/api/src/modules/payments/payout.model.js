@@ -53,7 +53,7 @@ const Payout = sequelize.define('Payout', {
     comment: 'Snapshot de datos bancarios al momento del payout'
   },
   paidAt: {
-    type: DataTypes.DATETIME,
+    type: DataTypes.DATE,
     allowNull: true
   },
   transactionReference: {

@@ -159,7 +159,7 @@ export const setupAssociations = () => {
   Business.belongsTo(User, { foreignKey: 'ownerId', as: 'owner' });
 
   // Business - BusinessService
-  Business.hasMany(BusinessService, { foreignKey: 'businessId', as: 'services' });
+  Business.hasMany(BusinessService, { foreignKey: 'businessId', as: 'businessServices' });
   BusinessService.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
 
   // Business - BusinessSocialPost
@@ -228,7 +228,7 @@ export const setupAssociations = () => {
   District.hasMany(Business, { foreignKey: 'districtId', as: 'businesses' });
 
   // Business - Address
-  Business.belongsTo(Address, { foreignKey: 'addressId', as: 'address' });
+  Business.belongsTo(Address, { foreignKey: 'addressId', as: 'addressRecord' });
   Address.hasMany(Business, { foreignKey: 'addressId', as: 'businesses' });
 
   // ---- Media (Polymorphic) ----

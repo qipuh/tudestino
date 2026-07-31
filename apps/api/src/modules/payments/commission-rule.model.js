@@ -30,12 +30,12 @@ const CommissionRule = sequelize.define('CommissionRule', {
     comment: 'Porcentaje de comisión tudestino'
   },
   effectiveFrom: {
-    type: DataTypes.DATETIME,
+    type: DataTypes.DATE,
     allowNull: false,
     comment: 'Cuándo entra en vigor esta regla'
   },
   effectiveUntil: {
-    type: DataTypes.DATETIME,
+    type: DataTypes.DATE,
     allowNull: true,
     comment: 'Cuándo expira esta regla. Null = vigente indefinidamente'
   },

@@ -1693,7 +1693,7 @@ function CreateBusiness() {
             )}
 
             {/* Step 2: Descripción (para otros tipos de negocio) */}
-            {step === 2 && formData.businessType !== 'hotel' && formData.businessType !== 'restaurant' && (
+            {step === 2 && !['hotel', 'restaurant', 'entertainment', 'spa'].includes(formData.businessType) && (
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

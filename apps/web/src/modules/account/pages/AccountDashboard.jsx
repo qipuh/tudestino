@@ -157,48 +157,50 @@ function AccountDashboard() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Negocios */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Mis Negocios</h2>
-              <Link to="/account/businesses" className="text-primary hover:text-primary-dark text-sm font-medium">
-                Ver todos →
-              </Link>
-            </div>
-            {businesses && businesses.length > 0 ? (
-              <div className="space-y-3">
-                {businesses.slice(0, 3).map((business) => (
-                  <Link
-                    key={business.id}
-                    to={`/business/${business.id}/manage`}
-                    className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition"
-                  >
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <Briefcase className="text-primary" size={20} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900">{business.name}</div>
-                      <div className="text-sm text-gray-500 capitalize">{business.businessType}</div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Briefcase className="mx-auto text-gray-300 mb-2" size={48} />
-                <p className="text-gray-500 text-sm mb-3">No tienes negocios</p>
-                <Link
-                  to="/business/create"
-                  className="inline-block bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark text-sm"
-                >
-                  Crear Negocio
+          {/* Negocios - solo para business_owner/admin */}
+          {(user?.role === 'business_owner' || user?.role === 'admin') && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Mis Negocios</h2>
+                <Link to="/account/businesses" className="text-primary hover:text-primary-dark text-sm font-medium">
+                  Ver todos →
                 </Link>
               </div>
-            )}
-          </div>
+              {businesses && businesses.length > 0 ? (
+                <div className="space-y-3">
+                  {businesses.slice(0, 3).map((business) => (
+                    <Link
+                      key={business.id}
+                      to={`/business/${business.id}/manage`}
+                      className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition"
+                    >
+                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <Briefcase className="text-primary" size={20} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">{business.name}</div>
+                        <div className="text-sm text-gray-500 capitalize">{business.businessType}</div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Briefcase className="mx-auto text-gray-300 mb-2" size={48} />
+                  <p className="text-gray-500 text-sm mb-3">No tienes negocios</p>
+                  <Link
+                    to="/business/create"
+                    className="inline-block bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark text-sm"
+                  >
+                    Crear Negocio
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Actividad Reciente */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className={`bg-white rounded-lg shadow-md p-6 ${(user?.role === 'business_owner' || user?.role === 'admin') ? '' : 'lg:col-span-2'}`}>
             <h2 className="text-xl font-bold text-gray-900 mb-4">Actividad Reciente</h2>
             <div className="text-center py-8">
               <Users className="mx-auto text-gray-300 mb-2" size={48} />

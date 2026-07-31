@@ -26,7 +26,7 @@ export default function BusinessesPage() {
         ...filters,
         search: searchTerm || undefined
       });
-      setBusinesses(data.data || data);
+      setBusinesses(Array.isArray(data) ? data : (data.data || []));
       setError(null);
     } catch (err) {
       setError(err.response?.data?.message || 'Error cargando negocios');

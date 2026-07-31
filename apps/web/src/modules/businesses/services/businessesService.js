@@ -1,6 +1,6 @@
-import apiClient from '../../../services/apiClient';
+import api from '../../../services/api';
 
-const API_BASE = '/api/businesses';
+const API_BASE = '/businesses';
 
 export const businessesService = {
   // Listar negocios con filtros
@@ -12,40 +12,34 @@ export const businessesService = {
     if (filters.limit) params.append('limit', filters.limit);
     if (filters.offset) params.append('offset', filters.offset);
 
-    const response = await apiClient.get(`${API_BASE}?${params.toString()}`);
-    return response.data;
+    return api.get(`${API_BASE}?${params.toString()}`);
   },
 
   // Obtener negocio por ID
   getBusinessById: async (id) => {
-    const response = await apiClient.get(`${API_BASE}/${id}`);
-    return response.data;
+    return api.get(`${API_BASE}/${id}`);
   },
 
   // Crear negocio
   createBusiness: async (data) => {
-    const response = await apiClient.post(API_BASE, data);
-    return response.data;
+    return api.post(API_BASE, data);
   },
 
   // Actualizar negocio
   updateBusiness: async (id, data) => {
-    const response = await apiClient.patch(`${API_BASE}/${id}`, data);
-    return response.data;
+    return api.patch(`${API_BASE}/${id}`, data);
   },
 
   // Eliminar negocio
   deleteBusiness: async (id) => {
-    const response = await apiClient.delete(`${API_BASE}/${id}`);
-    return response.data;
+    return api.delete(`${API_BASE}/${id}`);
   },
 
   // Buscar por ubicación
   searchByLocation: async (lat, lng, radius = 10) => {
-    const response = await apiClient.get(`${API_BASE}/search/location`, {
+    return api.get(`${API_BASE}/search/location`, {
       params: { lat, lng, radius }
     });
-    return response.data;
   }
 };
 

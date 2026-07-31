@@ -98,19 +98,21 @@ function AccountDashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Link
-            to="/account/businesses"
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition group"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition">
-                <Briefcase className="text-blue-600" size={24} />
+          {(user?.role === 'business_owner' || user?.role === 'admin') && (
+            <Link
+              to="/account/businesses"
+              className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition group"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition">
+                  <Briefcase className="text-blue-600" size={24} />
+                </div>
+                <TrendingUp className="text-gray-400" size={20} />
               </div>
-              <TrendingUp className="text-gray-400" size={20} />
-            </div>
-            <div className="text-3xl font-bold text-gray-900 mb-1">{stats.businesses}</div>
-            <div className="text-sm text-gray-600">Negocios</div>
-          </Link>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{stats.businesses}</div>
+              <div className="text-sm text-gray-600">Negocios</div>
+            </Link>
+          )}
 
           <Link
             to="/bookings"
@@ -214,13 +216,15 @@ function AccountDashboard() {
           <h3 className="text-xl font-bold mb-2">¿Qué quieres hacer hoy?</h3>
           <p className="text-white/90 mb-4">Accede rápidamente a las funciones más utilizadas</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Link
-              to="/account/businesses"
-              className="bg-white/20 hover:bg-white/30 rounded-lg p-4 text-center transition"
-            >
-              <Briefcase className="mx-auto mb-2" size={24} />
-              <div className="text-sm font-medium">Mis Negocios</div>
-            </Link>
+            {(user?.role === 'business_owner' || user?.role === 'admin') && (
+              <Link
+                to="/account/businesses"
+                className="bg-white/20 hover:bg-white/30 rounded-lg p-4 text-center transition"
+              >
+                <Briefcase className="mx-auto mb-2" size={24} />
+                <div className="text-sm font-medium">Mis Negocios</div>
+              </Link>
+            )}
             <Link
               to="/bookings"
               className="bg-white/20 hover:bg-white/30 rounded-lg p-4 text-center transition"

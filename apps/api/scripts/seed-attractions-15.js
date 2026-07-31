@@ -337,7 +337,7 @@ const attractions = [
     videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
     images: [
       { url: "https://upload.wikimedia.org/wikipedia/commons/a/ab/Belen_Church_%28Cajamarca%29.jpg", caption: "Fachada Iglesia Belén", credit: "Wikimedia Commons", sourceUrl: "https://commons.wikimedia.org/wiki/File:Belen_Church_(Cajamarca).jpg" },
-      { url: "https://upload.wikimedia.org/wikipedia/commons/e/e0/Interior_Iglesia_Belen.jpg", caption: "Interior retablo dorado", credit: "Wikimedia Commons", sourceUrl": "https://commons.wikimedia.org/wiki/File:Interior_Iglesia_Belen.jpg" }
+      { url: "https://upload.wikimedia.org/wikipedia/commons/e/e0/Interior_Iglesia_Belen.jpg", caption: "Interior retablo dorado", credit: "Wikimedia Commons", sourceUrl: "https://commons.wikimedia.org/wiki/File:Interior_Iglesia_Belen.jpg" }
     ]
   }
 ];

@@ -1151,5 +1151,133 @@ router.post('/add-business-commission-fields', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/migrations/run-polymorph
+ * Ejecuta todas las migraciones polymorph en serie (DDL + data migrations)
+ */
+router.post('/run-polymorph', async (req, res) => {
+  try {
+    const logs = [];
+
+    logs.push('Starting polymorph data migrations...');
+
+    // Migrate businesses
+    logs.push('Migrating businesses...');
+    await sequelize.query(`
+      INSERT INTO businesses (id, ownerId, name, slug, description, businessType, address, contactPhone, contactEmail, status, districtId, ratingAverage, reviewCount)
+      SELECT
+        id,
+        hostId,
+        COALESCE(propertyName, hotelName, 'Unnamed'),
+        LOWER(REPLACE(REPLACE(COALESCE(propertyName, hotelName, 'unnamed'), ' ', '-'), '/', '-')),
+        description,
+        'accommodation',
+        JSON_OBJECT('street', addressStreet, 'city', addressCity, 'state', addressState, 'country', addressCountry, 'latitude', addressLatitude, 'longitude', addressLongitude, 'zipCode', addressZipCode),
+        contactPhone,
+        contactEmail,
+        'active',
+        district_id,
+        COALESCE(ratingAverage, 0),
+        COALESCE(ratingCount, 0)
+      FROM hotel_properties
+      WHERE businessId IS NULL
+      ON DUPLICATE KEY UPDATE id=id;
+    `);
+
+    // Migrate media (business_photos -> media)
+    logs.push('Migrating media...');
+    await sequelize.query(`
+      INSERT INTO media (id, url, type, mediable_type, mediable_id, \`order\`)
+      SELECT
+        id,
+        photo_url,
+        'gallery',
+        'Business',
+        business_id,
+        0
+      FROM business_photos
+      WHERE business_id IS NOT NULL
+      ON DUPLICATE KEY UPDATE id=id;
+    `);
+
+    // Migrate services (business_services unchanged, just ensure they exist)
+    logs.push('Ensuring services exist...');
+    // business_services already exists, no migration needed
+
+    // Migrate reservations (business_reservations with service info)
+    logs.push('Migrating reservations...');
+    await sequelize.query(`
+      INSERT INTO reservations (id, businessId, userId, serviceId, reservationDate, reservationTime, numberOfPeople, status, totalPrice, currency, paymentStatus, metadata)
+      SELECT
+        id,
+        business_id,
+        guest_id,
+        NULL,
+        booking_date,
+        booking_time,
+        COALESCE(guests, 1),
+        status,
+        total_price,
+        'PEN',
+        'pending',
+        JSON_OBJECT('notes', notes)
+      FROM business_reservations
+      ON DUPLICATE KEY UPDATE id=id;
+    `);
+
+    // Migrate offers (promotions -> offers)
+    logs.push('Migrating offers...');
+    await sequelize.query(`
+      INSERT INTO offers (id, businessId, code, title, description, discountType, discountValue, maxUses, usedCount, validFrom, validUntil, isActive)
+      SELECT
+        id,
+        business_id,
+        code,
+        title,
+        description,
+        discount_type,
+        discount_value,
+        max_uses,
+        COALESCE(used_count, 0),
+        valid_from,
+        valid_until,
+        is_active
+      FROM promotions
+      WHERE business_id IS NOT NULL
+      ON DUPLICATE KEY UPDATE id=id;
+    `);
+
+    // Migrate user favorites
+    logs.push('Migrating user favorites...');
+    await sequelize.query(`
+      INSERT INTO user_favorites (id, userId, businessId)
+      SELECT
+        id,
+        user_id,
+        business_id
+      FROM favorites
+      WHERE business_id IS NOT NULL
+      ON DUPLICATE KEY UPDATE id=id;
+    `);
+
+    logs.push('✓ All polymorph data migrations completed');
+
+    res.json({
+      success: true,
+      message: 'Polymorph data migrations completed successfully',
+      logs,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error running polymorph migrations:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error running polymorph migrations',
+      error: error.message,
+      logs: []
+    });
+  }
+});
+
 export default router;
 

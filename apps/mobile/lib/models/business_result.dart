@@ -10,6 +10,7 @@ class BusinessResult {
   final String? imageUrl;
   final String? city;
   final String? country;
+  final String? districtId;
   final double rating;
   final int reviewCount;
   final String? url;
@@ -22,6 +23,7 @@ class BusinessResult {
     this.imageUrl,
     this.city,
     this.country,
+    this.districtId,
     required this.rating,
     required this.reviewCount,
     this.url,
@@ -41,6 +43,7 @@ class BusinessResult {
           : null,
       city: location?['city'],
       country: location?['country'],
+      districtId: json['districtId'],
       rating: double.tryParse(json['rating']?.toString() ?? '0') ?? 0,
       reviewCount: int.tryParse(json['reviewCount']?.toString() ?? '0') ?? 0,
       url: json['url'],

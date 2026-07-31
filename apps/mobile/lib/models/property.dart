@@ -20,6 +20,7 @@ class Property {
   final String? addressZipCode;
   final double? addressLatitude;
   final double? addressLongitude;
+  final String? districtId;
 
   // Servicios
   final List<String> propertyAmenities;
@@ -66,6 +67,7 @@ class Property {
     this.addressZipCode,
     this.addressLatitude,
     this.addressLongitude,
+    this.districtId,
     required this.propertyAmenities,
     required this.breakfastIncluded,
     required this.parkingType,
@@ -109,6 +111,7 @@ class Property {
       addressLongitude: json['addressLongitude'] != null
           ? double.tryParse(json['addressLongitude'].toString())
           : null,
+      districtId: json['districtId'],
       propertyAmenities: Room.parseAmenities(json['propertyAmenities']),
       breakfastIncluded: json['breakfastIncluded'] ?? false,
       parkingType: json['parkingType'] ?? 'no',

@@ -11,6 +11,7 @@ class Attraction {
   final String? city;
   final String? region;
   final String? country;
+  final String? districtId;
   final bool hasDistanceMarkers;
   final String? whatToDo;
   final String? recommendations;
@@ -33,6 +34,7 @@ class Attraction {
     this.city,
     this.region,
     this.country,
+    this.districtId,
     this.hasDistanceMarkers = false,
     this.whatToDo,
     this.recommendations,
@@ -61,6 +63,7 @@ class Attraction {
       city: json['city'],
       region: json['region'],
       country: json['country'],
+      districtId: json['districtId'],
       hasDistanceMarkers: json['hasDistanceMarkers'] ?? false,
       whatToDo: json['whatToDo'],
       recommendations: json['recommendations'],

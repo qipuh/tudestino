@@ -2268,6 +2268,7 @@ function CreateBusiness() {
               )}
               {step < 4 ? (
                 <button
+                  key="next-step-button"
                   type="button"
                   onClick={nextStep}
                   className="flex-1 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium"
@@ -2276,6 +2277,7 @@ function CreateBusiness() {
                 </button>
               ) : (
                 <button
+                  key="submit-button"
                   type="submit"
                   disabled={loading}
                   className="flex-1 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark font-medium disabled:opacity-50 disabled:cursor-not-allowed"

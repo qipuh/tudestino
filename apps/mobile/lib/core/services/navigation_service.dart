@@ -25,7 +25,7 @@ import '../../modules/verification/verify_identity_screen.dart';
 import '../../modules/properties/tour_detail_screen.dart';
 import '../../modules/social/create_post_screen.dart';
 import '../../modules/properties/attraction_detail_screen.dart';
-import '../../modules/properties/business_detail_screen.dart';
+import '../../modules/businesses/screens/business_detail_screen.dart';
 import '../../modules/profile/account_settings_screen.dart';
 import '../../modules/profile/help_support_screen.dart';
 import '../../modules/bookings/payment_method_screen.dart';

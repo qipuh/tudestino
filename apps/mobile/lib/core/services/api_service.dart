@@ -45,6 +45,8 @@ class ApiService {
     _authToken = token;
   }
 
+  Dio get dio => _dio;
+
   Future<Response> get(String path) async {
     return await _dio.get(path);
   }

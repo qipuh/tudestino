@@ -9,6 +9,7 @@ import {
   updateAccommodationTypes,
   getEmailSettings,
   updateEmailSettings,
+  sendTestEmail,
   getWhatsAppSettings,
   updateWhatsAppSettings,
   getRoutingSettings,
@@ -30,6 +31,7 @@ router.put('/payment', updatePaymentSettings);
 router.put('/accommodation-types', updateAccommodationTypes);
 router.get('/email', getEmailSettings);
 router.put('/email', updateEmailSettings);
+router.post('/email/test', sendTestEmail);
 router.get('/whatsapp', getWhatsAppSettings);
 router.put('/whatsapp', updateWhatsAppSettings);
 router.get('/routing', getRoutingSettings);

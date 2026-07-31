@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Users, ShoppingCart, DollarSign, AlertCircle, Loader } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { BarChart3, Users, ShoppingCart, DollarSign, AlertCircle, Loader, Mail } from 'lucide-react';
 import adminService from '../services/adminService';
 
 export default function AdminDashboard() {
@@ -192,6 +193,13 @@ export default function AdminDashboard() {
             <button className="px-4 py-3 bg-orange-500 text-white rounded hover:bg-orange-600 font-medium">
               Gestionar Usuarios
             </button>
+            <Link
+              to="/admin/settings/email"
+              className="px-4 py-3 bg-primary text-white rounded hover:bg-primary-dark font-medium flex items-center justify-center gap-2"
+            >
+              <Mail size={18} />
+              Configurar Correo
+            </Link>
           </div>
         </div>
       </div>

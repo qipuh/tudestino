@@ -46,7 +46,20 @@ export const adminService = {
     if (filters.limit) params.append('limit', filters.limit);
 
     return api.get(`/admin/users?${params.toString()}`);
-  }
+  },
+
+  // Email (SMTP) settings
+  getEmailSettings: async () => {
+    return api.get('/settings/email');
+  },
+
+  updateEmailSettings: async (data) => {
+    return api.put('/settings/email', data);
+  },
+
+  sendTestEmail: async (to) => {
+    return api.post('/settings/email/test', { to });
+  },
 };
 
 export default adminService;

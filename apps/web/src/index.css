@@ -42,7 +42,7 @@ p, span, li, label, input, button {
 }
 
 .logo-td {
-  height: 39px;
+  height: 45px;
   width: auto;
   object-fit: contain;
   transition: transform 0.3s ease;

@@ -34,13 +34,9 @@ class AuthService {
       verificationStatus: 'pending',
     });
 
-    // Enviar código de verificación por WhatsApp (si tiene teléfono) o email
+    // Enviar código de verificación por email
     try {
-      if (phone) {
-        await verificationService.sendWhatsAppVerification(phone, verificationCode, name);
-      } else {
-        await verificationService.sendEmailVerification(email, verificationCode, name);
-      }
+      await verificationService.sendEmailVerification(email, verificationCode, name);
     } catch (verificationError) {
       console.error('Error sending verification:', verificationError);
       // No lanzar error, el usuario se creó exitosamente
@@ -215,12 +211,7 @@ class AuthService {
       emailVerificationExpires: expiresAt,
     });
 
-    // Enviar por WhatsApp si tiene teléfono, sino por email
-    if (user.phone) {
-      await verificationService.sendWhatsAppVerification(user.phone, code, user.name);
-    } else {
-      await verificationService.sendEmailVerification(email, code, user.name);
-    }
+    await verificationService.sendEmailVerification(email, code, user.name);
 
     return {
       message: 'Código enviado exitosamente',

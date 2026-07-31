@@ -1105,7 +1105,16 @@ function CreateBusiness() {
       }
     }
     if (step === 3) {
-      if (!formData.address.city) {
+      // Aceptar ubicación por búsqueda libre (address.city) O por el picker
+      // jerárquico (país + departamento) - antes solo validaba address.city,
+      // así que completar el picker jerárquico sin tocar el buscador nunca
+      // dejaba avanzar, y si quedaba texto viejo de una búsqueda anterior
+      // en address.city, avanzaba con datos obsoletos aunque el usuario
+      // hubiera cambiado la selección después.
+      const hasFreeTextLocation = !!formData.address.city;
+      const hasHierarchicalLocation = !!(formData.location.countryId && formData.location.departmentId);
+
+      if (!hasFreeTextLocation && !hasHierarchicalLocation) {
         setError('Debes seleccionar una ubicación antes de continuar');
         return;
       }
@@ -1175,7 +1184,18 @@ function CreateBusiness() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
+          <form
+            onSubmit={handleSubmit}
+            onKeyDown={(e) => {
+              // Enter en cualquier input (ej: el buscador de ubicación con
+              // sugerencias) no debe disparar submit implícito del form -
+              // eso saltaba directo al siguiente paso sin que el usuario
+              // llegara a elegir una sugerencia, usando datos viejos.
+              if (e.key === 'Enter' && step < 4 && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+              }
+            }}
+          >
             {/* Step 1: Nombre y tipo de negocio */}
             {step === 1 && (
               <div className="space-y-6">

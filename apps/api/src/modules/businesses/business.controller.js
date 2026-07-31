@@ -19,12 +19,10 @@ class BusinessController {
       const ownerId = req.user.id;
       const businessData = req.body;
 
-      // Validar que el usuario sea business_owner
+      // Crear un negocio promueve al usuario a business_owner (no requiere
+      // aprobación previa - guest/host son los roles iniciales normales)
       if (req.user.role !== 'business_owner' && req.user.role !== 'admin') {
-        return res.status(403).json({
-          success: false,
-          message: 'Solo los usuarios con rol business_owner pueden crear negocios'
-        });
+        await User.update({ role: 'business_owner' }, { where: { id: ownerId } });
       }
 
       const business = await businessService.createBusiness(ownerId, businessData);

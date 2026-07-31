@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import '../../../config/api_client.dart';
+import '../../../core/config/api_client.dart';
 import '../models/business_model.dart';
 
 class BusinessesService {

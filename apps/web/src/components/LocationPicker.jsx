@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import locationsService from '../services/locationsService.js';
 
 export default function LocationPicker({
@@ -25,18 +25,54 @@ export default function LocationPicker({
     districts: false,
   });
 
+  // IDs pendientes de aplicar una vez que su lista (departments/provinces/
+  // districts) termine de cargar - ver sync externo más abajo.
+  const pendingRef = useRef({ departmentId: null, provinceId: null, districtId: null });
+  const lastExternalSigRef = useRef(`${value.countryId || ''}|${value.departmentId || ''}|${value.provinceId || ''}|${value.districtId || ''}`);
+
   // Load countries on mount
   useEffect(() => {
     loadCountries();
   }, []);
 
+  // Sincroniza con cambios externos del prop `value` (ej: autocomplete de
+  // dirección que detecta país/departamento y los empuja desde el padre).
+  // Antes esto solo se leía una vez al montar (useState inicial) - cambios
+  // posteriores del padre se ignoraban por completo. Se autoprotege contra
+  // el eco de nuestro propio onChange: cuando el padre solo refleja el
+  // estado que ya tenemos, los ids ya coinciden y no dispara nada.
+  useEffect(() => {
+    const sig = `${value.countryId || ''}|${value.departmentId || ''}|${value.provinceId || ''}|${value.districtId || ''}`;
+    if (sig === lastExternalSigRef.current) return;
+    lastExternalSigRef.current = sig;
+
+    if (value.countryId && value.countryId !== countryId) {
+      pendingRef.current = {
+        departmentId: value.departmentId || null,
+        provinceId: value.provinceId || null,
+        districtId: value.districtId || null,
+      };
+      setCountryId(value.countryId);
+    } else if (value.departmentId && value.departmentId !== departmentId) {
+      pendingRef.current = {
+        departmentId: null,
+        provinceId: value.provinceId || null,
+        districtId: value.districtId || null,
+      };
+      setDepartmentId(value.departmentId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value.countryId, value.departmentId, value.provinceId, value.districtId]);
+
   // Load departments when country changes
   useEffect(() => {
     if (countryId) {
       loadDepartments(countryId);
-      setDepartmentId('');
-      setProvinceId('');
-      setDistrictId('');
+      if (!pendingRef.current.departmentId) {
+        setDepartmentId('');
+        setProvinceId('');
+        setDistrictId('');
+      }
     } else {
       setDepartments([]);
     }
@@ -46,8 +82,10 @@ export default function LocationPicker({
   useEffect(() => {
     if (departmentId) {
       loadProvinces(departmentId);
-      setProvinceId('');
-      setDistrictId('');
+      if (!pendingRef.current.provinceId) {
+        setProvinceId('');
+        setDistrictId('');
+      }
     } else {
       setProvinces([]);
     }
@@ -57,7 +95,9 @@ export default function LocationPicker({
   useEffect(() => {
     if (provinceId) {
       loadDistricts(provinceId);
-      setDistrictId('');
+      if (!pendingRef.current.districtId) {
+        setDistrictId('');
+      }
     } else {
       setDistricts([]);
     }
@@ -89,7 +129,16 @@ export default function LocationPicker({
     try {
       setLoading((prev) => ({ ...prev, departments: true }));
       const response = await locationsService.getDepartments(cId);
-      setDepartments(response.data || []);
+      const list = response.data || [];
+      setDepartments(list);
+
+      const pendingDept = pendingRef.current.departmentId;
+      if (pendingDept) {
+        pendingRef.current.departmentId = null;
+        if (list.some((d) => d.id === pendingDept)) {
+          setDepartmentId(pendingDept);
+        }
+      }
     } catch (error) {
       console.error('Error loading departments:', error);
     } finally {
@@ -101,7 +150,16 @@ export default function LocationPicker({
     try {
       setLoading((prev) => ({ ...prev, provinces: true }));
       const response = await locationsService.getProvinces(dId);
-      setProvinces(response.data || []);
+      const list = response.data || [];
+      setProvinces(list);
+
+      const pendingProv = pendingRef.current.provinceId;
+      if (pendingProv) {
+        pendingRef.current.provinceId = null;
+        if (list.some((p) => p.id === pendingProv)) {
+          setProvinceId(pendingProv);
+        }
+      }
     } catch (error) {
       console.error('Error loading provinces:', error);
     } finally {
@@ -113,7 +171,16 @@ export default function LocationPicker({
     try {
       setLoading((prev) => ({ ...prev, districts: true }));
       const response = await locationsService.getDistricts(pId);
-      setDistricts(response.data || []);
+      const list = response.data || [];
+      setDistricts(list);
+
+      const pendingDist = pendingRef.current.districtId;
+      if (pendingDist) {
+        pendingRef.current.districtId = null;
+        if (list.some((d) => d.id === pendingDist)) {
+          setDistrictId(pendingDist);
+        }
+      }
     } catch (error) {
       console.error('Error loading districts:', error);
     } finally {

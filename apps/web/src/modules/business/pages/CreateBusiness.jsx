@@ -6,6 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import useBusiness from '../hooks/useBusiness';
 import UserAccountLayout from '../../../layouts/UserAccountLayout';
 import LocationPicker from '../../../components/LocationPicker';
+import locationsService from '../../../services/locationsService';
 
 // Fix para los iconos de Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -813,6 +814,55 @@ function CreateBusiness() {
     }));
   };
 
+  const normalizeForMatch = (str) =>
+    (str || '')
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .trim()
+      .toLowerCase();
+
+  // Busca país/departamento reales (con sus ids normalizados) a partir del
+  // texto libre que devuelve Nominatim (ej: country="Perú", state="Cajamarca")
+  // y los aplica al LocationPicker - antes seleccionar una dirección del
+  // autocomplete no llenaba país/departamento, había que repetir la
+  // selección manualmente en el picker jerárquico.
+  const applyLocationHierarchyFromText = async (countryName, stateName) => {
+    if (!countryName) return;
+
+    try {
+      const countriesRes = await locationsService.getCountries();
+      const countries = countriesRes.data || [];
+      const normalizedCountry = normalizeForMatch(countryName);
+      const matchedCountry = countries.find(
+        (c) => normalizeForMatch(c.name) === normalizedCountry || normalizeForMatch(c.nativeName) === normalizedCountry
+      );
+
+      if (!matchedCountry) return;
+
+      let matchedDepartmentId = '';
+      if (stateName) {
+        const deptsRes = await locationsService.getDepartments(matchedCountry.id);
+        const departments = deptsRes.data || [];
+        const normalizedState = normalizeForMatch(stateName);
+        const matchedDept = departments.find((d) => normalizeForMatch(d.name) === normalizedState);
+        if (matchedDept) matchedDepartmentId = matchedDept.id;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        location: {
+          ...prev.location,
+          countryId: matchedCountry.id,
+          departmentId: matchedDepartmentId,
+          provinceId: '',
+          districtId: '',
+        },
+      }));
+    } catch (error) {
+      console.error('Error matching location hierarchy:', error);
+    }
+  };
+
   // Manejar selección de ubicación de la lista de sugerencias
   const handleSelectLocation = (location) => {
     setFormData(prev => ({
@@ -826,6 +876,8 @@ function CreateBusiness() {
         longitude: location.longitude,
       }
     }));
+
+    applyLocationHierarchyFromText(location.country, location.state);
 
     // Actualizar marcador en el mapa
     setMapMarker({
@@ -870,6 +922,8 @@ function CreateBusiness() {
             longitude: latlng.lng
           }
         }));
+
+        applyLocationHierarchyFromText(address.country, address.state || address.region);
 
         // Actualizar el query de ubicación si cambió la ciudad
         if (address.city || address.town || address.village) {

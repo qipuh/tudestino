@@ -3,24 +3,16 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:ionicons/ionicons.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../providers/properties_provider.dart';
 import '../../models/property.dart';
 import '../../models/attraction.dart';
 import '../properties/property_grid_card.dart';
+import '../properties/property_preview_card.dart';
 import '../properties/business_result_card.dart';
 import '../properties/attraction_result_card.dart';
-
-const _categoryTitles = {
-  'all': 'Buscar todo',
-  'hotel': 'Buscar alojamiento',
-  'restaurant': 'Buscar restaurantes',
-  'tours': 'Buscar tours',
-  'entertainment': 'Buscar entretenimiento',
-  'spa': 'Buscar spa y bienestar',
-  'attractions': 'Buscar atractivos turísticos',
-};
 
 /// Panel deslizante desde la derecha (sidebar), usado para fechas/huéspedes
 /// y para filtros - reemplaza los paneles inline que antes ocupaban toda
@@ -68,6 +60,8 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final _locationController = TextEditingController();
   final MapController _mapController = MapController();
+  final DraggableScrollableController _sheetController =
+      DraggableScrollableController();
   DateTime? _checkIn;
   DateTime? _checkOut;
   int _adults = 2;
@@ -75,13 +69,11 @@ class _SearchScreenState extends State<SearchScreen> {
   double _minPrice = 0;
   double _maxPrice = 1000;
   String? _propertyType;
-  bool _showMap = false;
-  String? _hoveredResultId;
+  Property? _previewProperty;
 
   bool get _isHotelSearch => widget.category == 'hotel';
   bool get _isAttractionSearch => widget.category == 'attractions';
   bool get _isAllSearch => widget.category == 'all';
-  bool get _supportsMap => _isHotelSearch || _isAttractionSearch;
 
   @override
   void initState() {
@@ -99,6 +91,7 @@ class _SearchScreenState extends State<SearchScreen> {
   void dispose() {
     _locationController.dispose();
     _mapController.dispose();
+    _sheetController.dispose();
     super.dispose();
   }
 
@@ -109,6 +102,8 @@ class _SearchScreenState extends State<SearchScreen> {
     final location = _locationController.text.trim().isNotEmpty
         ? _locationController.text.trim()
         : null;
+
+    setState(() => _previewProperty = null);
 
     if (_isHotelSearch) {
       await propertiesProvider.searchProperties(
@@ -174,168 +169,31 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final propertiesProvider = Provider.of<PropertiesProvider>(context);
-    final dateFormat = DateFormat('dd MMM', 'es');
-
-    final hasDates = _checkIn != null && _checkOut != null;
-    final datesGuestsLabel = _isHotelSearch
-        ? (hasDates
-            ? '${dateFormat.format(_checkIn!)} - ${dateFormat.format(_checkOut!)} · ${_adults + _children}'
-            : 'Fechas · Huéspedes')
-        : null;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_categoryTitles[widget.category] ?? 'Buscar'),
-        actions: [
-          if (_supportsMap)
-            IconButton(
-              icon: Icon(_showMap ? Icons.view_list_outlined : Icons.map_outlined),
-              tooltip: _showMap ? 'Ver lista' : 'Ver mapa',
-              onPressed: () => setState(() => _showMap = !_showMap),
-            ),
-          if (_isHotelSearch)
-            IconButton(
-              icon: const Icon(Icons.filter_alt_outlined),
-              tooltip: 'Filtros',
-              onPressed: _openFiltersPanel,
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Barra de búsqueda en una sola línea
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            color: Colors.white,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 48,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: AppTheme.sand,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.search, size: 20, color: AppTheme.mute),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: TextField(
-                            controller: _locationController,
-                            decoration: const InputDecoration(
-                              hintText: 'Destino',
-                              border: InputBorder.none,
-                              isDense: true,
-                            ),
-                            onSubmitted: (_) => _performSearch(),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                if (_isHotelSearch) ...[
-                  const SizedBox(width: 8),
-                  Material(
-                    color: AppTheme.sand,
-                    borderRadius: BorderRadius.circular(24),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(24),
-                      onTap: _openDatesGuestsPanel,
-                      child: Container(
-                        height: 48,
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        alignment: Alignment.center,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.calendar_month_outlined, size: 20, color: AppTheme.ink),
-                            if (hasDates) ...[
-                              const SizedBox(width: 6),
-                              Text(
-                                datesGuestsLabel!,
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-                const SizedBox(width: 8),
-                Material(
-                  color: AppTheme.primaryColor,
-                  borderRadius: BorderRadius.circular(24),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(24),
-                    onTap: propertiesProvider.isLoading ? null : _performSearch,
-                    child: Container(
-                      height: 48,
-                      width: 48,
-                      alignment: Alignment.center,
-                      child: propertiesProvider.isLoading
-                          ? const SizedBox(
-                              width: 18, height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Icon(Icons.search, color: Colors.white),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-
-          // Resultados
-          Expanded(
-            child: _showMap && _supportsMap
-                ? _buildMapView(propertiesProvider)
-                : _buildResults(propertiesProvider),
-          ),
-        ],
-      ),
-    );
-  }
+  void _closePreview() => setState(() => _previewProperty = null);
 
   List<Marker> _buildPropertyMarkers(List<Property> properties) {
     return properties.where((p) => p.addressLatitude != null && p.addressLongitude != null).map((property) {
-      final isHovered = _hoveredResultId == property.id;
+      final isSelected = _previewProperty?.id == property.id;
       return Marker(
-        width: isHovered ? 90 : 76,
-        height: isHovered ? 42 : 36,
+        width: isSelected ? 90 : 76,
+        height: isSelected ? 42 : 36,
         point: LatLng(property.addressLatitude!, property.addressLongitude!),
         child: GestureDetector(
-          onTap: () => Navigator.of(context).pushNamed(
-            '/property-detail',
-            arguments: {
-              'propertyId': property.id,
-              'checkIn': _checkIn,
-              'checkOut': _checkOut,
-              'adults': _adults,
-              'children': _children,
-            },
-          ),
+          onTap: () => setState(() => _previewProperty = property),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: isHovered ? AppTheme.primaryColor : Colors.white,
+              color: isSelected ? AppTheme.primaryColor : Colors.white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: isHovered ? AppTheme.primaryColor : Colors.grey.shade300),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 4, offset: const Offset(0, 2))],
+              border: Border.all(color: isSelected ? AppTheme.primaryColor : AppTheme.line),
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 4, offset: const Offset(0, 2))],
             ),
             alignment: Alignment.center,
             child: Text(
               CurrencyFormatter.format(property.minPrice),
               style: TextStyle(
-                color: isHovered ? Colors.white : AppTheme.ink,
+                color: isSelected ? Colors.white : AppTheme.ink,
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),
@@ -359,7 +217,7 @@ class _SearchScreenState extends State<SearchScreen> {
               color: AppTheme.secondaryColor,
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4)],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4)],
             ),
             child: const Icon(Icons.landscape, color: Colors.white, size: 18),
           ),
@@ -368,64 +226,207 @@ class _SearchScreenState extends State<SearchScreen> {
     }).toList();
   }
 
-  Widget _buildMapView(PropertiesProvider provider) {
-    final markers = _isHotelSearch
-        ? _buildPropertyMarkers(provider.searchResults)
-        : _buildAttractionMarkers(provider.attractionResults);
+  List<Marker> _buildMarkers(PropertiesProvider provider) {
+    final markers = <Marker>[];
+    // Restaurantes/tours/entretenimiento/spa (BusinessResult) no traen
+    // lat/lng desde /search/all - solo distrito - así que no tienen pin
+    // propio; siguen listados en el panel de abajo igual.
+    if (_isHotelSearch || _isAllSearch) {
+      markers.addAll(_buildPropertyMarkers(provider.searchResults));
+    }
+    if (_isAttractionSearch || _isAllSearch) {
+      markers.addAll(_buildAttractionMarkers(provider.attractionResults));
+    }
+    return markers;
+  }
 
-    final center = markers.isNotEmpty ? markers.first.point : const LatLng(-7.1619, -78.5128);
+  @override
+  Widget build(BuildContext context) {
+    final propertiesProvider = Provider.of<PropertiesProvider>(context);
+    final markers = _buildMarkers(propertiesProvider);
+    final center = markers.isNotEmpty
+        ? markers.first.point
+        : const LatLng(-7.1619, -78.5128); // Default: Cajamarca
 
-    return Stack(
-      children: [
-        FlutterMap(
-          mapController: _mapController,
-          options: MapOptions(initialCenter: center, initialZoom: 12, minZoom: 4, maxZoom: 18),
-          children: [
-            TileLayer(
-              // Estilo claro gris/azul (CartoDB Positron) en vez del OSM
-              // crudo, que sale beige/amarillento y no combina con la marca.
-              urlTemplate:
-                  'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-              subdomains: const ['a', 'b', 'c', 'd'],
-              userAgentPackageName: 'com.adapptika.tudestino',
-              tileDisplay: const TileDisplay.fadeIn(),
-            ),
-            MarkerLayer(markers: markers),
-          ],
-        ),
-        if (markers.isEmpty && !provider.isLoading)
-          const Positioned(
-            top: 16,
-            left: 16,
-            right: 16,
-            child: Card(
-              child: Padding(
-                padding: EdgeInsets.all(12),
-                child: Text('No hay resultados con ubicación para mostrar en el mapa'),
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Mapa de fondo, ocupa toda la pantalla
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(initialCenter: center, initialZoom: 12, minZoom: 4, maxZoom: 18),
+            children: [
+              TileLayer(
+                // Estilo claro gris/azul (CartoDB Positron) en vez del OSM
+                // crudo, que sale beige/amarillento y no combina con la marca.
+                urlTemplate:
+                    'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                subdomains: const ['a', 'b', 'c', 'd'],
+                userAgentPackageName: 'com.adapptika.tudestino',
+                tileDisplay: const TileDisplay.fadeIn(),
+              ),
+              MarkerLayer(markers: markers),
+            ],
+          ),
+
+          // Barra de búsqueda flotante sobre el mapa
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                children: [
+                  Material(
+                    color: Colors.white,
+                    shape: const CircleBorder(),
+                    elevation: 3,
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: () => Navigator.of(context).maybePop(),
+                      child: const SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: Icon(Icons.arrow_back, size: 20, color: AppTheme.ink),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Material(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      elevation: 3,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: SizedBox(
+                          height: 40,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.search, size: 18, color: AppTheme.mute),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: TextField(
+                                  controller: _locationController,
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                  decoration: const InputDecoration(
+                                    hintText: 'Destino',
+                                    hintStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.ink),
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                  ),
+                                  onSubmitted: (_) => _performSearch(),
+                                ),
+                              ),
+                              propertiesProvider.isLoading
+                                  ? const SizedBox(
+                                      width: 16, height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : InkWell(
+                                      onTap: _performSearch,
+                                      child: const Icon(Icons.search, size: 18, color: AppTheme.primaryColor),
+                                    ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (_isHotelSearch) ...[
+                    const SizedBox(width: 8),
+                    Material(
+                      color: Colors.white,
+                      shape: const CircleBorder(),
+                      elevation: 3,
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: _openDatesGuestsPanel,
+                        child: const SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: Icon(Icons.calendar_month_outlined, size: 18, color: AppTheme.ink),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Material(
+                      color: Colors.white,
+                      shape: const CircleBorder(),
+                      elevation: 3,
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: _openFiltersPanel,
+                        child: const SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: Icon(Icons.filter_alt_outlined, size: 18, color: AppTheme.ink),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ),
-      ],
+
+          if (propertiesProvider.isLoading)
+            const Positioned(
+              top: 120,
+              left: 0,
+              right: 0,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+
+          if (_previewProperty != null)
+            PropertyPreviewCard(
+              property: _previewProperty!,
+              checkIn: _checkIn,
+              checkOut: _checkOut,
+              adults: _adults,
+              children: _children,
+              onHide: _closePreview,
+            )
+          else
+            _buildResultsSheet(propertiesProvider),
+        ],
+      ),
     );
   }
 
-  Widget _buildResults(PropertiesProvider provider) {
-    if (provider.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+  Widget _buildResultsSheet(PropertiesProvider provider) {
+    return DraggableScrollableSheet(
+      controller: _sheetController,
+      initialChildSize: 0.32,
+      minChildSize: 0.14,
+      maxChildSize: 0.9,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(color: Colors.black26, blurRadius: 16, offset: Offset(0, -4)),
+            ],
+          ),
+          child: _buildSheetContent(provider, scrollController),
+        );
+      },
+    );
+  }
 
+  Widget _buildSheetContent(PropertiesProvider provider, ScrollController scrollController) {
     if (provider.error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 60, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(provider.error!),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: _performSearch, child: const Text('Reintentar')),
-          ],
-        ),
+      return ListView(
+        controller: scrollController,
+        children: [
+          const SizedBox(height: 40),
+          Icon(Icons.error_outline, size: 48, color: Colors.grey.shade400),
+          const SizedBox(height: 12),
+          Center(child: Text(provider.error!, textAlign: TextAlign.center)),
+          const SizedBox(height: 16),
+          Center(
+            child: ElevatedButton(onPressed: _performSearch, child: const Text('Reintentar')),
+          ),
+        ],
       );
     }
 
@@ -468,34 +469,92 @@ class _SearchScreenState extends State<SearchScreen> {
           .toList();
     }
 
-    if (cards.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.search_off, size: 60, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('No se encontraron resultados'),
-            SizedBox(height: 8),
-            Text(
-              'Intenta modificar tus criterios de búsqueda',
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
+    return CustomScrollView(
+      controller: scrollController,
+      slivers: [
+        SliverToBoxAdapter(
+          child: Column(
+            children: [
+              const SizedBox(height: 10),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      provider.isLoading
+                          ? 'Buscando...'
+                          : '${cards.length} ${cards.length == 1 ? "resultado encontrado" : "resultados encontrados"}',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                    ),
+                    if (_isHotelSearch)
+                      TextButton.icon(
+                        onPressed: () {
+                          // TODO: Ordenar
+                        },
+                        icon: const Icon(Ionicons.swap_vertical_outline, size: 18),
+                        label: const Text('Ordenar'),
+                        style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-      );
-    }
-
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.68,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      itemCount: cards.length,
-      itemBuilder: (context, index) => cards[index],
+        if (provider.isLoading)
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 48),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          )
+        else if (cards.isEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 48),
+              child: Column(
+                children: [
+                  Icon(Icons.search_off, size: 56, color: Colors.grey.shade400),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No se encontraron resultados',
+                    style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Intenta modificar tus criterios de búsqueda',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.68,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => cards[index],
+                childCount: cards.length,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

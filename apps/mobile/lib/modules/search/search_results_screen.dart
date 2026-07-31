@@ -3,14 +3,13 @@ import 'package:provider/provider.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:intl/intl.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:ionicons/ionicons.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../providers/properties_provider.dart';
-import '../../providers/favorites_provider.dart';
 import '../../models/property.dart';
 import '../properties/property_grid_card.dart';
+import '../properties/property_preview_card.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String? location;
@@ -207,7 +206,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             ),
 
           if (_previewProperty != null)
-            _PropertyPreviewCard(
+            PropertyPreviewCard(
               property: _previewProperty!,
               checkIn: widget.checkIn,
               checkOut: widget.checkOut,
@@ -366,165 +365,5 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     _mapController.dispose();
     _sheetController.dispose();
     super.dispose();
-  }
-}
-
-/// Vista previa de la propiedad al tocar su precio en el mapa - fotos,
-/// título, descripción, precio y like, sin abandonar el mapa de fondo.
-class _PropertyPreviewCard extends StatelessWidget {
-  final Property property;
-  final DateTime? checkIn;
-  final DateTime? checkOut;
-  final int adults;
-  final int children;
-  final VoidCallback onHide;
-
-  const _PropertyPreviewCard({
-    required this.property,
-    required this.checkIn,
-    required this.checkOut,
-    required this.adults,
-    required this.children,
-    required this.onHide,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final images = property.rooms.expand((r) => r.images).toList();
-    final maxHeight = MediaQuery.of(context).size.height * 0.5;
-
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxHeight),
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 20,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: GestureDetector(
-            onTap: () {
-              Navigator.of(context).pushNamed(
-                '/property-detail',
-                arguments: {
-                  'propertyId': property.id,
-                  'checkIn': checkIn,
-                  'checkOut': checkOut,
-                  'adults': adults,
-                  'children': children,
-                },
-              );
-            },
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  height: 160,
-                  width: double.infinity,
-                  child: images.isEmpty
-                      ? Container(
-                          color: AppTheme.sand,
-                          child: const Icon(Ionicons.image_outline,
-                              size: 40, color: AppTheme.mute),
-                        )
-                      : PageView.builder(
-                          itemCount: images.length,
-                          itemBuilder: (context, i) => CachedNetworkImage(
-                            imageUrl: images[i],
-                            fit: BoxFit.cover,
-                            errorWidget: (_, __, ___) => Container(
-                              color: AppTheme.sand,
-                              child: const Icon(Ionicons.image_outline,
-                                  size: 40, color: AppTheme.mute),
-                            ),
-                          ),
-                        ),
-                ),
-                Flexible(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          property.displayName,
-                          style: const TextStyle(
-                              fontSize: 17, fontWeight: FontWeight.w600),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          property.fullAddress,
-                          style: TextStyle(
-                              fontSize: 13, color: Colors.grey.shade600),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: RichText(
-                                text: TextSpan(
-                                  children: [
-                                    TextSpan(
-                                      text: CurrencyFormatter.format(property.minPrice),
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 17,
-                                        color: Theme.of(context).primaryColor,
-                                      ),
-                                    ),
-                                    TextSpan(
-                                      text: '/noche',
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Consumer<FavoritesProvider>(
-                              builder: (context, favoritesProvider, _) {
-                                final isFav = favoritesProvider.isFavorite(property.id);
-                                return IconButton(
-                                  icon: Icon(
-                                    isFav ? Ionicons.heart : Ionicons.heart_outline,
-                                    color: isFav ? Colors.red : AppTheme.mute,
-                                  ),
-                                  onPressed: () =>
-                                      favoritesProvider.toggleFavorite(property.id),
-                                );
-                              },
-                            ),
-                            TextButton(
-                              onPressed: onHide,
-                              child: const Text('Ocultar'),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

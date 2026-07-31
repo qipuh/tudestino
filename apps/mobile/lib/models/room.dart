@@ -1,3 +1,5 @@
+import '../core/utils/url_helper.dart';
+
 class Room {
   final String id;
   final String propertyId;
@@ -36,7 +38,8 @@ class Room {
       beds: (json['beds'] as List?)?.map((bed) => Bed.fromJson(bed)).toList() ?? [],
       pricePerNight: double.tryParse(json['pricePerNight']?.toString() ?? '0') ?? 0.0,
       amenities: parseAmenities(json['amenities']),
-      images: (json['images'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      images: UrlHelper.getFullImageUrls(
+          (json['images'] as List?)?.map((e) => e.toString()).toList()),
       isAvailable: json['isAvailable'] ?? true,
     );
   }

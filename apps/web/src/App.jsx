@@ -76,6 +76,8 @@ import ServicesPage from '@modules/services/pages/ServicesPage';
 import ServiceFormPage from '@modules/services/pages/ServiceFormPage';
 import OffersPage from '@modules/offers/pages/OffersPage';
 import OfferFormPage from '@modules/offers/pages/OfferFormPage';
+import AdminDashboard from '@modules/admin/pages/AdminDashboard';
+import BusinessVerificationPage from '@modules/admin/pages/BusinessVerificationPage';
 import useAuthStore from './store/authStore';
 
 function App() {
@@ -187,8 +189,10 @@ function App() {
         <Route path="rutas/:id" element={<RouteDetailPage />} />
 
         {/* Admin Routes */}
-        <Route path="admin" element={<AdminPage />} />
-        <Route path="admin/verifications" element={<VerificationsPage />} />
+        <Route path="admin" element={<AdminDashboard />} />
+        <Route path="admin/verifications" element={<BusinessVerificationPage />} />
+        <Route path="admin/legacy" element={<AdminPage />} />
+        <Route path="admin/legacy/verifications" element={<VerificationsPage />} />
 
         {/* Legal & Static Pages */}
         <Route path="about" element={<AboutPage />} />

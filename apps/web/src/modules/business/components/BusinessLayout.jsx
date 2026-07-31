@@ -156,7 +156,7 @@ function BusinessLayout({ children, activeMenu }) {
         className={`fixed left-0 top-0 h-screen z-30 ${
           accountSidebarOpen ? 'w-64' : 'w-16'
         }`}
-        style={{ backgroundColor: '#C1502E' }}
+        style={{ backgroundColor: '#034EA2' }}
       >
         <div className="flex flex-col h-full">
           {/* User info compacto */}
@@ -200,12 +200,12 @@ function BusinessLayout({ children, activeMenu }) {
           <button
             onClick={() => setAccountSidebarOpen(!accountSidebarOpen)}
             className="absolute -right-3 top-20 bg-white rounded-full p-1.5 shadow-lg hover:shadow-xl transition-all z-50 border-2"
-            style={{ borderColor: '#C1502E' }}
+            style={{ borderColor: '#034EA2' }}
           >
             {accountSidebarOpen ? (
-              <ChevronLeft size={16} style={{ color: '#C1502E' }} />
+              <ChevronLeft size={16} style={{ color: '#034EA2' }} />
             ) : (
-              <ChevronRight size={16} style={{ color: '#C1502E' }} />
+              <ChevronRight size={16} style={{ color: '#034EA2' }} />
             )}
           </button>
 

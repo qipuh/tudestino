@@ -16,7 +16,7 @@ class UsersService {
     // {role: 'admin'} o {identityVerified: true} en el body y escalar
     // privilegios o saltarse la verificación de identidad - user.update()
     // aplicaba el body crudo sin filtrar campos sensibles.
-    const allowedFields = ['name', 'phone', 'username', 'bio', 'avatar', 'email'];
+    const allowedFields = ['name', 'phone', 'username', 'bio', 'avatar', 'email', 'location', 'dateOfBirth'];
     const updateData = {};
     for (const field of allowedFields) {
       if (rawUpdateData[field] !== undefined) {

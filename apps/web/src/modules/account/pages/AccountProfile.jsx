@@ -1,11 +1,28 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import UserAccountLayout from '../../../layouts/UserAccountLayout';
-import { User, Camera, MapPin, Calendar, Mail, Phone, ExternalLink, Edit2, X, Loader2, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { User, Camera, MapPin, Calendar, Mail, Phone, ExternalLink, Edit2, X, Loader2, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import useAuthStore from '../../../store/authStore';
 import api from '../../../services/api';
 import { useSidebar } from '../../../contexts/SidebarContext';
 import useVerification from '../../../hooks/useVerification';
+
+const emptyForm = { name: '', phone: '', location: '', dateOfBirth: '', bio: '' };
+
+function toDateInputValue(value) {
+  if (!value) return '';
+  return String(value).slice(0, 10);
+}
+
+function formFromUser(user) {
+  return {
+    name: user?.name || '',
+    phone: user?.phone || '',
+    location: user?.location || '',
+    dateOfBirth: toDateInputValue(user?.dateOfBirth),
+    bio: user?.bio || '',
+  };
+}
 
 function AccountProfile() {
   const { user, setUser } = useAuthStore();
@@ -18,11 +35,67 @@ function AccountProfile() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef(null);
 
+  const [form, setForm] = useState(() => formFromUser(user));
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [profileSaved, setProfileSaved] = useState(false);
+
   // Disable sidebar on this page
   useEffect(() => {
     setSidebarVisible(false);
     return () => setSidebarVisible(false);
   }, [setSidebarVisible]);
+
+  // Re-sincroniza el form si el usuario cambia (login, refresh de store, etc)
+  useEffect(() => {
+    setForm(formFromUser(user));
+  }, [user?.id]);
+
+  const isDirty = JSON.stringify(form) !== JSON.stringify(formFromUser(user));
+
+  const handleFieldChange = (field) => (e) => {
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+    setProfileSaved(false);
+  };
+
+  const handleCancelEdit = () => {
+    setForm(formFromUser(user));
+    setProfileError('');
+    setProfileSaved(false);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!form.name.trim()) {
+      setProfileError('El nombre no puede estar vacío');
+      return;
+    }
+
+    try {
+      setSavingProfile(true);
+      setProfileError('');
+
+      const response = await api.patch('/users/me', {
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        location: form.location.trim(),
+        dateOfBirth: form.dateOfBirth || null,
+        bio: form.bio.trim(),
+      });
+
+      const userData = response.data || response.user;
+      if (userData?.id) {
+        setUser({ ...user, ...userData });
+      }
+
+      setProfileSaved(true);
+      setTimeout(() => setProfileSaved(false), 3000);
+    } catch (err) {
+      console.error('Error al guardar perfil:', err);
+      setProfileError(err.response?.data?.message || 'Error al guardar los cambios. Intenta de nuevo.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const handleSaveUrl = async () => {
     if (!customUrl || customUrl.length < 3) {
@@ -38,39 +111,14 @@ function AccountProfile() {
         username: customUrl
       });
 
-      console.log('✅ Response from API:', response.data);
+      const userData = response.data || response.user;
 
-      // La respuesta viene directamente en response.data (no en response.data.user)
-      // porque el interceptor de axios ya extrae la propiedad 'data'
-      const userData = response.data;
-
-      console.log('📋 userData:', userData);
-      console.log('🔍 userData.username:', userData.username);
-      console.log('👤 Usuario actual antes del merge:', user);
-
-      // Actualizar el usuario en el store - hacer merge completo
       if (userData?.id) {
-        // Hacer merge del usuario actual con los nuevos datos
-        const updatedUser = {
-          ...user,
-          ...userData
-        };
-
-        console.log('✨ Updated user después del merge:', updatedUser);
-        console.log('🎯 updatedUser.username:', updatedUser.username);
-
-        setUser(updatedUser);
-
-        // Forzar actualización del estado local también
+        setUser({ ...user, ...userData });
         setCustomUrl(userData.username);
-      } else {
-        console.error('❌ No hay datos de usuario en la respuesta!');
       }
 
       setShowUrlModal(false);
-
-      // Mostrar mensaje de éxito
-      alert('✓ URL personalizada guardada exitosamente!');
     } catch (err) {
       console.error('Error al guardar URL:', err);
       setError(err.response?.data?.message || 'Error al guardar la URL. Puede que ya esté en uso.');
@@ -87,20 +135,19 @@ function AccountProfile() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validar tipo de archivo
     if (!file.type.startsWith('image/')) {
-      alert('Por favor selecciona una imagen válida');
+      setProfileError('Por favor selecciona una imagen válida');
       return;
     }
 
-    // Validar tamaño (máximo 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('La imagen no debe superar los 5MB');
+      setProfileError('La imagen no debe superar los 5MB');
       return;
     }
 
     try {
       setUploadingAvatar(true);
+      setProfileError('');
 
       const formData = new FormData();
       formData.append('avatar', file);
@@ -111,22 +158,17 @@ function AccountProfile() {
         },
       });
 
-      // Actualizar usuario con nuevo avatar
       const avatarUrl = response.data?.avatar;
       if (avatarUrl) {
-        const updatedUser = {
-          ...user,
-          avatar: avatarUrl,
-        };
-        setUser(updatedUser);
-        alert('✓ Foto de perfil actualizada exitosamente!');
+        setUser({ ...user, avatar: avatarUrl });
+        setProfileSaved(true);
+        setTimeout(() => setProfileSaved(false), 3000);
       }
     } catch (err) {
       console.error('Error al subir avatar:', err);
-      alert('Error al subir la foto. Por favor intenta de nuevo.');
+      setProfileError('Error al subir la foto. Por favor intenta de nuevo.');
     } finally {
       setUploadingAvatar(false);
-      // Limpiar el input para permitir subir la misma imagen de nuevo
       if (event.target) {
         event.target.value = '';
       }
@@ -137,10 +179,10 @@ function AccountProfile() {
     <UserAccountLayout activeMenu="profile">
       <div className="max-w-4xl">
         <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Mi Perfil de Viajero</h1>
-              <p className="text-gray-600 mt-1">
+              <h1 className="text-3xl font-bold text-ink">Mi Perfil de Viajero</h1>
+              <p className="text-mute mt-1">
                 Gestiona tu información personal y preferencias de viaje
               </p>
             </div>
@@ -150,20 +192,20 @@ function AccountProfile() {
                   href={`/${user.username}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-primary hover:text-primary-dark border border-primary rounded-lg hover:bg-blue-50 transition"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-primary hover:text-primary-dark border border-primary rounded-full hover:bg-sand transition"
                 >
                   <ExternalLink size={16} />
                   Ver perfil público
                 </a>
               ) : (
-                <div className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 border border-gray-300 rounded-lg bg-gray-50">
+                <div className="flex items-center gap-2 px-4 py-2 text-sm text-mute border border-line rounded-full bg-sand">
                   <ExternalLink size={16} />
                   Configura tu URL primero
                 </div>
               )}
               <button
                 onClick={() => setShowUrlModal(true)}
-                className="flex items-center gap-2 px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-dark transition"
+                className="flex items-center gap-2 px-4 py-2 text-sm bg-primary text-white rounded-full hover:bg-primary-dark transition"
               >
                 <Edit2 size={16} />
                 {user?.username ? 'Cambiar URL' : 'Configurar URL'}
@@ -174,8 +216,8 @@ function AccountProfile() {
 
         {/* Verification Status */}
         {!verificationLoading && (
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Estado de Verificación</h2>
+          <div className="bg-white rounded-2xl shadow-card p-6 mb-6 border border-line">
+            <h2 className="text-xl font-semibold text-ink mb-4">Estado de Verificación</h2>
             {isVerified && status === 'verified' ? (
               <div className="flex items-center gap-3 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
                 <CheckCircle className="text-green-600 flex-shrink-0" size={24} />
@@ -187,11 +229,11 @@ function AccountProfile() {
                 </div>
               </div>
             ) : status === 'pending' ? (
-              <div className="flex items-center gap-3 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
-                <Clock className="text-blue-600 flex-shrink-0" size={24} />
+              <div className="flex items-center gap-3 p-4 bg-secondary/10 border-l-4 border-secondary rounded-lg">
+                <Clock className="text-secondary flex-shrink-0" size={24} />
                 <div className="flex-1">
-                  <p className="font-semibold text-blue-900">Verificación en Proceso</p>
-                  <p className="text-sm text-blue-700">
+                  <p className="font-semibold text-ink">Verificación en Proceso</p>
+                  <p className="text-sm text-mute">
                     Estamos revisando tu documentación. Te notificaremos cuando sea aprobada.
                   </p>
                 </div>
@@ -206,23 +248,23 @@ function AccountProfile() {
                   </p>
                   <Link
                     to="/verify-identity"
-                    className="inline-block px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium"
+                    className="inline-block px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition text-sm font-medium"
                   >
                     Reintentar Verificación
                   </Link>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-3 p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg">
-                <Clock className="text-yellow-600 flex-shrink-0" size={24} />
+              <div className="flex items-center gap-3 p-4 bg-gold/10 border-l-4 border-gold rounded-lg">
+                <Clock className="text-gold flex-shrink-0" size={24} />
                 <div className="flex-1">
-                  <p className="font-semibold text-yellow-900">Identidad No Verificada</p>
-                  <p className="text-sm text-yellow-700 mb-3">
+                  <p className="font-semibold text-ink">Identidad No Verificada</p>
+                  <p className="text-sm text-mute mb-3">
                     Verifica tu identidad para acceder a todas las funcionalidades como reservas y mensajes.
                   </p>
                   <Link
                     to="/verify-identity"
-                    className="inline-block px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition text-sm font-medium"
+                    className="inline-block px-4 py-2 bg-gold text-ink rounded-full hover:brightness-95 transition text-sm font-medium"
                   >
                     Verificar mi Identidad
                   </Link>
@@ -233,36 +275,36 @@ function AccountProfile() {
         )}
 
         {/* Profile Photo Section */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Foto de Perfil</h2>
+        <div className="bg-white rounded-2xl shadow-card p-6 mb-6 border border-line">
+          <h2 className="text-xl font-semibold text-ink mb-4">Foto de Perfil</h2>
           <div className="flex items-center gap-6">
             <div className="relative">
               {user?.avatar ? (
                 <img
                   src={user.avatar.startsWith('http') ? user.avatar : `${import.meta.env.VITE_SERVER_URL}${user.avatar}`}
                   alt={user.name}
-                  className="w-24 h-24 rounded-full object-cover"
+                  className="w-24 h-24 rounded-full object-cover border-2 border-line"
                 />
               ) : (
-                <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center">
+                <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center">
                   <User className="text-white" size={40} />
                 </div>
               )}
               <button
                 onClick={handleAvatarClick}
                 disabled={uploadingAvatar}
-                className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-lg border border-gray-200 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-lg border border-line hover:bg-sand transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {uploadingAvatar ? (
-                  <Loader2 size={16} className="text-gray-600 animate-spin" />
+                  <Loader2 size={16} className="text-mute animate-spin" />
                 ) : (
-                  <Camera size={16} className="text-gray-600" />
+                  <Camera size={16} className="text-mute" />
                 )}
               </button>
             </div>
             <div>
-              <h3 className="font-medium text-gray-900 mb-1">Actualiza tu foto</h3>
-              <p className="text-sm text-gray-600 mb-3">
+              <h3 className="font-medium text-ink mb-1">Actualiza tu foto</h3>
+              <p className="text-sm text-mute mb-3">
                 Una foto de perfil clara ayuda a los anfitriones a reconocerte
               </p>
               <button
@@ -284,111 +326,126 @@ function AccountProfile() {
         </div>
 
         {/* Personal Information */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Información Personal</h2>
+        <div className="bg-white rounded-2xl shadow-card p-6 border border-line">
+          <h2 className="text-xl font-semibold text-ink mb-6">Información Personal</h2>
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre
-                </label>
-                <input
-                  type="text"
-                  value={user?.name || ''}
-                  placeholder="Tu nombre"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  readOnly
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Apellido
-                </label>
-                <input
-                  type="text"
-                  value=""
-                  placeholder="Tu apellido"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  readOnly
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-ink mb-2">
+                Nombre completo
+              </label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={handleFieldChange('name')}
+                placeholder="Tu nombre completo"
+                className="w-full px-4 py-2 border border-line rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition"
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-ink mb-2">
                 <Mail className="inline mr-2" size={16} />
                 Correo Electrónico
               </label>
               <input
                 type="email"
                 value={user?.email || ''}
-                placeholder="tu@email.com"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-gray-50"
+                className="w-full px-4 py-2 border border-line rounded-xl bg-sand text-mute cursor-not-allowed"
                 readOnly
+                title="El correo no se puede editar desde aquí"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-ink mb-2">
                 <Phone className="inline mr-2" size={16} />
                 Teléfono
               </label>
               <input
                 type="tel"
-                value={user?.phone || ''}
+                value={form.phone}
+                onChange={handleFieldChange('phone')}
                 placeholder="+51 999 999 999"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                readOnly
+                className="w-full px-4 py-2 border border-line rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-ink mb-2">
                 <Calendar className="inline mr-2" size={16} />
                 Fecha de Nacimiento
               </label>
               <input
                 type="date"
-                value={user?.dateOfBirth || ''}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                readOnly
+                value={form.dateOfBirth}
+                onChange={handleFieldChange('dateOfBirth')}
+                className="w-full px-4 py-2 border border-line rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-ink mb-2">
                 <MapPin className="inline mr-2" size={16} />
                 Ciudad
               </label>
               <input
                 type="text"
-                value={user?.location || ''}
+                value={form.location}
+                onChange={handleFieldChange('location')}
                 placeholder="Lima, Perú"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                readOnly
+                className="w-full px-4 py-2 border border-line rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-ink mb-2">
                 Sobre ti
               </label>
               <textarea
                 rows={4}
-                value={user?.bio || ''}
+                value={form.bio}
+                onChange={handleFieldChange('bio')}
                 placeholder="Cuéntanos sobre tus intereses y preferencias de viaje..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                readOnly
+                className="w-full px-4 py-2 border border-line rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition resize-none"
               />
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
-            <button className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+          {profileError && (
+            <div className="flex items-center gap-2 mt-6 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+              <AlertCircle size={16} className="flex-shrink-0" />
+              {profileError}
+            </div>
+          )}
+
+          {profileSaved && (
+            <div className="flex items-center gap-2 mt-6 p-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700">
+              <CheckCircle size={16} className="flex-shrink-0" />
+              Cambios guardados exitosamente
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-line">
+            <button
+              onClick={handleCancelEdit}
+              disabled={!isDirty || savingProfile}
+              className="px-6 py-2 border border-line rounded-full text-ink hover:bg-sand transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
               Cancelar
             </button>
-            <button className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition">
-              Guardar Cambios
+            <button
+              onClick={handleSaveProfile}
+              disabled={!isDirty || savingProfile}
+              className="px-6 py-2 bg-primary text-white rounded-full hover:bg-primary-dark transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {savingProfile ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                'Guardar Cambios'
+              )}
             </button>
           </div>
         </div>
@@ -396,27 +453,27 @@ function AccountProfile() {
         {/* URL Personalizada Modal */}
         {showUrlModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-gray-900">Cambiar URL Personalizada</h3>
+                <h3 className="text-xl font-bold text-ink">Cambiar URL Personalizada</h3>
                 <button
                   onClick={() => setShowUrlModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition"
+                  className="text-mute hover:text-ink transition"
                 >
                   <X size={24} />
                 </button>
               </div>
 
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-mute mb-4">
                 Personaliza la URL de tu perfil público. Solo puedes usar letras, números y guiones.
               </p>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-ink mb-2">
                   URL Personalizada
                 </label>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">tudestino.pe/</span>
+                  <span className="text-sm text-mute">tudestino.pe/</span>
                   <input
                     type="text"
                     value={customUrl}
@@ -425,12 +482,12 @@ function AccountProfile() {
                       setError('');
                     }}
                     placeholder="tu-nombre"
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="flex-1 px-4 py-2 border border-line rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
                     disabled={saving}
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Tu URL será: <strong>tudestino.pe/{customUrl || 'tu-nombre'}</strong>
+                <p className="text-xs text-mute mt-2">
+                  Tu URL será: <strong className="text-ink">tudestino.pe/{customUrl || 'tu-nombre'}</strong>
                 </p>
                 {error && (
                   <p className="text-xs text-red-600 mt-2 flex items-center gap-1">
@@ -446,14 +503,14 @@ function AccountProfile() {
                     setShowUrlModal(false);
                     setError('');
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                  className="flex-1 px-4 py-2 border border-line rounded-full text-ink hover:bg-sand transition"
                   disabled={saving}
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleSaveUrl}
-                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2 bg-primary text-white rounded-full hover:bg-primary-dark transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   disabled={!customUrl || saving}
                 >
                   {saving ? (

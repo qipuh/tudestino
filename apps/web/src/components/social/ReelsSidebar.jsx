@@ -309,7 +309,7 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
           <div className="absolute inset-0 rounded-full animate-ping opacity-75" style={{ backgroundColor: '#E8A33D' }}></div>
 
           {/* Main button */}
-          <div className="relative text-white p-4 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-110" style={{ backgroundColor: '#C1502E' }}>
+          <div className="relative text-white p-4 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-110" style={{ backgroundColor: '#034EA2' }}>
             <Grid3x3 size={28} className="animate-pulse" />
 
             {/* Sparkle effect */}
@@ -318,10 +318,10 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
 
           {/* Tooltip */}
           <div className="absolute bottom-full right-0 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            <div className="text-white text-xs font-medium px-3 py-2 rounded-lg whitespace-nowrap shadow-xl" style={{ backgroundColor: '#C1502E' }}>
+            <div className="text-white text-xs font-medium px-3 py-2 rounded-lg whitespace-nowrap shadow-xl" style={{ backgroundColor: '#034EA2' }}>
               ¡Descubre Contenido! 📸
               <div className="absolute top-full right-4 -mt-1">
-                <div className="border-4 border-transparent" style={{ borderTopColor: '#C1502E' }}></div>
+                <div className="border-4 border-transparent" style={{ borderTopColor: '#034EA2' }}></div>
               </div>
             </div>
           </div>
@@ -680,7 +680,7 @@ function ReelsSidebar({ isOpen, onToggle, userId, filterByUser = false, business
             <button
               onClick={onToggle}
               className="absolute bottom-6 -left-10 p-3 rounded-l-lg shadow-lg transition-all duration-300 hover:shadow-xl"
-              style={{ backgroundColor: '#C1502E' }}
+              style={{ backgroundColor: '#034EA2' }}
               aria-label="Ocultar panel"
               title="Ocultar panel"
             >

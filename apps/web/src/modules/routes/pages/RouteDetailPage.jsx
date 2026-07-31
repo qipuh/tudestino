@@ -135,7 +135,7 @@ function RouteDetailPage() {
               attribution="&copy; OpenStreetMap"
               url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <Polyline positions={points} color="#C1502E" weight={4} />
+            <Polyline positions={points} color="#034EA2" weight={4} />
             {route.startPoint && (
               <Marker position={[route.startPoint.lat, route.startPoint.lng]} />
             )}

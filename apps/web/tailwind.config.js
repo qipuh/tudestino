@@ -7,22 +7,23 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Clay: terracota andina, acento principal (reemplaza el azul anterior)
+        // Azul TuDestino - alineado con apps/mobile (core/theme/app_theme.dart)
         primary: {
-          DEFAULT: '#C1502E',
-          dark: '#9C3D22',
-          light: '#E2A98F',
+          DEFAULT: '#034EA2',
+          dark: '#023A7A',
+          light: '#4D82C4',
         },
-        // Teal: acento secundario, evoca el Pacífico
+        // Celeste - acento secundario
         secondary: {
-          DEFAULT: '#0F6E6A',
-          dark: '#0B4F4C',
+          DEFAULT: '#00ADEF',
+          dark: '#0089BF',
         },
         ink: '#1C1A17',
         mute: '#78716C',
-        sand: '#F7F4F1',
-        line: '#E8E3DC',
-        gold: '#E8A33D',
+        // Neutros fríos (azulados), no cálidos - igual que mobile
+        sand: '#F4F6F8',
+        line: '#E7EBEF',
+        gold: '#FFCA01',
       },
       fontFamily: {
         display: ['"Bricolage Grotesque"', 'sans-serif'],

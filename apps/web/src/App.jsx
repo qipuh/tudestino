@@ -78,6 +78,8 @@ import OffersPage from '@modules/offers/pages/OffersPage';
 import OfferFormPage from '@modules/offers/pages/OfferFormPage';
 import AdminDashboard from '@modules/admin/pages/AdminDashboard';
 import BusinessVerificationPage from '@modules/admin/pages/BusinessVerificationPage';
+import PaymentsPage from '@modules/admin/pages/PaymentsPage';
+import PayoutsPage from '@modules/admin/pages/PayoutsPage';
 import useAuthStore from './store/authStore';
 
 function App() {
@@ -191,6 +193,8 @@ function App() {
         {/* Admin Routes */}
         <Route path="admin" element={<AdminDashboard />} />
         <Route path="admin/verifications" element={<BusinessVerificationPage />} />
+        <Route path="admin/payments" element={<PaymentsPage />} />
+        <Route path="admin/payouts" element={<PayoutsPage />} />
         <Route path="admin/legacy" element={<AdminPage />} />
         <Route path="admin/legacy/verifications" element={<VerificationsPage />} />
 

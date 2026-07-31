@@ -68,6 +68,9 @@ import ContactPage from '@modules/legal/pages/ContactPage';
 import BlogPage from '@modules/legal/pages/BlogPage';
 import BusinessResourcesPage from '@modules/legal/pages/BusinessResourcesPage';
 import PricingPage from '@modules/legal/pages/PricingPage';
+import BusinessesPage from '@modules/businesses/pages/BusinessesPage';
+import BusinessFormPage from '@modules/businesses/pages/BusinessFormPage';
+import BusinessDetailPage from '@modules/businesses/pages/BusinessDetailPage';
 import useAuthStore from './store/authStore';
 
 function App() {
@@ -150,8 +153,11 @@ function App() {
         {/* Tours Public Routes */}
         <Route path="tours/:id" element={<TourDetailPage />} />
 
-        {/* Business Routes (plural for compatibility) */}
-        <Route path="businesses/:id" element={<BusinessDetail />} />
+        {/* Business Polymorph Routes */}
+        <Route path="businesses" element={<BusinessesPage />} />
+        <Route path="businesses/new" element={<BusinessFormPage />} />
+        <Route path="businesses/:id" element={<BusinessDetailPage />} />
+        <Route path="businesses/:id/edit" element={<BusinessFormPage />} />
 
         {/* Events Routes */}
         <Route path="events" element={<EventsListPage />} />

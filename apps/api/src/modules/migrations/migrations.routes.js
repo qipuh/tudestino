@@ -765,5 +765,83 @@ router.post('/create-location-hierarchy', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/migrations/add-district-fk-to-entities
+ * Adds district_id foreign key columns to hotel_properties, attractions, businesses, events, entertainment, tours
+ */
+router.post('/add-district-fk-to-entities', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+
+    const tablesToUpdate = [
+      'hotel_properties',
+      'attractions',
+      'businesses',
+      'events',
+      'entertainment',
+      'tours',
+    ];
+
+    const results = [];
+
+    for (const table of tablesToUpdate) {
+      const tableDescription = await queryInterface.describeTable(table);
+
+      if (tableDescription.district_id) {
+        results.push({ table, status: 'already_exists' });
+        continue;
+      }
+
+      // Add district_id column
+      await queryInterface.addColumn(table, 'district_id', {
+        type: DataTypes.CHAR(36),
+        allowNull: true,
+        comment: 'FK to districts table',
+      });
+
+      // Add foreign key constraint
+      try {
+        await queryInterface.addConstraint(table, {
+          fields: ['district_id'],
+          type: 'foreign key',
+          name: `fk_${table}_district`,
+          references: {
+            table: 'districts',
+            field: 'id',
+          },
+          onDelete: 'SET NULL',
+          onUpdate: 'CASCADE',
+        });
+      } catch (fkError) {
+        console.warn(`FK constraint for ${table} may already exist:`, fkError.message);
+      }
+
+      // Add index
+      try {
+        await queryInterface.addIndex(table, ['district_id'], {
+          name: `idx_${table}_district_id`,
+        });
+      } catch (indexError) {
+        console.warn(`Index for ${table} may already exist:`, indexError.message);
+      }
+
+      results.push({ table, status: 'migrated' });
+    }
+
+    res.json({
+      success: true,
+      message: 'District FK columns added successfully',
+      results,
+    });
+  } catch (error) {
+    console.error('Error adding district FK:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error adding district FK columns',
+      error: error.message,
+    });
+  }
+});
+
 export default router;
 

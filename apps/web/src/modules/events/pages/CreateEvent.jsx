@@ -5,6 +5,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import useEvents from '../hooks/useEvents';
 import useAuthStore from '../../../store/authStore';
+import LocationPicker from '../../../components/LocationPicker';
 
 // Fix para los iconos de Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -56,6 +57,12 @@ function CreateEvent() {
       country: 'Perú',
       latitude: null,
       longitude: null,
+    },
+    locationData: {
+      countryId: '',
+      departmentId: '',
+      provinceId: '',
+      districtId: '',
     },
     organizer: '',
     capacity: '',
@@ -132,6 +139,13 @@ function CreateEvent() {
         [name]: value,
       });
     }
+  };
+
+  const handleLocationChange = (locationData) => {
+    setFormData(prev => ({
+      ...prev,
+      locationData,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -438,34 +452,18 @@ function CreateEvent() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Ciudad
-                    </label>
-                    <input
-                      type="text"
-                      name="address.city"
-                      value={formData.address.city}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                      placeholder="Cajamarca"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Región/Estado
-                    </label>
-                    <input
-                      type="text"
-                      name="address.state"
-                      value={formData.address.state}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                      placeholder="Cajamarca"
-                    />
-                  </div>
                 </div>
+
+                {/* Ubicación Jerárquica */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <LocationPicker
+                    value={formData.locationData}
+                    onChange={handleLocationChange}
+                    label="Ubicación del Evento"
+                  />
+                </div>
+
+                <div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>

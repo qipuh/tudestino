@@ -6,6 +6,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import useEvents from '../hooks/useEvents';
 import useAuthStore from '../../../store/authStore';
+import LocationPicker from '../../../components/LocationPicker';
 
 // Fix para los iconos de Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -59,6 +60,12 @@ function EditEvent() {
       latitude: null,
       longitude: null,
     },
+    locationData: {
+      countryId: '',
+      departmentId: '',
+      provinceId: '',
+      districtId: '',
+    },
     organizer: '',
     capacity: '',
   });
@@ -90,6 +97,12 @@ function EditEvent() {
               country: event.address?.country || 'Perú',
               latitude: event.address?.latitude || null,
               longitude: event.address?.longitude || null,
+            },
+            locationData: event.locationData || {
+              countryId: '',
+              departmentId: '',
+              provinceId: '',
+              districtId: '',
             },
             organizer: event.organizer || '',
             capacity: event.capacity || '',

@@ -7,6 +7,7 @@ import useBusiness from '../hooks/useBusiness';
 import ImageUpload from '../../../components/ImageUpload';
 import BusinessLayout from '../components/BusinessLayout';
 import { useSidebar } from '../../../contexts/SidebarContext';
+import LocationPicker from '../../../components/LocationPicker';
 
 // Fix para los iconos de Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -662,6 +663,12 @@ function EditBusiness() {
       latitude: null,
       longitude: null,
     },
+    location: {
+      countryId: '',
+      departmentId: '',
+      provinceId: '',
+      districtId: '',
+    },
     contactPhone: '',
     contactEmail: '',
     website: '',
@@ -737,6 +744,12 @@ function EditBusiness() {
           latitude: null,
           longitude: null,
         },
+        location: business.location || {
+          countryId: '',
+          departmentId: '',
+          provinceId: '',
+          districtId: '',
+        },
         contactPhone: business.contactPhone || '',
         contactEmail: business.contactEmail || '',
         website: business.website || '',
@@ -785,6 +798,13 @@ function EditBusiness() {
       }
     }
   }, [business]);
+
+  const handleLocationChange = (locationData) => {
+    setFormData(prev => ({
+      ...prev,
+      location: locationData,
+    }));
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -1562,51 +1582,19 @@ function EditBusiness() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Ciudad *
-                    </label>
-                    <input
-                      type="text"
-                      name="address.city"
-                      value={formData.address.city}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Región/Estado
-                    </label>
-                    <input
-                      type="text"
-                      name="address.state"
-                      value={formData.address.state}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                    />
-                  </div>
+                {/* Ubicación Jerárquica (Nueva) */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <LocationPicker
+                    value={formData.location}
+                    onChange={handleLocationChange}
+                    label="Ubicación (Búsqueda jerárquica)"
+                  />
                 </div>
 
+                {/* Dirección Específica + Código Postal */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      País
-                    </label>
-                    <input
-                      type="text"
-                      name="address.country"
-                      value={formData.address.country}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2 opacity-50">
                       Código Postal
                     </label>
                     <input
@@ -1614,7 +1602,7 @@ function EditBusiness() {
                       name="address.zipCode"
                       value={formData.address.zipCode}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50"
                     />
                   </div>
                 </div>

@@ -7,6 +7,11 @@ const Promotion = sequelize.define('Promotion', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
+  businessId: {
+    type: DataTypes.CHAR(36),
+    allowNull: true,
+    comment: 'FK a businesses. Null = promoción global de la plataforma.',
+  },
   code: {
     type: DataTypes.STRING(50),
     allowNull: false,

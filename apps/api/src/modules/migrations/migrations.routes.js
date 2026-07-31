@@ -843,5 +843,313 @@ router.post('/add-district-fk-to-entities', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/migrations/add-business-service-price
+ * Adds price column to business_services table (extiende el sistema existente en vez de crear tabla nueva)
+ */
+router.post('/add-business-service-price', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('business_services');
+
+    if (tableDescription.price) {
+      return res.json({ success: true, message: 'Column price already exists in business_services', alreadyExists: true });
+    }
+
+    await queryInterface.addColumn('business_services', 'price', {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      comment: 'Precio del servicio (amenity/food_item/activity/addon). Null si el precio vive en settings JSON.',
+    });
+
+    res.json({ success: true, message: 'Column price added to business_services', alreadyExists: false });
+  } catch (error) {
+    console.error('Error adding price column to business_services:', error);
+    res.status(500).json({ success: false, message: 'Error adding price column', error: error.message });
+  }
+});
+
+/**
+ * POST /api/migrations/add-reservation-service-fields
+ * Adds serviceId, totalPrice, metadata columns to business_reservations table
+ */
+router.post('/add-reservation-service-fields', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('business_reservations');
+    const addedColumns = [];
+
+    if (!tableDescription.serviceId) {
+      await queryInterface.addColumn('business_reservations', 'serviceId', {
+        type: DataTypes.CHAR(36),
+        allowNull: true,
+        comment: 'FK opcional a business_services — qué servicio específico se reservó',
+      });
+      try {
+        await queryInterface.addConstraint('business_reservations', {
+          fields: ['serviceId'],
+          type: 'foreign key',
+          name: 'fk_business_reservations_service',
+          references: { table: 'business_services', field: 'id' },
+          onDelete: 'RESTRICT',
+          onUpdate: 'CASCADE',
+        });
+      } catch (fkError) {
+        console.warn('FK constraint for business_reservations.serviceId may already exist:', fkError.message);
+      }
+      addedColumns.push('serviceId');
+    }
+
+    if (!tableDescription.totalPrice) {
+      await queryInterface.addColumn('business_reservations', 'totalPrice', {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true,
+        comment: 'Precio total de la reserva',
+      });
+      addedColumns.push('totalPrice');
+    }
+
+    if (!tableDescription.metadata) {
+      await queryInterface.addColumn('business_reservations', 'metadata', {
+        type: DataTypes.JSON,
+        allowNull: true,
+        comment: 'Texto libre no facturable (ej: llegada tarde). Lo facturable va en serviceId/totalPrice, no aquí.',
+      });
+      addedColumns.push('metadata');
+    }
+
+    if (addedColumns.length === 0) {
+      return res.json({ success: true, message: 'Columns serviceId, totalPrice, metadata already exist in business_reservations', alreadyExists: true });
+    }
+
+    res.json({ success: true, message: `Added columns to business_reservations: ${addedColumns.join(', ')}`, addedColumns });
+  } catch (error) {
+    console.error('Error adding fields to business_reservations:', error);
+    res.status(500).json({ success: false, message: 'Error adding fields to business_reservations', error: error.message });
+  }
+});
+
+/**
+ * POST /api/migrations/add-business-photo-type
+ * Adds type column (cover/gallery/video) to business_photos table
+ */
+router.post('/add-business-photo-type', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('business_photos');
+
+    if (tableDescription.type) {
+      return res.json({ success: true, message: 'Column type already exists in business_photos', alreadyExists: true });
+    }
+
+    await queryInterface.addColumn('business_photos', 'type', {
+      type: DataTypes.ENUM('cover', 'gallery', 'video'),
+      allowNull: false,
+      defaultValue: 'gallery',
+      comment: 'Tipo de media: cover (portada), gallery (galería), video',
+    });
+
+    res.json({ success: true, message: 'Column type added to business_photos', alreadyExists: false });
+  } catch (error) {
+    console.error('Error adding type column to business_photos:', error);
+    res.status(500).json({ success: false, message: 'Error adding type column', error: error.message });
+  }
+});
+
+/**
+ * POST /api/migrations/add-business-specs-fields
+ * Adds cuisine, priceRange, capacity, eventDateStart, eventDateEnd to businesses table
+ */
+router.post('/add-business-specs-fields', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('businesses');
+    const addedColumns = [];
+
+    const columnsToAdd = [
+      { name: 'cuisine', type: DataTypes.STRING(100), options: { allowNull: true } },
+      { name: 'priceRange', type: DataTypes.ENUM('$', '$$', '$$$', '$$$$'), options: { allowNull: true } },
+      { name: 'capacity', type: DataTypes.INTEGER, options: { allowNull: true } },
+      { name: 'eventDateStart', type: DataTypes.DATE, options: { allowNull: true } },
+      { name: 'eventDateEnd', type: DataTypes.DATE, options: { allowNull: true } },
+    ];
+
+    for (const col of columnsToAdd) {
+      if (!tableDescription[col.name]) {
+        await queryInterface.addColumn('businesses', col.name, { type: col.type, ...col.options });
+        addedColumns.push(col.name);
+      }
+    }
+
+    if (addedColumns.length === 0) {
+      return res.json({ success: true, message: 'Spec columns already exist in businesses', alreadyExists: true });
+    }
+
+    res.json({ success: true, message: `Added spec columns to businesses: ${addedColumns.join(', ')}`, addedColumns });
+  } catch (error) {
+    console.error('Error adding spec columns to businesses:', error);
+    res.status(500).json({ success: false, message: 'Error adding spec columns', error: error.message });
+  }
+});
+
+/**
+ * POST /api/migrations/add-favorites-business-support
+ * Adds businessId to favorites, relaxes propertyId to nullable (favorito puede ser property O business)
+ */
+router.post('/add-favorites-business-support', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('favorites');
+    const changes = [];
+
+    if (!tableDescription.businessId) {
+      await queryInterface.addColumn('favorites', 'businessId', {
+        type: DataTypes.CHAR(36),
+        allowNull: true,
+        comment: 'FK a businesses. Exactamente uno de propertyId/businessId debe estar seteado.',
+      });
+      try {
+        await queryInterface.addIndex('favorites', ['userId', 'businessId'], {
+          name: 'favorites_user_business_unique',
+          unique: true,
+        });
+      } catch (idxError) {
+        console.warn('Index favorites_user_business_unique may already exist:', idxError.message);
+      }
+      changes.push('businessId added');
+    }
+
+    if (tableDescription.propertyId && tableDescription.propertyId.allowNull === false) {
+      await queryInterface.changeColumn('favorites', 'propertyId', {
+        type: DataTypes.CHAR(36),
+        allowNull: true,
+      });
+      changes.push('propertyId relaxed to nullable');
+    }
+
+    if (changes.length === 0) {
+      return res.json({ success: true, message: 'favorites already supports businessId', alreadyExists: true });
+    }
+
+    res.json({ success: true, message: `favorites updated: ${changes.join(', ')}`, changes });
+  } catch (error) {
+    console.error('Error updating favorites for business support:', error);
+    res.status(500).json({ success: false, message: 'Error updating favorites', error: error.message });
+  }
+});
+
+/**
+ * POST /api/migrations/add-promotions-business-id
+ * Adds businessId to promotions (null = promoción global de plataforma)
+ */
+router.post('/add-promotions-business-id', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('promotions');
+
+    if (tableDescription.businessId) {
+      return res.json({ success: true, message: 'Column businessId already exists in promotions', alreadyExists: true });
+    }
+
+    await queryInterface.addColumn('promotions', 'businessId', {
+      type: DataTypes.CHAR(36),
+      allowNull: true,
+      comment: 'FK a businesses. Null = promoción global de la plataforma.',
+    });
+
+    try {
+      await queryInterface.addIndex('promotions', ['businessId'], { name: 'idx_promotions_business_id' });
+    } catch (idxError) {
+      console.warn('Index idx_promotions_business_id may already exist:', idxError.message);
+    }
+
+    res.json({ success: true, message: 'Column businessId added to promotions', alreadyExists: false });
+  } catch (error) {
+    console.error('Error adding businessId to promotions:', error);
+    res.status(500).json({ success: false, message: 'Error adding businessId column', error: error.message });
+  }
+});
+
+/**
+ * POST /api/migrations/add-reservation-payment-fields
+ * Adds currency, paymentStatus/Intent/Method, fee split, refund fields to business_reservations
+ */
+router.post('/add-reservation-payment-fields', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('business_reservations');
+    const addedColumns = [];
+
+    const columnsToAdd = [
+      { name: 'currency', type: DataTypes.STRING(3), options: { allowNull: false, defaultValue: 'PEN' } },
+      { name: 'paymentStatus', type: DataTypes.ENUM('pending', 'paid', 'refunded', 'failed'), options: { allowNull: false, defaultValue: 'pending' } },
+      { name: 'paymentIntentId', type: DataTypes.STRING, options: { allowNull: true } },
+      { name: 'paymentMethod', type: DataTypes.STRING, options: { allowNull: true } },
+      { name: 'platformFeePercent', type: DataTypes.DECIMAL(5, 2), options: { allowNull: true } },
+      { name: 'platformFeeAmount', type: DataTypes.DECIMAL(10, 2), options: { allowNull: true } },
+      { name: 'gatewayFeeAmount', type: DataTypes.DECIMAL(10, 2), options: { allowNull: true } },
+      { name: 'businessNetAmount', type: DataTypes.DECIMAL(10, 2), options: { allowNull: true } },
+      { name: 'refundedAmount', type: DataTypes.DECIMAL(10, 2), options: { allowNull: true } },
+      { name: 'refundReason', type: DataTypes.TEXT, options: { allowNull: true } },
+      { name: 'refundedAt', type: DataTypes.DATE, options: { allowNull: true } },
+    ];
+
+    for (const col of columnsToAdd) {
+      if (!tableDescription[col.name]) {
+        await queryInterface.addColumn('business_reservations', col.name, { type: col.type, ...col.options });
+        addedColumns.push(col.name);
+      }
+    }
+
+    if (addedColumns.length === 0) {
+      return res.json({ success: true, message: 'Payment columns already exist in business_reservations', alreadyExists: true });
+    }
+
+    res.json({ success: true, message: `Added to business_reservations: ${addedColumns.join(', ')}`, addedColumns });
+  } catch (error) {
+    console.error('Error adding payment fields to business_reservations:', error);
+    res.status(500).json({ success: false, message: 'Error adding payment fields', error: error.message });
+  }
+});
+
+/**
+ * POST /api/migrations/add-business-commission-fields
+ * Adds platformFeePercent and bankAccount to businesses table
+ */
+router.post('/add-business-commission-fields', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('businesses');
+    const addedColumns = [];
+
+    if (!tableDescription.platformFeePercent) {
+      await queryInterface.addColumn('businesses', 'platformFeePercent', {
+        type: DataTypes.DECIMAL(5, 2),
+        allowNull: true,
+        comment: 'Comisión tudestino %. Null = default global.',
+      });
+      addedColumns.push('platformFeePercent');
+    }
+
+    if (!tableDescription.bankAccount) {
+      await queryInterface.addColumn('businesses', 'bankAccount', {
+        type: DataTypes.JSON,
+        allowNull: true,
+        comment: 'Datos bancarios para desembolsos: {bank, accountType, accountNumber, cci}',
+      });
+      addedColumns.push('bankAccount');
+    }
+
+    if (addedColumns.length === 0) {
+      return res.json({ success: true, message: 'Commission columns already exist in businesses', alreadyExists: true });
+    }
+
+    res.json({ success: true, message: `Added to businesses: ${addedColumns.join(', ')}`, addedColumns });
+  } catch (error) {
+    console.error('Error adding commission fields to businesses:', error);
+    res.status(500).json({ success: false, message: 'Error adding commission fields', error: error.message });
+  }
+});
+
 export default router;
 

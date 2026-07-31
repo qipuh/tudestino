@@ -49,7 +49,12 @@ const BusinessService = sequelize.define('BusinessService', {
   settings: {
     type: DataTypes.JSON,
     allowNull: true,
-    comment: 'JSON con configuración específica del servicio (precio, capacidad, amenities, etc)'
+    comment: 'JSON con configuración específica del servicio (capacidad, amenities, etc)'
+  },
+  price: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    comment: 'Precio del servicio. Null si el precio vive dentro de settings JSON (ej: variantes por habitación).'
   },
   status: {
     type: DataTypes.ENUM('draft', 'active', 'inactive', 'under_maintenance'),

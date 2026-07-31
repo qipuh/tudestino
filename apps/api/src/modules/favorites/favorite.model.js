@@ -13,7 +13,12 @@ const Favorite = sequelize.define('Favorite', {
   },
   propertyId: {
     type: DataTypes.CHAR(36),
-    allowNull: false,
+    allowNull: true,
+  },
+  businessId: {
+    type: DataTypes.CHAR(36),
+    allowNull: true,
+    comment: 'FK a businesses (restaurant/spa/entertainment/etc). Exactamente uno de propertyId/businessId debe estar seteado.',
   },
 }, {
   tableName: 'favorites',
@@ -21,6 +26,7 @@ const Favorite = sequelize.define('Favorite', {
   updatedAt: false,
   indexes: [
     { unique: true, fields: ['userId', 'propertyId'] },
+    { unique: true, fields: ['userId', 'businessId'] },
   ],
 });
 

@@ -344,7 +344,12 @@
       "Read(//c/laragon/**)",
       "Bash(/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql -u root tudestino)",
       "Bash(/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql -u root tudestino -e \"SELECT 'Departments:' as label, COUNT\\(*\\) as total FROM departments UNION ALL SELECT 'Provinces:' as label, COUNT\\(*\\) FROM provinces UNION ALL SELECT 'Districts:' as label, COUNT\\(*\\) FROM districts;\")",
-      "Bash(/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql -u root tudestino -e \"SHOW COLUMNS FROM hotel_properties LIKE '%city%';\")"
+      "Bash(/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql -u root tudestino -e \"SHOW COLUMNS FROM hotel_properties LIKE '%city%';\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/migrations/add-business-specs-fields)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(npm start *)",
+      "Bash(echo \"restarted, PID: $!\")",
+      "Bash(echo \"restarted PID: $!\")"
     ],
     "deny": [],
     "ask": []

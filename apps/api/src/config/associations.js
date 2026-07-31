@@ -26,6 +26,19 @@ import AttractionImage from '../modules/attractions/attraction-image.model.js';
 import AttractionTag from '../modules/attractions/attraction-tag.model.js';
 import Route from '../modules/routes/route.model.js';
 import RouteMilestone from '../modules/routes/route-milestone.model.js';
+import Address from '../modules/addresses/address.model.js';
+import Media from '../modules/media/media.model.js';
+import Service from '../modules/services/service.model.js';
+import Reservation from '../modules/reservations/reservation.model.js';
+import BusinessProfile from '../modules/business-profiles/business-profile.model.js';
+import UserProfile from '../modules/user-profiles/user-profile.model.js';
+import UserFavorite from '../modules/user-profiles/user-favorite.model.js';
+import Offer from '../modules/offers/offer.model.js';
+import Payment from '../modules/payments/payment.model.js';
+import Refund from '../modules/payments/refund.model.js';
+import Payout from '../modules/payments/payout.model.js';
+import PayoutItem from '../modules/payments/payout-item.model.js';
+import CommissionRule from '../modules/payments/commission-rule.model.js';
 
 export const setupAssociations = () => {
   // User - Property (Host relationship)
@@ -203,5 +216,108 @@ export const setupAssociations = () => {
   Province.hasMany(District, { foreignKey: 'provinceId', as: 'districts' });
   District.belongsTo(Province, { foreignKey: 'provinceId', as: 'province' });
 
-  console.log('✅ Model associations configured (including Business module, Attractions, and Location hierarchy)');
+  // ==================== NEW POLYMORPH SYSTEM ASSOCIATIONS ====================
+
+  // ---- Address & Location ----
+  // District - Address
+  District.hasMany(Address, { foreignKey: 'districtId', as: 'addresses' });
+  Address.belongsTo(District, { foreignKey: 'districtId', as: 'district' });
+
+  // Business - District (already exists above, but ensuring it's clear)
+  Business.belongsTo(District, { foreignKey: 'districtId', as: 'district' });
+  District.hasMany(Business, { foreignKey: 'districtId', as: 'businesses' });
+
+  // Business - Address
+  Business.belongsTo(Address, { foreignKey: 'addressId', as: 'address' });
+  Address.hasMany(Business, { foreignKey: 'addressId', as: 'businesses' });
+
+  // ---- Media (Polymorphic) ----
+  // Media no tiene FK hardcodeado (es polimórfica vía mediableType + mediableId)
+  // Pero podemos definir scopes en el modelo para filtrar por tipo
+
+  // ---- Services & Reservations ----
+  // Business - Service (NEW centralizado)
+  Business.hasMany(Service, { foreignKey: 'businessId', as: 'services' });
+  Service.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
+
+  // Business - Reservation
+  Business.hasMany(Reservation, { foreignKey: 'businessId', as: 'reservations' });
+  Reservation.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
+
+  // User - Reservation
+  User.hasMany(Reservation, { foreignKey: 'userId', as: 'reservations' });
+  Reservation.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+  // Reservation - Service
+  Reservation.belongsTo(Service, { foreignKey: 'serviceId', as: 'service' });
+  Service.hasMany(Reservation, { foreignKey: 'serviceId', as: 'reservations' });
+
+  // ---- Profiles ----
+  // Business - BusinessProfile
+  Business.hasOne(BusinessProfile, { foreignKey: 'businessId', as: 'profile' });
+  BusinessProfile.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
+
+  // BusinessProfile - Owner User
+  BusinessProfile.belongsTo(User, { foreignKey: 'ownerId', as: 'owner' });
+  User.hasMany(BusinessProfile, { foreignKey: 'ownerId', as: 'ownedBusinesses' });
+
+  // User - UserProfile
+  User.hasOne(UserProfile, { foreignKey: 'userId', as: 'profile' });
+  UserProfile.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+  // UserProfile - UserFavorite
+  UserProfile.hasMany(UserFavorite, { foreignKey: 'userId', as: 'favorites' });
+  UserFavorite.belongsTo(UserProfile, { foreignKey: 'userId', as: 'userProfile' });
+
+  // UserFavorite - User & Business
+  UserFavorite.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+  User.hasMany(UserFavorite, { foreignKey: 'userId', as: 'favorites' });
+
+  UserFavorite.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
+  Business.hasMany(UserFavorite, { foreignKey: 'businessId', as: 'favoritedBy' });
+
+  // ---- Offers ----
+  Business.hasMany(Offer, { foreignKey: 'businessId', as: 'offers' });
+  Offer.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
+
+  // ---- Payments, Refunds, Payouts ----
+  // Reservation - Payment
+  Reservation.hasOne(Payment, { foreignKey: 'reservationId', as: 'payment' });
+  Payment.belongsTo(Reservation, { foreignKey: 'reservationId', as: 'reservation' });
+
+  // Business - Payment
+  Business.hasMany(Payment, { foreignKey: 'businessId', as: 'payments' });
+  Payment.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
+
+  // Payment - Refund
+  Payment.hasMany(Refund, { foreignKey: 'paymentId', as: 'refunds' });
+  Refund.belongsTo(Payment, { foreignKey: 'paymentId', as: 'payment' });
+
+  // Refund - Reservation & User
+  Refund.belongsTo(Reservation, { foreignKey: 'reservationId', as: 'reservation' });
+  Reservation.hasMany(Refund, { foreignKey: 'reservationId', as: 'refunds' });
+
+  Refund.belongsTo(User, { foreignKey: 'processedByUserId', as: 'processedBy' });
+  User.hasMany(Refund, { foreignKey: 'processedByUserId', as: 'processedRefunds' });
+
+  // Business - Payout
+  Business.hasMany(Payout, { foreignKey: 'businessId', as: 'payouts' });
+  Payout.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
+
+  // Payout - PayoutItem
+  Payout.hasMany(PayoutItem, { foreignKey: 'payoutId', as: 'items' });
+  PayoutItem.belongsTo(Payout, { foreignKey: 'payoutId', as: 'payout' });
+
+  // PayoutItem - Payment
+  PayoutItem.belongsTo(Payment, { foreignKey: 'paymentId', as: 'payment' });
+  Payment.hasMany(PayoutItem, { foreignKey: 'paymentId', as: 'payoutItems' });
+
+  // ---- Commission Rules ----
+  Business.hasMany(CommissionRule, { foreignKey: 'businessId', as: 'commissionRules' });
+  CommissionRule.belongsTo(Business, { foreignKey: 'businessId', as: 'business' });
+
+  CommissionRule.belongsTo(User, { foreignKey: 'createdByUserId', as: 'createdBy' });
+  User.hasMany(CommissionRule, { foreignKey: 'createdByUserId', as: 'commissionRules' });
+
+  console.log('✅ Model associations configured (including Business module, Attractions, Location hierarchy, Polymorph System)');
 };

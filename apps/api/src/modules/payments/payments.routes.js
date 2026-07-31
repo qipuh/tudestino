@@ -1,11 +1,11 @@
 import express from 'express';
-import { authenticate } from '../../middleware/auth.middleware.js';
-import { chargeBooking } from './payments.controller.js';
+import * as paymentsController from './payments.controller.js';
 
 const router = express.Router();
 
-router.use(authenticate);
-
-router.post('/culqi/charge-booking', chargeBooking);
+router.post('/', paymentsController.create);
+router.get('/reservation/:reservationId', paymentsController.getByReservation);
+router.get('/business/:businessId', paymentsController.getByBusiness);
+router.post('/webhook/:provider', paymentsController.webhookHandler);
 
 export default router;

@@ -27,6 +27,12 @@ const BusinessPhoto = sequelize.define('BusinessPhoto', {
     type: DataTypes.INTEGER,
     defaultValue: 0,
   },
+  type: {
+    type: DataTypes.ENUM('cover', 'gallery', 'video'),
+    allowNull: false,
+    defaultValue: 'gallery',
+    comment: 'Tipo de media: cover (portada), gallery (galería), video',
+  },
 }, {
   tableName: 'business_photos',
   timestamps: true,

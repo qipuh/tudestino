@@ -1,6 +1,30 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../models/booking.dart';
 import '../core/services/api_service.dart';
+
+String _extractErrorMessage(Object e) {
+  if (e is DioException) {
+    final data = e.response?.data;
+    if (data is Map && data['message'] != null) {
+      return data['message'].toString();
+    }
+    if (e.response == null) {
+      return 'Error de conexión. Verifica tu internet.';
+    }
+  }
+  return 'Ocurrió un error. Intenta nuevamente.';
+}
+
+String? _extractErrorCode(Object e) {
+  if (e is DioException) {
+    final data = e.response?.data;
+    if (data is Map && data['code'] != null) {
+      return data['code'].toString();
+    }
+  }
+  return null;
+}
 
 class BookingsProvider with ChangeNotifier {
   final ApiService _apiService;
@@ -9,6 +33,8 @@ class BookingsProvider with ChangeNotifier {
   Booking? _selectedBooking;
   bool _isLoading = false;
   String? _error;
+  String? _errorCode;
+  String? _lastCreatedBookingId;
 
   BookingsProvider(this._apiService);
 
@@ -16,11 +42,17 @@ class BookingsProvider with ChangeNotifier {
   Booking? get selectedBooking => _selectedBooking;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  String? get errorCode => _errorCode;
+  String? get lastCreatedBookingId => _lastCreatedBookingId;
 
   List<Booking> get upcomingBookings {
     final now = DateTime.now();
+    // pending también debe verse - es una reserva recién creada esperando
+    // confirmación del anfitrión, no solo las ya 'confirmed'.
     return _bookings
-        .where((b) => b.checkIn.isAfter(now) && b.status == 'confirmed')
+        .where((b) =>
+            b.checkIn.isAfter(now) &&
+            (b.status == 'confirmed' || b.status == 'pending'))
         .toList()
       ..sort((a, b) => a.checkIn.compareTo(b.checkIn));
   }
@@ -28,7 +60,11 @@ class BookingsProvider with ChangeNotifier {
   List<Booking> get pastBookings {
     final now = DateTime.now();
     return _bookings
-        .where((b) => b.checkOut.isBefore(now) || b.status == 'completed')
+        .where((b) =>
+            b.checkOut.isBefore(now) ||
+            b.status == 'completed' ||
+            b.status == 'cancelled' ||
+            b.status == 'rejected')
         .toList()
       ..sort((a, b) => b.checkOut.compareTo(a.checkOut));
   }
@@ -66,6 +102,7 @@ class BookingsProvider with ChangeNotifier {
   }) async {
     _isLoading = true;
     _error = null;
+    _errorCode = null;
     notifyListeners();
 
     try {
@@ -82,6 +119,7 @@ class BookingsProvider with ChangeNotifier {
       );
 
       if (response.data['success']) {
+        _lastCreatedBookingId = response.data['data']?['id'] as String?;
         await loadUserBookings();
         _isLoading = false;
         notifyListeners();
@@ -93,8 +131,34 @@ class BookingsProvider with ChangeNotifier {
         return false;
       }
     } catch (e) {
-      _error = 'Error de conexión. Verifica tu internet.';
+      _error = _extractErrorMessage(e);
+      _errorCode = _extractErrorCode(e);
       _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> chargeBookingWithCulqi(String bookingId, String token) async {
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.post(
+        '/payments/culqi/charge-booking',
+        data: {'bookingId': bookingId, 'token': token},
+      );
+
+      if (response.data['success'] == true) {
+        notifyListeners();
+        return true;
+      }
+
+      _error = response.data['message'] ?? 'No se pudo procesar el pago';
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = _extractErrorMessage(e);
       notifyListeners();
       return false;
     }
@@ -125,7 +189,7 @@ class BookingsProvider with ChangeNotifier {
         return false;
       }
     } catch (e) {
-      _error = 'Error de conexión. Verifica tu internet.';
+      _error = _extractErrorMessage(e);
       _isLoading = false;
       notifyListeners();
       return false;

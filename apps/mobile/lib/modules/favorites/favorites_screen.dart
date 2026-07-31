@@ -1,13 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/favorites_provider.dart';
+import '../properties/property_card.dart';
 
-class FavoritesScreen extends StatelessWidget {
+class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
 
   @override
+  State<FavoritesScreen> createState() => _FavoritesScreenState();
+}
+
+class _FavoritesScreenState extends State<FavoritesScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = context.read<AuthProvider>();
+      if (authProvider.isAuthenticated) {
+        context.read<FavoritesProvider>().loadFavorites();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
+    final authProvider = context.watch<AuthProvider>();
 
     if (!authProvider.isAuthenticated) {
       return Scaffold(
@@ -35,15 +53,20 @@ class FavoritesScreen extends StatelessWidget {
       );
     }
 
-    // Mock favorites - en producción vendría del backend
-    final favorites = <Map<String, dynamic>>[];
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mis Favoritos'),
       ),
-      body: favorites.isEmpty
-          ? Center(
+      body: Consumer<FavoritesProvider>(
+        builder: (context, favoritesProvider, _) {
+          if (favoritesProvider.isLoading && favoritesProvider.favorites.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final favorites = favoritesProvider.favorites;
+
+          if (favorites.isEmpty) {
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -69,15 +92,24 @@ class FavoritesScreen extends StatelessWidget {
                   ),
                 ],
               ),
-            )
-          : ListView.builder(
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: favoritesProvider.loadFavorites,
+            child: ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: favorites.length,
               itemBuilder: (context, index) {
-                // TODO: Implementar PropertyCard cuando tengamos favoritos reales
-                return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: PropertyCard(property: favorites[index]),
+                );
               },
             ),
+          );
+        },
+      ),
     );
   }
 }

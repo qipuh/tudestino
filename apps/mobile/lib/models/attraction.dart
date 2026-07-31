@@ -16,6 +16,7 @@ class Attraction {
   final String? recommendations;
   final bool isPublished;
   final int views;
+  final List<String> galleryImages;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -37,6 +38,7 @@ class Attraction {
     this.recommendations,
     this.isPublished = true,
     this.views = 0,
+    this.galleryImages = const [],
     this.createdAt,
     this.updatedAt,
   });
@@ -64,6 +66,12 @@ class Attraction {
       recommendations: json['recommendations'],
       isPublished: json['isPublished'] ?? true,
       views: json['views'] ?? 0,
+      galleryImages: json['images'] is List
+          ? (json['images'] as List)
+              .map((e) => e is Map ? e['url']?.toString() ?? '' : e.toString())
+              .where((s) => s.isNotEmpty)
+              .toList()
+          : [],
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'])
           : null,

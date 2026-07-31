@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:share_plus/share_plus.dart';
 import '../../providers/social_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/config/app_config.dart';
 import '../../models/social_post.dart';
 import 'comments_screen.dart';
 
@@ -23,7 +25,11 @@ class _FeedScreenState extends State<FeedScreen> {
     timeago.setLocaleMessages('es', timeago.EsMessages());
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<SocialProvider>(context, listen: false).loadFeed(refresh: true);
+      final socialProvider = Provider.of<SocialProvider>(context, listen: false);
+      socialProvider.loadFeed(refresh: true);
+      if (Provider.of<AuthProvider>(context, listen: false).isAuthenticated) {
+        socialProvider.loadSavedPosts();
+      }
     });
 
     _scrollController.addListener(_onScroll);
@@ -67,9 +73,12 @@ class _FeedScreenState extends State<FeedScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add_box_outlined),
-            onPressed: () {
+            onPressed: () async {
               if (authProvider.isAuthenticated) {
-                Navigator.of(context).pushNamed('/create-post');
+                final created = await Navigator.of(context).pushNamed('/create-post');
+                if (created == true && context.mounted) {
+                  Provider.of<SocialProvider>(context, listen: false).loadFeed(refresh: true);
+                }
               } else {
                 Navigator.of(context).pushNamed('/login');
               }
@@ -249,14 +258,26 @@ class PostCard extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.send_outlined),
                   onPressed: () {
-                    // TODO: Compartir
+                    final caption = post.caption.isNotEmpty ? '${post.caption}\n\n' : '';
+                    Share.share('$caption${AppConfig.webUrl}');
                   },
                 ),
                 const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.bookmark_border),
-                  onPressed: () {
-                    // TODO: Guardar
+                Builder(
+                  builder: (context) {
+                    final socialProvider = context.watch<SocialProvider>();
+                    final isSaved = socialProvider.isPostSaved(post.id);
+                    return IconButton(
+                      icon: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border),
+                      onPressed: () {
+                        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                        if (!authProvider.isAuthenticated) {
+                          Navigator.of(context).pushNamed('/login');
+                          return;
+                        }
+                        context.read<SocialProvider>().toggleSavePost(post.id);
+                      },
+                    );
                   },
                 ),
               ],
@@ -323,6 +344,7 @@ class PostCard extends StatelessWidget {
         builder: (context) => CommentsScreen(
           contentType: 'post',
           contentId: post.id,
+          post: post,
         ),
       ),
     );

@@ -96,7 +96,7 @@ function BusinessPosts() {
               </button>
               <button
                 onClick={() => handleCreatePost('reel')}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:opacity-90 transition"
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:opacity-90 transition"
               >
                 <Video size={20} />
                 Crear Reel

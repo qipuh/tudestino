@@ -87,9 +87,10 @@ function AttractionsManagement() {
   const getImageUrl = (imageUrl) => {
     if (!imageUrl) return '';
     if (imageUrl.startsWith('http')) return imageUrl;
-    // Construir URL base desde API_URL (ej: https://api.tudestino.pe/api -> https://tudestino.pe)
-    const apiUrl = API_URL || '';
-    const baseUrl = apiUrl.replace(/\/api\/?$/, '').replace('api.', '');
+    // Los archivos viven físicamente en el servidor de la API (Express
+    // sirve /uploads ahí) - tudestino.pe es el build estático del web y
+    // NO tiene esos archivos, aunque devuelva 200 (fallback de Apache).
+    const baseUrl = (API_URL || '').replace(/\/api\/?$/, '');
     return `${baseUrl}/uploads/attractions/${imageUrl}`;
   };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Eye, Mail, Phone, Calendar, Link as LinkIcon } from 'lucide-react';
+import { Search, Eye, X, Link as LinkIcon } from 'lucide-react';
 import api from '../../services/api';
 
 function UsersManagement() {
@@ -8,6 +8,7 @@ function UsersManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [page, setPage] = useState(1);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -17,7 +18,10 @@ function UsersManagement() {
     try {
       setLoading(true);
       const params = { page, limit: 20 };
-      if (filterType !== 'all') params.userType = filterType;
+      // El backend filtra por `role` (guest/host/business_owner/admin),
+      // no por `userType` - ese nombre de parámetro nunca coincidía y el
+      // filtro no hacía nada.
+      if (filterType !== 'all') params.role = filterType;
       if (searchTerm) params.search = searchTerm;
 
       const response = await api.get('/admin/users', { params });
@@ -44,18 +48,27 @@ function UsersManagement() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar usuarios..."
+              onKeyDown={(e) => { if (e.key === 'Enter') { setPage(1); fetchUsers(); } }}
+              placeholder="Buscar usuarios... (Enter para buscar)"
               className="w-full pl-10 pr-4 py-2 border rounded-lg"
             />
           </div>
+          <button
+            onClick={() => { setPage(1); fetchUsers(); }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Buscar
+          </button>
           <select
             value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
+            onChange={(e) => { setFilterType(e.target.value); setPage(1); }}
             className="px-4 py-2 border rounded-lg"
           >
             <option value="all">Todos</option>
+            <option value="guest">Viajeros</option>
             <option value="host">Anfitriones</option>
-            <option value="tourist">Turistas</option>
+            <option value="business_owner">Negocios</option>
+            <option value="admin">Administradores</option>
           </select>
         </div>
       </div>
@@ -112,7 +125,11 @@ function UsersManagement() {
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <button className="text-blue-600 hover:text-blue-900 p-2">
+                    <button
+                      onClick={() => setSelectedUser(user)}
+                      className="text-blue-600 hover:text-blue-900 p-2"
+                      title="Ver detalle"
+                    >
                       <Eye className="w-5 h-5" />
                     </button>
                   </td>
@@ -122,6 +139,53 @@ function UsersManagement() {
           </tbody>
         </table>
       </div>
+
+      {selectedUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-lg font-bold text-gray-900">Detalle de usuario</h2>
+              <button onClick={() => setSelectedUser(null)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="space-y-3 text-sm">
+              <div>
+                <span className="text-gray-500">Nombre:</span>{' '}
+                <span className="font-medium text-gray-900">{selectedUser.name} {selectedUser.lastName}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Usuario:</span>{' '}
+                <span className="font-medium text-gray-900">@{selectedUser.username || selectedUser.email?.split('@')[0]}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Email:</span>{' '}
+                <span className="font-medium text-gray-900">{selectedUser.email}</span>
+              </div>
+              {selectedUser.phone && (
+                <div>
+                  <span className="text-gray-500">Teléfono:</span>{' '}
+                  <span className="font-medium text-gray-900">{selectedUser.phone}</span>
+                </div>
+              )}
+              <div>
+                <span className="text-gray-500">Rol:</span>{' '}
+                <span className="font-medium text-gray-900">{selectedUser.role}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Registrado:</span>{' '}
+                <span className="font-medium text-gray-900">{formatDate(selectedUser.createdAt)}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Identidad:</span>{' '}
+                <span className="font-medium text-gray-900">
+                  {selectedUser.identityStatus === 'verified' ? 'Verificada' : selectedUser.identityStatus === 'rejected' ? 'Rechazada' : 'Pendiente'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

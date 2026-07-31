@@ -159,10 +159,10 @@ export const Like = sequelize.define('Like', {
     field: 'user_id',
   },
   contentType: {
-    type: DataTypes.ENUM('post', 'reel', 'comment'),
+    type: DataTypes.ENUM('post', 'reel', 'comment', 'route'),
     allowNull: false,
     field: 'content_type',
-    comment: 'Tipo de contenido: post, reel o comment',
+    comment: 'Tipo de contenido: post, reel, comment o route',
   },
   contentId: {
     type: DataTypes.CHAR(36),
@@ -202,7 +202,7 @@ export const Comment = sequelize.define('Comment', {
     field: 'user_id',
   },
   contentType: {
-    type: DataTypes.ENUM('post', 'reel'),
+    type: DataTypes.ENUM('post', 'reel', 'route'),
     allowNull: false,
     field: 'content_type',
   },
@@ -248,4 +248,37 @@ export const Comment = sequelize.define('Comment', {
   underscored: true,
 });
 
-export default { Post, Reel, Like, Comment };
+/**
+ * Modelo de SavedPost - posts que un usuario guardó (bookmark)
+ */
+export const SavedPost = sequelize.define('SavedPost', {
+  id: {
+    type: DataTypes.CHAR(36),
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
+  },
+  userId: {
+    type: DataTypes.CHAR(36),
+    allowNull: false,
+    field: 'user_id',
+  },
+  postId: {
+    type: DataTypes.CHAR(36),
+    allowNull: false,
+    field: 'post_id',
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+    field: 'created_at',
+  },
+}, {
+  tableName: 'social_saved_posts',
+  timestamps: false,
+  underscored: true,
+  indexes: [
+    { unique: true, fields: ['user_id', 'post_id'] },
+  ],
+});
+
+export default { Post, Reel, Like, Comment, SavedPost };

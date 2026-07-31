@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../../providers/properties_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/favorites_provider.dart';
+import '../../core/config/app_config.dart';
 import '../../models/room.dart';
 import '../../models/property.dart';
 
@@ -47,7 +51,20 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<PropertiesProvider>(context, listen: false)
           .loadPropertyDetail(widget.propertyId);
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.isAuthenticated) {
+        Provider.of<FavoritesProvider>(context, listen: false)
+            .checkStatus(widget.propertyId);
+      }
     });
+  }
+
+  void _shareProperty(Property property) {
+    final url = '${AppConfig.webUrl}/properties/${property.id}';
+    Share.share(
+      '${property.displayName} en TuDestino\n$url',
+      subject: property.displayName,
+    );
   }
 
   Future<void> _openDateSelector() async {
@@ -200,18 +217,31 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       backgroundColor: Colors.white,
       iconTheme: const IconThemeData(color: Colors.white),
       actions: [
-        Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.3),
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.favorite_border, color: Colors.white),
-            onPressed: () {
-              // TODO: Implementar favoritos
-            },
-          ),
+        Consumer<FavoritesProvider>(
+          builder: (context, favoritesProvider, _) {
+            final isFavorite = favoritesProvider.isFavorite(property.id);
+            return Container(
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.3),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorite ? Colors.redAccent : Colors.white,
+                ),
+                onPressed: () {
+                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                  if (!authProvider.isAuthenticated) {
+                    Navigator.of(context).pushNamed('/login');
+                    return;
+                  }
+                  favoritesProvider.toggleFavorite(property.id);
+                },
+              ),
+            );
+          },
         ),
         Container(
           margin: const EdgeInsets.all(8),
@@ -221,9 +251,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           ),
           child: IconButton(
             icon: const Icon(Icons.share, color: Colors.white),
-            onPressed: () {
-              // TODO: Implementar compartir
-            },
+            onPressed: () => _shareProperty(property),
           ),
         ),
       ],
@@ -634,7 +662,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 
   Widget _buildBookingSection(Property property, ThemeData theme) {
-    final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
     final dateFormat = DateFormat('d MMM', 'es');
 
     return Padding(
@@ -767,13 +794,13 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          ...property.rooms.map((room) => _buildRoomCard(room, currencyFormat, theme)),
+          ...property.rooms.map((room) => _buildRoomCard(room, theme)),
         ],
       ),
     );
   }
 
-  Widget _buildRoomCard(Room room, NumberFormat currencyFormat, ThemeData theme) {
+  Widget _buildRoomCard(Room room, ThemeData theme) {
     final isSelected = _selectedRoom?.id == room.id;
 
     return Container(
@@ -871,7 +898,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '${currencyFormat.format(room.pricePerNight)}/noche',
+                        '${CurrencyFormatter.format(room.pricePerNight)}/noche',
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
@@ -910,7 +937,6 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 
   Widget _buildBottomBar(Property property, ThemeData theme) {
-    final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
     final nights =
         _checkIn != null && _checkOut != null ? _checkOut!.difference(_checkIn!).inDays : 0;
     final totalPrice = _selectedRoom != null && nights > 0
@@ -939,7 +965,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                 children: [
                   if (totalPrice != null) ...[
                     Text(
-                      currencyFormat.format(totalPrice),
+                      CurrencyFormatter.format(totalPrice),
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: theme.primaryColor,
@@ -955,7 +981,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                     ),
                   ] else ...[
                     Text(
-                      'Desde ${currencyFormat.format(property.minPrice)}',
+                      'Desde ${CurrencyFormatter.format(property.minPrice)}',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: theme.primaryColor,

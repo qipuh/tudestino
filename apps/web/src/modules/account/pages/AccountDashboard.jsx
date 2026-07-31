@@ -208,7 +208,7 @@ function AccountDashboard() {
         </div>
 
         {/* Quick Links */}
-        <div className="bg-gradient-to-r from-primary to-primary-dark rounded-lg p-6 text-white">
+        <div className="bg-primary rounded-lg p-6 text-white">
           <h3 className="text-xl font-bold mb-2">¿Qué quieres hacer hoy?</h3>
           <p className="text-white/90 mb-4">Accede rápidamente a las funciones más utilizadas</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

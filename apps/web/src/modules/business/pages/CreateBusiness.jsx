@@ -5,6 +5,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import useBusiness from '../hooks/useBusiness';
 import UserAccountLayout from '../../../layouts/UserAccountLayout';
+import LocationPicker from '../../../components/LocationPicker';
 
 // Fix para los iconos de Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -664,6 +665,12 @@ function CreateBusiness() {
       latitude: null,
       longitude: null,
     },
+    location: {
+      countryId: '',
+      departmentId: '',
+      provinceId: '',
+      districtId: '',
+    },
     contactPhone: '',
     contactEmail: '',
     website: '',
@@ -797,6 +804,14 @@ function CreateBusiness() {
 
     return () => clearTimeout(timeoutId);
   }, [step, formData.address.street, formData.address.city, formData.address.state, formData.address.country]);
+
+  // Manejar selección de ubicación jerárquica
+  const handleLocationChange = (locationData) => {
+    setFormData(prev => ({
+      ...prev,
+      location: locationData,
+    }));
+  };
 
   // Manejar selección de ubicación de la lista de sugerencias
   const handleSelectLocation = (location) => {
@@ -1908,6 +1923,15 @@ function CreateBusiness() {
                       ))}
                     </div>
                   )}
+                </div>
+
+                {/* Ubicación Jerárquica (Nueva) */}
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <LocationPicker
+                    value={formData.location}
+                    onChange={handleLocationChange}
+                    label="Ubicación (Búsqueda jerárquica)"
+                  />
                 </div>
 
                 {/* Ubicación seleccionada (solo lectura) */}

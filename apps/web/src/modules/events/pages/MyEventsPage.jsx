@@ -267,7 +267,7 @@ function MyEventsPage() {
                         />
                       </div>
                     ) : (
-                      <div className="h-48 bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
+                      <div className="h-48 bg-primary flex items-center justify-center">
                         <span className="text-6xl">
                           {categoryIcons[event.category] || '📅'}
                         </span>

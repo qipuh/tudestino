@@ -1,3 +1,5 @@
+import '../core/utils/url_helper.dart';
+
 class User {
   final String id;
   final String name;
@@ -37,7 +39,9 @@ class User {
       name: json['name'] ?? '',
       email: json['email'] ?? '',
       phone: json['phone'],
-      profilePicture: json['profilePicture'],
+      profilePicture: json['avatar'] != null
+          ? UrlHelper.getFullImageUrl(json['avatar'], folder: 'avatars')
+          : null,
       role: json['role'] ?? 'guest',
       emailVerified: json['emailVerified'] ?? false,
       phoneVerified: json['phoneVerified'] ?? false,

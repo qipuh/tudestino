@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../../providers/bookings_provider.dart';
 import '../../models/booking.dart';
 
@@ -120,7 +121,6 @@ class BookingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dateFormat = DateFormat('dd MMM yyyy', 'es');
-    final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
 
     Color statusColor;
     switch (booking.status) {
@@ -265,7 +265,7 @@ class BookingCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          currencyFormat.format(booking.totalPrice),
+                          CurrencyFormatter.format(booking.totalPrice),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,

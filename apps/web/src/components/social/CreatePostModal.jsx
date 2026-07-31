@@ -84,7 +84,7 @@ function CreatePostModal({ isOpen, onClose, onPostCreated }) {
               onClick={() => setPostType('post')}
               className={`flex-1 py-3 px-4 rounded-xl font-medium transition flex items-center justify-center gap-2 ${
                 postType === 'post'
-                  ? 'bg-gradient-to-r from-primary to-primary-dark text-white'
+                  ? 'bg-primary text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -96,7 +96,7 @@ function CreatePostModal({ isOpen, onClose, onPostCreated }) {
               onClick={() => setPostType('reel')}
               className={`flex-1 py-3 px-4 rounded-xl font-medium transition flex items-center justify-center gap-2 ${
                 postType === 'reel'
-                  ? 'bg-gradient-to-r from-primary to-primary-dark text-white'
+                  ? 'bg-primary text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -121,7 +121,7 @@ function CreatePostModal({ isOpen, onClose, onPostCreated }) {
           </div>
 
           {/* Info note */}
-          <div className="mb-6 p-4 bg-gradient-to-r from-primary/10 to-primary-dark/10 border-2 border-primary/30 rounded-xl">
+          <div className="mb-6 p-4 bg-primary/10 border-2 border-primary/30 rounded-xl">
             <p className="text-sm text-gray-700">
               <span className="font-semibold text-primary-dark">📌 Nota:</span> Por ahora, las publicaciones usarán {postType === 'reel' ? 'un video de ejemplo' : 'imágenes de placeholder'}. La subida de archivos se implementará próximamente.
             </p>
@@ -146,7 +146,7 @@ function CreatePostModal({ isOpen, onClose, onPostCreated }) {
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl font-semibold hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
               disabled={uploading}
             >
               {uploading ? (

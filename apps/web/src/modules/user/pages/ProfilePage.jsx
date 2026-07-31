@@ -612,7 +612,7 @@ function ProfilePage({ userIdProp }) {
             <div className="relative">
               <div
                 onClick={handleAvatarClick}
-                className={`w-28 h-28 rounded-full bg-gradient-to-br from-primary via-primary-dark to-purple-600 p-1 shadow-lg ${
+                className={`w-28 h-28 rounded-full bg-primary p-1 shadow-lg ${
                   isOwnProfile ? 'cursor-pointer group' : ''
                 }`}
               >
@@ -624,7 +624,7 @@ function ProfilePage({ userIdProp }) {
                       className={`w-full h-full object-cover ${isOwnProfile ? 'group-hover:opacity-75 transition-opacity' : ''}`}
                     />
                   ) : (
-                    <div className={`w-full h-full flex items-center justify-center text-3xl font-bold bg-gradient-to-br from-primary/10 to-primary/20 text-primary ${
+                    <div className={`w-full h-full flex items-center justify-center text-3xl font-bold bg-primary/10 text-primary ${
                       isOwnProfile ? 'group-hover:opacity-75 transition-opacity' : ''
                     }`}>
                       {profile.name.charAt(0).toUpperCase()}
@@ -689,7 +689,7 @@ function ProfilePage({ userIdProp }) {
                     />
                     <button
                       onClick={() => setShowChatBubble(true)}
-                      className="px-5 py-2 text-sm font-medium bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg hover:scale-105 flex items-center gap-2 transition-all shadow-md"
+                      className="px-5 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:shadow-lg hover:scale-105 flex items-center gap-2 transition-all shadow-md"
                       title="Enviar mensaje"
                     >
                       <MessageCircle size={16} />
@@ -736,7 +736,7 @@ function ProfilePage({ userIdProp }) {
 
               {/* Biography Section Enhanced */}
               {(profile.bio || profile.travelBio) && (
-                <div className="bg-gradient-to-r from-gray-50 to-transparent rounded-lg p-4 border-l-4 border-primary">
+                <div className="bg-sand rounded-lg p-4 border-l-4 border-primary">
                   {profile.bio && (
                     <p className="text-sm text-gray-800 leading-relaxed mb-2">{profile.bio}</p>
                   )}
@@ -776,7 +776,7 @@ function ProfilePage({ userIdProp }) {
                   </span>
                   {/* Active indicator bar */}
                   {isActive && (
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary-dark rounded-t-full shadow-lg shadow-primary/50"></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full shadow-lg shadow-primary/50"></div>
                   )}
                 </button>
               );
@@ -859,8 +859,8 @@ function ProfilePage({ userIdProp }) {
                 })}
               </div>
             ) : (
-              <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-sm border-2 border-dashed border-gray-300 p-16 text-center">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/20 rounded-full mb-4">
+              <div className="bg-white rounded-2xl shadow-sm border-2 border-dashed border-gray-300 p-16 text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/10 rounded-full mb-4">
                   <ImageIcon size={40} className="text-primary" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -872,7 +872,7 @@ function ProfilePage({ userIdProp }) {
                 {isOwnProfile && (
                   <button
                     onClick={() => setShowCreateSidebar(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all shadow-md font-medium"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all shadow-md font-medium"
                   >
                     <PlusCircle size={18} />
                     Crear primera publicación
@@ -971,8 +971,8 @@ function ProfilePage({ userIdProp }) {
                 </div>
               ))
             ) : (
-              <div className="col-span-3 bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-sm border-2 border-dashed border-gray-300 p-16 text-center">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/20 rounded-full mb-4">
+              <div className="col-span-3 bg-white rounded-2xl shadow-sm border-2 border-dashed border-gray-300 p-16 text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/10 rounded-full mb-4">
                   <Video size={40} className="text-primary" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -987,7 +987,7 @@ function ProfilePage({ userIdProp }) {
                       setContentType('reel');
                       setShowCreateSidebar(true);
                     }}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all shadow-md font-medium"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all shadow-md font-medium"
                   >
                     <Video size={18} />
                     Crear primer reel
@@ -1000,8 +1000,8 @@ function ProfilePage({ userIdProp }) {
 
         {/* Compartidos Tab */}
         {activeTab === 'compartidos' && (
-          <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-sm border-2 border-dashed border-gray-300 p-16 text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/20 rounded-full mb-4">
+          <div className="bg-white rounded-2xl shadow-sm border-2 border-dashed border-gray-300 p-16 text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/10 rounded-full mb-4">
               <Share2 size={40} className="text-primary" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -1016,7 +1016,7 @@ function ProfilePage({ userIdProp }) {
         {/* Servicios Tab (solo para hosts) */}
         {activeTab === 'servicios' && isHost && (
           <div>
-            <div className="flex items-center justify-between mb-6 bg-gradient-to-r from-primary/5 to-transparent rounded-lg p-4">
+            <div className="flex items-center justify-between mb-6 bg-primary/5 rounded-lg p-4">
               <div className="flex items-center gap-3">
                 <Briefcase size={24} className="text-primary" />
                 <div>
@@ -1027,7 +1027,7 @@ function ProfilePage({ userIdProp }) {
               {isOwnProfile && (
                 <Link
                   to="/host/properties"
-                  className="px-5 py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all shadow-md font-medium flex items-center gap-2"
+                  className="px-5 py-2.5 bg-primary text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all shadow-md font-medium flex items-center gap-2"
                 >
                   <Briefcase size={16} />
                   Gestionar Propiedades
@@ -1061,7 +1061,7 @@ function ProfilePage({ userIdProp }) {
                         </div>
                       )}
                       {property.ratingAverage >= 4.5 && (
-                        <div className="absolute top-3 right-3 bg-gradient-to-r from-primary to-primary-dark px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
+                        <div className="absolute top-3 right-3 bg-primary px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
                           <Star size={14} className="fill-white text-white" />
                           <span className="text-sm font-bold text-white">Destacado</span>
                         </div>
@@ -1095,8 +1095,8 @@ function ProfilePage({ userIdProp }) {
                 ))}
               </div>
             ) : (
-              <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-sm border-2 border-dashed border-gray-300 p-16 text-center">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/20 rounded-full mb-4">
+              <div className="bg-white rounded-2xl shadow-sm border-2 border-dashed border-gray-300 p-16 text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/10 rounded-full mb-4">
                   <Home size={40} className="text-primary" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -1108,7 +1108,7 @@ function ProfilePage({ userIdProp }) {
                 {isOwnProfile && (
                   <Link
                     to="/host/properties"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all shadow-md font-medium"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all shadow-md font-medium"
                   >
                     <Briefcase size={18} />
                     Publicar mi primera propiedad
@@ -1124,7 +1124,7 @@ function ProfilePage({ userIdProp }) {
       {showFollowersModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={() => setShowFollowersModal(false)}>
           <div className="bg-white rounded-2xl max-w-md w-full max-h-[32rem] overflow-hidden shadow-2xl transform transition-all animate-slideUp" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-gradient-to-r from-primary/5 to-transparent border-b p-5 flex items-center justify-between">
+            <div className="sticky top-0 bg-primary/5 border-b p-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Users size={20} className="text-primary" />
                 <h3 className="font-bold text-lg text-gray-900">Seguidores</h3>
@@ -1157,7 +1157,7 @@ function ProfilePage({ userIdProp }) {
                   {followersData.followers.map((follower) => (
                     <div key={follower.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/30 overflow-hidden flex-shrink-0">
+                        <div className="w-12 h-12 rounded-full bg-primary/20 overflow-hidden flex-shrink-0">
                           {follower.avatar ? (
                             <img
                               src={getImageUrl(follower.avatar, 'social')}
@@ -1218,7 +1218,7 @@ function ProfilePage({ userIdProp }) {
       {showFollowingModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={() => setShowFollowingModal(false)}>
           <div className="bg-white rounded-2xl max-w-md w-full max-h-[32rem] overflow-hidden shadow-2xl transform transition-all animate-slideUp" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-gradient-to-r from-primary/5 to-transparent border-b p-5 flex items-center justify-between">
+            <div className="sticky top-0 bg-primary/5 border-b p-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <UserCheck size={20} className="text-primary" />
                 <h3 className="font-bold text-lg text-gray-900">Siguiendo</h3>
@@ -1251,7 +1251,7 @@ function ProfilePage({ userIdProp }) {
                   {followingData.following.map((following) => (
                     <div key={following.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/30 overflow-hidden flex-shrink-0">
+                        <div className="w-12 h-12 rounded-full bg-primary/20 overflow-hidden flex-shrink-0">
                           {following.avatar ? (
                             <img
                               src={getImageUrl(following.avatar, 'social')}
@@ -1399,7 +1399,7 @@ function ProfilePage({ userIdProp }) {
             {/* Botón principal */}
             <button
               onClick={() => setShowCreateSidebar(!showCreateSidebar)}
-              className={`bg-gradient-to-r from-primary to-primary-dark text-white p-5 rounded-full shadow-2xl hover:shadow-3xl transition-all transform hover:scale-110 ${showCreateSidebar ? 'rotate-45' : ''}`}
+              className={`bg-primary text-white p-5 rounded-full shadow-2xl hover:shadow-3xl transition-all transform hover:scale-110 ${showCreateSidebar ? 'rotate-45' : ''}`}
               title="Crear contenido"
             >
               <Plus size={28} strokeWidth={3} />

@@ -58,7 +58,7 @@ class BusinessServiceClass {
           },
           {
             model: BusinessSocialPost,
-            as: 'posts',
+            as: 'businessPosts',
             where: { isActive: true },
             required: false,
             limit: 10,

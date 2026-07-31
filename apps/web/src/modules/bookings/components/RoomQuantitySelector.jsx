@@ -55,7 +55,7 @@ function RoomQuantitySelector({ rooms, selectedRooms, onRoomsChange, maxGuests }
   return (
     <div className="space-y-4" data-room-selector>
       {/* Header con resumen */}
-      <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-4 border-2 border-primary/20">
+      <div className="bg-primary/10 rounded-xl p-4 border-2 border-primary/20">
         <h3 className="text-lg font-semibold text-gray-900 mb-3">
           Selecciona tus habitaciones
         </h3>

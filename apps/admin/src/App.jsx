@@ -10,6 +10,9 @@ import AccommodationTypes from '@modules/accommodation-types/AccommodationTypes'
 import PromotionsManagement from '@modules/promotions/PromotionsManagement';
 import SlidersManagement from '@modules/sliders/SlidersManagement';
 import AttractionsManagement from '@modules/attractions/AttractionsManagement';
+import PaymentSettings from '@modules/settings/PaymentSettings';
+import RoutingSettings from '@modules/settings/RoutingSettings';
+import CommunicationsSettings from '@modules/communications/CommunicationsSettings';
 import LoginPage from './pages/LoginPage';
 import useAuthStore from './store/authStore';
 
@@ -54,6 +57,9 @@ function App() {
         <Route path="promotions" element={<PromotionsManagement />} />
         <Route path="sliders" element={<SlidersManagement />} />
         <Route path="attractions" element={<AttractionsManagement />} />
+        <Route path="settings/payment" element={<PaymentSettings />} />
+        <Route path="settings/routing" element={<RoutingSettings />} />
+        <Route path="settings/communications" element={<CommunicationsSettings />} />
       </Route>
       {/* Catch-all route para rutas no encontradas */}
       <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} replace />} />

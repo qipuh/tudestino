@@ -21,8 +21,8 @@ function PlaceTagging({ tags = [], onChange }) {
       try {
         // Search in both businesses and properties
         const [businessesRes, propertiesRes] = await Promise.all([
-          api.get(`/businesses?search=${searchTerm}&limit=5`),
-          api.get(`/properties?search=${searchTerm}&limit=5`),
+          api.get(`/businesses/search?q=${encodeURIComponent(searchTerm)}&limit=5`),
+          api.get(`/properties?search=${encodeURIComponent(searchTerm)}&limit=5`),
         ]);
 
         const businesses = (businessesRes.data?.businesses || []).map((b) => ({
@@ -30,15 +30,16 @@ function PlaceTagging({ tags = [], onChange }) {
           name: b.name,
           type: 'business',
           icon: Building2,
-          location: b.address || b.city,
+          location: b.address?.city || b.address || '',
         }));
 
-        const properties = (propertiesRes.data?.properties || []).map((p) => ({
+        // /properties devuelve el array directo en `data`, no `data.properties`
+        const properties = (propertiesRes.data || []).map((p) => ({
           id: p.id,
-          name: p.title,
+          name: p.hotelName || p.propertyName,
           type: 'property',
           icon: Home,
-          location: p.address || p.city,
+          location: p.addressCity || '',
         }));
 
         setSearchResults([...businesses, ...properties]);

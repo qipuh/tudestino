@@ -12,7 +12,8 @@ function HomePage() {
   const [tourBusinesses, setTourBusinesses] = useState([]);
   const [attractions, setAttractions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [attractionsCarouselIndex, setAttractionsCarouselIndex] = useState(0);
+  const [attractionsAtStart, setAttractionsAtStart] = useState(true);
+  const [attractionsAtEnd, setAttractionsAtEnd] = useState(false);
   const { sidebarOpen, toggleSidebar, setSidebarVisible } = useSidebar();
   const attractionsCarouselRef = useRef(null);
 
@@ -36,8 +37,6 @@ function HomePage() {
       const searchResult = await api.get('/search/all?limit=100&category=all');
       let businessesData = [];
 
-      console.log('📊 Search result:', searchResult);
-
       // Adaptar respuesta según estructura del endpoint
       if (searchResult.success && searchResult.data && searchResult.data.results) {
         businessesData = searchResult.data.results;
@@ -47,7 +46,6 @@ function HomePage() {
         businessesData = searchResult;
       }
 
-      console.log('📊 Businesses data:', businessesData);
       setBusinesses(businessesData);
 
     } catch (error) {
@@ -60,11 +58,9 @@ function HomePage() {
   const fetchTours = async () => {
     try {
       const response = await api.get('/tours/search?limit=8');
-      console.log('🗺️ Tours response:', response);
 
       // La respuesta tiene estructura: { success: true, data: { tours: [...], pagination: {...} } }
       const toursData = response.data?.tours || response.tours || [];
-      console.log('🗺️ Tours data:', toursData);
       setTours(toursData);
     } catch (error) {
       console.error('Error fetching tours:', error);
@@ -75,11 +71,9 @@ function HomePage() {
   const fetchTourBusinesses = async () => {
     try {
       const response = await api.get('/businesses/search?businessType=tour&limit=8');
-      console.log('🏢 Tour businesses response:', response);
 
       // La respuesta tiene estructura: { success: true, data: { businesses: [...], pagination: {...} } }
       const businessesData = response.data?.businesses || response.businesses || [];
-      console.log('🏢 Tour businesses data:', businessesData);
       setTourBusinesses(businessesData);
     } catch (error) {
       console.error('Error fetching tour businesses:', error);
@@ -90,10 +84,8 @@ function HomePage() {
   const fetchAttractions = async () => {
     try {
       const response = await api.get('/attractions?limit=50');
-      console.log('🏞️ Attractions response:', response);
 
       const attractionsData = response.data?.attractions || response.attractions || response.data || [];
-      console.log('🏞️ Attractions data:', attractionsData);
       setAttractions(attractionsData);
     } catch (error) {
       console.error('Error fetching attractions:', error);
@@ -102,15 +94,22 @@ function HomePage() {
   };
 
   const handleAttractionsNext = () => {
-    if (attractionsCarouselIndex < attractions.length - 4) {
-      setAttractionsCarouselIndex(prev => prev + 1);
-    }
+    const el = attractionsCarouselRef.current;
+    if (!el) return;
+    el.scrollBy({ left: el.clientWidth * 0.9, behavior: 'smooth' });
   };
 
   const handleAttractionsPrev = () => {
-    if (attractionsCarouselIndex > 0) {
-      setAttractionsCarouselIndex(prev => prev - 1);
-    }
+    const el = attractionsCarouselRef.current;
+    if (!el) return;
+    el.scrollBy({ left: -el.clientWidth * 0.9, behavior: 'smooth' });
+  };
+
+  const handleAttractionsScroll = () => {
+    const el = attractionsCarouselRef.current;
+    if (!el) return;
+    setAttractionsAtStart(el.scrollLeft <= 4);
+    setAttractionsAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 4);
   };
 
   if (loading) {
@@ -222,7 +221,7 @@ function HomePage() {
           <section className="mb-16">
             <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
               <TrendingUp className="text-primary" size={24} />
-              <h2 className="text-xl sm:text-2xl font-bold text-primary-dark">Destacados</h2>
+              <h2 className="text-xl sm:text-2xl font-medium tracking-tight text-ink">Destacados</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {featuredItems.map((item) => {
@@ -273,14 +272,14 @@ function HomePage() {
                         </div>
                       )}
                       {itemRating >= 4.5 && (
-                        <div className="absolute top-2 sm:top-3 right-2 sm:right-3 bg-gradient-to-r from-primary to-primary-dark px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-lg flex items-center gap-1 sm:gap-1.5">
+                        <div className="absolute top-2 sm:top-3 right-2 sm:right-3 bg-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-card flex items-center gap-1 sm:gap-1.5">
                           <Star size={12} className="fill-white text-white sm:w-3.5 sm:h-3.5" />
                           <span className="text-xs sm:text-sm font-bold text-white">Destacado</span>
                         </div>
                       )}
                     </div>
                     <div className="p-3 sm:p-4">
-                      <h3 className="font-semibold text-base sm:text-lg truncate group-hover:text-primary transition-colors">
+                      <h3 className="font-medium text-base sm:text-lg truncate group-hover:text-primary transition-colors">
                         {itemName}
                       </h3>
                       <div className="flex items-center gap-1 text-xs sm:text-sm text-gray-600 mt-1">
@@ -327,7 +326,7 @@ function HomePage() {
             <div className="flex items-center justify-between mb-4 sm:mb-6">
               <div className="flex items-center gap-2 sm:gap-3">
                 <Map className="text-primary" size={24} />
-                <h2 className="text-xl sm:text-2xl font-bold text-primary-dark">Tours y Excursiones</h2>
+                <h2 className="text-xl sm:text-2xl font-medium tracking-tight text-ink">Tours y Excursiones</h2>
                 <span className="text-xs sm:text-sm text-gray-500">({tours.length})</span>
               </div>
               <Link
@@ -344,7 +343,7 @@ function HomePage() {
                   to={`/business/${tour.businessId}`}
                   className="group bg-white border border-gray-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="h-40 sm:h-48 bg-gradient-to-br from-teal-500 to-teal-700 relative overflow-hidden">
+                  <div className="h-40 sm:h-48 bg-secondary relative overflow-hidden">
                     {tour.coverImage ? (
                       <img
                         src={getImageUrl(tour.coverImage, 'tours')}
@@ -366,7 +365,7 @@ function HomePage() {
                     )}
                   </div>
                   <div className="p-3 sm:p-4">
-                    <h3 className="font-semibold text-base sm:text-lg line-clamp-2 group-hover:text-primary transition-colors min-h-[3rem]">
+                    <h3 className="font-medium text-base sm:text-lg line-clamp-2 group-hover:text-primary transition-colors min-h-[3rem]">
                       {tour.name}
                     </h3>
 
@@ -409,7 +408,7 @@ function HomePage() {
             <div className="flex items-center justify-between mb-4 sm:mb-6">
               <div className="flex items-center gap-2 sm:gap-3">
                 <Building2 className="text-primary" size={24} />
-                <h2 className="text-xl sm:text-2xl font-bold text-primary-dark">Agencias de Tours</h2>
+                <h2 className="text-xl sm:text-2xl font-medium tracking-tight text-ink">Agencias de Tours</h2>
                 <span className="text-xs sm:text-sm text-gray-500">({tourBusinesses.length})</span>
               </div>
               <Link
@@ -426,7 +425,7 @@ function HomePage() {
                   to={`/business/${business.id}`}
                   className="group bg-white border border-gray-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="h-40 sm:h-48 bg-gradient-to-br from-primary to-primary-dark relative overflow-hidden">
+                  <div className="h-40 sm:h-48 bg-primary relative overflow-hidden">
                     {business.logo || business.coverImage ? (
                       <img
                         src={getImageUrl(business.logo || business.coverImage, 'business')}
@@ -446,7 +445,7 @@ function HomePage() {
                     )}
                   </div>
                   <div className="p-3 sm:p-4">
-                    <h3 className="font-semibold text-base sm:text-lg truncate group-hover:text-primary transition-colors">
+                    <h3 className="font-medium text-base sm:text-lg truncate group-hover:text-primary transition-colors">
                       {business.name}
                     </h3>
                     {business.description && (
@@ -500,7 +499,7 @@ function HomePage() {
               <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <categoryInfo.icon className="text-primary" size={24} />
-                  <h2 className="text-xl sm:text-2xl font-bold text-primary-dark">{categoryInfo.name}</h2>
+                  <h2 className="text-xl sm:text-2xl font-medium tracking-tight text-ink">{categoryInfo.name}</h2>
                   <span className="text-xs sm:text-sm text-gray-500">({typeItems.length})</span>
                 </div>
                 <Link
@@ -559,7 +558,7 @@ function HomePage() {
                         )}
                       </div>
                       <div className="p-3 sm:p-4">
-                        <h3 className="font-semibold text-base sm:text-lg truncate group-hover:text-primary transition-colors">
+                        <h3 className="font-medium text-base sm:text-lg truncate group-hover:text-primary transition-colors">
                           {itemName}
                         </h3>
                         <div className="flex items-center gap-1 text-xs sm:text-sm text-gray-600 mt-1">
@@ -600,21 +599,21 @@ function HomePage() {
             <div className="flex items-center justify-between mb-4 sm:mb-6">
               <div className="flex items-center gap-2 sm:gap-3">
                 <MapPin className="text-primary" size={24} />
-                <h2 className="text-xl sm:text-2xl font-bold text-primary-dark">Atractivos Turísticos</h2>
+                <h2 className="text-xl sm:text-2xl font-medium tracking-tight text-ink">Atractivos Turísticos</h2>
                 <span className="text-xs sm:text-sm text-gray-500">({attractions.length})</span>
               </div>
             </div>
 
             {/* Carousel Container */}
             <div className="relative">
-              {/* Navigation Buttons */}
-              {attractions.length > 4 && (
+              {/* Navigation Buttons - Solo en pantallas donde alcanza para hover con mouse */}
+              {attractions.length > 1 && (
                 <>
                   <button
                     onClick={handleAttractionsPrev}
-                    disabled={attractionsCarouselIndex === 0}
-                    className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white rounded-full p-2 shadow-lg transition-all ${
-                      attractionsCarouselIndex === 0
+                    disabled={attractionsAtStart}
+                    className={`hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white rounded-full p-2 shadow-lg transition-all ${
+                      attractionsAtStart
                         ? 'opacity-50 cursor-not-allowed'
                         : 'hover:bg-gray-100 hover:scale-110'
                     }`}
@@ -624,9 +623,9 @@ function HomePage() {
                   </button>
                   <button
                     onClick={handleAttractionsNext}
-                    disabled={attractionsCarouselIndex >= attractions.length - 4}
-                    className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white rounded-full p-2 shadow-lg transition-all ${
-                      attractionsCarouselIndex >= attractions.length - 4
+                    disabled={attractionsAtEnd}
+                    className={`hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white rounded-full p-2 shadow-lg transition-all ${
+                      attractionsAtEnd
                         ? 'opacity-50 cursor-not-allowed'
                         : 'hover:bg-gray-100 hover:scale-110'
                     }`}
@@ -637,23 +636,19 @@ function HomePage() {
                 </>
               )}
 
-              {/* Carousel Track */}
-              <div className="overflow-hidden">
-                <div
-                  ref={attractionsCarouselRef}
-                  className="flex transition-transform duration-500 ease-in-out gap-4 sm:gap-6"
-                  style={{
-                    transform: `translateX(-${attractionsCarouselIndex * (100 / 4)}%)`
-                  }}
-                >
-                  {attractions.map((attraction) => (
+              {/* Carousel Track - scroll nativo con snap, tarjetas responsivas */}
+              <div
+                ref={attractionsCarouselRef}
+                onScroll={handleAttractionsScroll}
+                className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide -mx-3 px-3 sm:mx-0 sm:px-0"
+              >
+                {attractions.map((attraction) => (
                     <Link
                       key={attraction.id}
                       to={`/attractions/${attraction.id}`}
-                      className="group bg-white border border-gray-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 flex-shrink-0"
-                      style={{ width: 'calc(25% - 18px)' }}
+                      className="group bg-white border border-gray-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 flex-shrink-0 snap-start w-[85%] sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)]"
                     >
-                      <div className="h-48 sm:h-56 bg-gradient-to-br from-green-500 to-blue-600 relative overflow-hidden">
+                      <div className="h-48 sm:h-56 bg-sand relative overflow-hidden">
                         {attraction.coverImage ? (
                           <img
                             src={getImageUrl(attraction.coverImage, 'attractions')}
@@ -661,7 +656,7 @@ function HomePage() {
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-white">
+                          <div className="w-full h-full flex items-center justify-center text-primary/40">
                             <MapPin size={48} />
                           </div>
                         )}
@@ -674,7 +669,7 @@ function HomePage() {
                         </div>
                       </div>
                       <div className="p-4">
-                        <h3 className="font-semibold text-base sm:text-lg line-clamp-1 group-hover:text-primary transition-colors">
+                        <h3 className="font-medium text-base sm:text-lg line-clamp-1 group-hover:text-primary transition-colors">
                           {attraction.title}
                         </h3>
                         {attraction.description && (
@@ -698,26 +693,7 @@ function HomePage() {
                       </div>
                     </Link>
                   ))}
-                </div>
               </div>
-
-              {/* Indicators */}
-              {attractions.length > 4 && (
-                <div className="flex justify-center gap-2 mt-6">
-                  {Array.from({ length: Math.max(0, attractions.length - 3) }).map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setAttractionsCarouselIndex(index)}
-                      className={`h-2 rounded-full transition-all ${
-                        index === attractionsCarouselIndex
-                          ? 'w-8 bg-primary'
-                          : 'w-2 bg-gray-300 hover:bg-gray-400'
-                      }`}
-                      aria-label={`Ir a posición ${index + 1}`}
-                    />
-                  ))}
-                </div>
-              )}
             </div>
           </section>
         )}

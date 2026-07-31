@@ -2,9 +2,9 @@ import { Op } from 'sequelize';
 import { Property, Room } from '../properties/hotel-property.model.js';
 import User from '../users/user.model-mysql.js';
 import Business from '../businesses/business.model.js';
-import Restaurant from '../restaurants/restaurant.model.js';
 import Event from '../events/event.model.js';
 import Entertainment from '../entertainment/entertainment.model.js';
+import Attraction from '../attractions/attraction.model.js';
 
 // Servicio para obtener ubicación por IP
 const getLocationByIP = async (ip) => {
@@ -405,10 +405,54 @@ export const getLocationSuggestions = async (req, res) => {
       return res.json({ success: true, data: [] });
     }
 
-    // TODO: Implementar búsqueda de ubicaciones en tu BD
-    // Buscar ciudades/países que coincidan con el query
+    const like = { [Op.like]: `%${query}%` };
 
-    const suggestions = [];
+    // Ciudades reales donde ya hay contenido (hoteles/restaurantes/atractivos),
+    // no una API externa de geocoding - así solo se sugiere lo que existe.
+    // Nota: Restaurant (restaurants/restaurant.model.js) queda fuera - es un modelo
+    // huérfano que no mapea a la tabla real de producción (los restaurantes viven
+    // dentro del módulo businesses con address como JSON), ni siquiera está montado
+    // como ruta. Bug preexistente, no forma parte de esta feature.
+    const [properties, attractions] = await Promise.all([
+      Property.findAll({
+        attributes: ['addressCity', 'addressState', 'addressCountry'],
+        where: { addressCity: like },
+        group: ['addressCity', 'addressState', 'addressCountry'],
+        limit: 8,
+      }),
+      Attraction.findAll({
+        attributes: ['city', 'region', 'country'],
+        where: { city: like },
+        group: ['city', 'region', 'country'],
+        limit: 8,
+      }),
+    ]);
+
+    const normalize = (city, region, country) => {
+      const regionLabel = region && region.trim().toLowerCase() !== (city || '').trim().toLowerCase()
+        ? region
+        : country;
+      return {
+        city,
+        region: region || null,
+        country: country || null,
+        label: regionLabel ? `${city}, ${regionLabel}` : city,
+      };
+    };
+
+    const merged = [
+      ...properties.map(p => normalize(p.addressCity, p.addressState, p.addressCountry)),
+      ...attractions.map(a => normalize(a.city, a.region, a.country)),
+    ].filter(s => s.city);
+
+    // Deduplicar por label
+    const seen = new Set();
+    const suggestions = merged.filter(s => {
+      const key = s.label.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, 10);
 
     res.json({
       success: true,

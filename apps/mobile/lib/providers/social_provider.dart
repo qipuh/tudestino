@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart' as dio;
 import 'package:flutter/material.dart';
 import '../models/social_post.dart';
 import '../core/services/api_service.dart';
@@ -8,6 +9,8 @@ class SocialProvider with ChangeNotifier {
   List<SocialPost> _feedPosts = [];
   List<Reel> _reels = [];
   List<Comment> _comments = [];
+  List<SocialPost> _savedPosts = [];
+  final Set<String> _savedPostIds = {};
   bool _isLoading = false;
   String? _error;
   int _currentPage = 1;
@@ -18,9 +21,57 @@ class SocialProvider with ChangeNotifier {
   List<SocialPost> get feedPosts => _feedPosts;
   List<Reel> get reels => _reels;
   List<Comment> get comments => _comments;
+  List<SocialPost> get savedPosts => _savedPosts;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get hasMorePosts => _hasMorePosts;
+
+  bool isPostSaved(String postId) => _savedPostIds.contains(postId);
+
+  Future<void> loadSavedPosts() async {
+    try {
+      final response = await _apiService.get('/social/posts/saved/me');
+      if (response.data['success'] == true) {
+        _savedPosts = (response.data['data'] as List)
+            .map((json) => SocialPost.fromJson(json))
+            .toList();
+        _savedPostIds
+          ..clear()
+          ..addAll(_savedPosts.map((p) => p.id));
+        notifyListeners();
+      }
+    } catch (_) {
+      // silencioso
+    }
+  }
+
+  Future<void> toggleSavePost(String postId) async {
+    final wasSaved = _savedPostIds.contains(postId);
+    if (wasSaved) {
+      _savedPostIds.remove(postId);
+    } else {
+      _savedPostIds.add(postId);
+    }
+    notifyListeners();
+
+    try {
+      final response = await _apiService.post('/social/posts/$postId/save');
+      final isSaved = response.data['isSaved'] == true;
+      if (isSaved) {
+        _savedPostIds.add(postId);
+      } else {
+        _savedPostIds.remove(postId);
+      }
+      notifyListeners();
+    } catch (_) {
+      if (wasSaved) {
+        _savedPostIds.add(postId);
+      } else {
+        _savedPostIds.remove(postId);
+      }
+      notifyListeners();
+    }
+  }
 
   // Load feed posts
   Future<void> loadFeed({bool refresh = false}) async {
@@ -221,15 +272,80 @@ class SocialProvider with ChangeNotifier {
   Future<bool> createPost({
     required String caption,
     required List<String> mediaPaths,
+    String? location,
   }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
     try {
-      // TODO: Implement multipart file upload
-      // This would require using FormData with Dio
-      _error = 'Función de crear post próximamente';
+      final formData = dio.FormData.fromMap({
+        'caption': caption,
+        if (location != null) 'location': location,
+        'media': await Future.wait(
+          mediaPaths.map((path) => dio.MultipartFile.fromFile(path)),
+        ),
+      });
+
+      final response = await _apiService.post('/social/posts', data: formData);
+
+      if (response.data['success'] == true) {
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+
+      _error = response.data['message'] ?? 'Error al crear post';
+      _isLoading = false;
       notifyListeners();
       return false;
     } catch (e) {
-      _error = 'Error al crear post';
+      if (e is dio.DioException && e.response?.data is Map) {
+        _error = (e.response!.data['message'] ?? 'Error al crear post').toString();
+      } else {
+        _error = 'Error de conexión. Verifica tu internet.';
+      }
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> createReel({
+    required String videoPath,
+    String? caption,
+    String? location,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final formData = dio.FormData.fromMap({
+        if (caption != null) 'caption': caption,
+        if (location != null) 'location': location,
+        'video': await dio.MultipartFile.fromFile(videoPath),
+      });
+
+      final response = await _apiService.post('/social/reels', data: formData);
+
+      if (response.data['success'] == true) {
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+
+      _error = response.data['message'] ?? 'Error al crear reel';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      if (e is dio.DioException && e.response?.data is Map) {
+        _error = (e.response!.data['message'] ?? 'Error al crear reel').toString();
+      } else {
+        _error = 'Error de conexión. Verifica tu internet.';
+      }
+      _isLoading = false;
       notifyListeners();
       return false;
     }

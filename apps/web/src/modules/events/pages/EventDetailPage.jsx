@@ -445,7 +445,7 @@ function EventDetailPage() {
                 </div>
 
                 {/* Card de información adicional */}
-                <div className="mt-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg p-6">
+                <div className="mt-4 bg-primary/5 rounded-lg p-6">
                   <h4 className="font-semibold text-gray-900 mb-3">ℹ️ Información importante</h4>
                   <ul className="space-y-2 text-sm text-gray-700">
                     <li className="flex items-start gap-2">

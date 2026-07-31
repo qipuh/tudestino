@@ -72,7 +72,7 @@ function ProfilePage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary to-primary-dark h-32"></div>
+          <div className="bg-primary h-32"></div>
 
           {/* Profile Info */}
           <div className="px-6 pb-6">

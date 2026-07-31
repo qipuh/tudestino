@@ -156,7 +156,7 @@ function BusinessLayout({ children, activeMenu }) {
         className={`fixed left-0 top-0 h-screen z-30 ${
           accountSidebarOpen ? 'w-64' : 'w-16'
         }`}
-        style={{ backgroundColor: '#002c91' }}
+        style={{ backgroundColor: '#C1502E' }}
       >
         <div className="flex flex-col h-full">
           {/* User info compacto */}
@@ -200,12 +200,12 @@ function BusinessLayout({ children, activeMenu }) {
           <button
             onClick={() => setAccountSidebarOpen(!accountSidebarOpen)}
             className="absolute -right-3 top-20 bg-white rounded-full p-1.5 shadow-lg hover:shadow-xl transition-all z-50 border-2"
-            style={{ borderColor: '#002c91' }}
+            style={{ borderColor: '#C1502E' }}
           >
             {accountSidebarOpen ? (
-              <ChevronLeft size={16} style={{ color: '#002c91' }} />
+              <ChevronLeft size={16} style={{ color: '#C1502E' }} />
             ) : (
-              <ChevronRight size={16} style={{ color: '#002c91' }} />
+              <ChevronRight size={16} style={{ color: '#C1502E' }} />
             )}
           </button>
 
@@ -288,7 +288,7 @@ function BusinessLayout({ children, activeMenu }) {
         }`}
       >
         {/* Header con información del negocio */}
-        <div className="bg-gradient-to-r from-primary to-primary-dark text-white">
+        <div className="bg-primary text-white">
           <div className="container mx-auto px-4 py-8">
             <button
               onClick={() => navigate('/account/businesses')}

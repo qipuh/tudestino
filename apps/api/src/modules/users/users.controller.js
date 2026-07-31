@@ -43,6 +43,28 @@ export const getUserById = async (req, res, next) => {
   }
 };
 
+export const setFcmToken = async (req, res, next) => {
+  try {
+    const { fcmToken } = req.body;
+    if (!fcmToken) {
+      return res.status(400).json({ success: false, message: 'fcmToken requerido' });
+    }
+    await User.update({ fcmToken }, { where: { id: req.user.id } });
+    res.status(200).json({ success: true, message: 'Token registrado' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const clearFcmToken = async (req, res, next) => {
+  try {
+    await User.update({ fcmToken: null }, { where: { id: req.user.id } });
+    res.status(200).json({ success: true, message: 'Token eliminado' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getBookingHistory = async (req, res, next) => {
   try {
     const bookings = await usersService.getBookingHistory(req.user.id);

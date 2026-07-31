@@ -56,6 +56,8 @@ import EventDetailPage from '@modules/events/pages/EventDetailPage';
 import MyEventsPage from '@modules/events/pages/MyEventsPage';
 import EventCheckoutPage from '@modules/events/pages/EventCheckoutPage';
 import AttractionDetail from '@modules/attractions/pages/AttractionDetail';
+import RoutesFeedPage from '@modules/routes/pages/RoutesFeedPage';
+import RouteDetailPage from '@modules/routes/pages/RouteDetailPage';
 import AdminPage from '@modules/admin/pages/AdminPage';
 import VerificationsPage from '@modules/admin/pages/VerificationsPage';
 import AboutPage from '@modules/legal/pages/AboutPage';
@@ -161,6 +163,10 @@ function App() {
 
         {/* Attractions Routes */}
         <Route path="attractions/:id" element={<AttractionDetail />} />
+
+        {/* Routes (rutas GPS compartidas) */}
+        <Route path="rutas" element={<RoutesFeedPage />} />
+        <Route path="rutas/:id" element={<RouteDetailPage />} />
 
         {/* Admin Routes */}
         <Route path="admin" element={<AdminPage />} />

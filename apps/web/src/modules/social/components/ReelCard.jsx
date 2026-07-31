@@ -126,10 +126,10 @@ function ReelCard({ reel, onDelete, currentUserId, isActive }) {
       )}
 
       {/* Top gradient */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/50 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-32 bg-black/30" />
 
       {/* Bottom gradient */}
-      <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-64 bg-black/40 pointer-events-none" />
 
       {/* Mute button */}
       <button

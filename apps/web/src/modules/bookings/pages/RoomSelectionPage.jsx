@@ -243,7 +243,7 @@ function RoomSelectionPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 sticky top-24">
               {/* Header del resumen */}
-              <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-4 border-b">
+              <div className="bg-primary/10 p-4 border-b">
                 <h3 className="font-bold text-gray-900 text-lg">Resumen de tu reserva</h3>
               </div>
 
@@ -387,7 +387,7 @@ function RoomSelectionPage() {
                   className={`
                     w-full py-4 rounded-lg font-bold text-white transition-all flex items-center justify-center gap-2
                     ${canProceed
-                      ? 'bg-gradient-to-r from-primary to-primary-dark hover:opacity-90 shadow-lg hover:shadow-xl'
+                      ? 'bg-primary hover:opacity-90 shadow-lg hover:shadow-xl'
                       : 'bg-gray-300 cursor-not-allowed'
                     }
                   `}

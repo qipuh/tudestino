@@ -1,8 +1,30 @@
 import crypto from 'crypto';
 import { createRequire } from 'module';
+import { getEmailTransportConfig, getFactilizaConfig } from '../settings/settings.service.js';
 const require = createRequire(import.meta.url);
 
 class VerificationService {
+  /**
+   * Arma el transporter de nodemailer con la config guardada en el panel
+   * admin (tabla settings), con las variables de entorno como respaldo.
+   */
+  async getTransporter() {
+    const nodemailer = require('nodemailer');
+    const config = await getEmailTransportConfig();
+
+    const transporter = nodemailer.createTransport({
+      host: config.host || 'smtp.gmail.com',
+      port: config.port,
+      secure: config.port === 465,
+      auth: {
+        user: config.user,
+        pass: config.pass,
+      },
+    });
+
+    return { transporter, fromEmail: config.fromEmail, fromName: config.fromName };
+  }
+
   /**
    * Genera un código de verificación de 6 dígitos
    */
@@ -24,23 +46,10 @@ class VerificationService {
    */
   async sendEmailVerification(email, code, userName = '') {
     try {
-      // Usar require para cargar nodemailer (CommonJS)
-      const nodemailer = require('nodemailer');
-
-      // Configurar transporter de nodemailer
-      const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: smtpPort,
-        secure: smtpPort === 465, // true para puerto 465, false para otros
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      });
+      const { transporter, fromEmail, fromName } = await this.getTransporter();
 
       const mailOptions = {
-        from: `"${process.env.EMAIL_FROM_NAME || 'TuDestino'}" <${process.env.EMAIL_FROM || process.env.SMTP_USER}>`,
+        from: `"${fromName}" <${fromEmail}>`,
         to: email,
         subject: 'Verifica tu correo electrónico - TuDestino',
         html: `
@@ -103,12 +112,69 @@ class VerificationService {
   }
 
   /**
+   * Envía email con el link para restablecer contraseña. Antes esto solo
+   * se logueaba a consola (TODO nunca implementado) - "recuperación de
+   * contraseña" no le llegaba nunca al usuario en producción.
+   */
+  async sendPasswordResetEmail(email, resetUrl, userName = '') {
+    try {
+      const { transporter, fromEmail, fromName } = await this.getTransporter();
+
+      const mailOptions = {
+        from: `"${fromName}" <${fromEmail}>`,
+        to: email,
+        subject: 'Restablece tu contraseña - TuDestino',
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+              .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+              .button { display: inline-block; background: #667eea; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px 0; }
+              .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1 style="margin: 0;">🔐 Restablece tu contraseña</h1>
+              </div>
+              <div class="content">
+                <p>Hola${userName ? ` ${userName}` : ''},</p>
+                <p>Recibimos una solicitud para restablecer tu contraseña en TuDestino. Haz clic en el siguiente botón para continuar:</p>
+                <p style="text-align: center;">
+                  <a href="${resetUrl}" class="button">Restablecer contraseña</a>
+                </p>
+                <p style="color: #666; font-size: 13px;">Este enlace expira en 1 hora. Si no solicitaste este cambio, puedes ignorar este mensaje - tu contraseña seguirá siendo la misma.</p>
+              </div>
+              <div class="footer">
+                <p>© 2026 TuDestino. Todos los derechos reservados.</p>
+                <p>Este es un correo automático, por favor no respondas a este mensaje.</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `,
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log('📧 Email de recuperación enviado:', info.messageId);
+      return { success: true, messageId: info.messageId };
+    } catch (error) {
+      console.error('❌ Error enviando email de recuperación:', error);
+      throw new Error(`Error sending password reset email: ${error.message}`);
+    }
+  }
+
+  /**
    * Envía código de verificación por WhatsApp usando API de Factiliza
    */
   async sendWhatsAppVerification(phone, code, userName = '') {
     try {
-      const token = process.env.FACTILIZA_TOKEN;
-      const instanceName = process.env.FACTILIZA_INSTANCE;
+      const { token, instance: instanceName } = await getFactilizaConfig();
 
       if (!token || !instanceName) {
         throw new Error('Factiliza credentials not configured');

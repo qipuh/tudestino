@@ -76,11 +76,20 @@ router.post('/like', authenticate, socialController.toggleLike);
 // Agregar comentario
 router.post('/comments', authenticate, socialController.addComment);
 
+// Eliminar comentario propio
+router.delete('/comments/:commentId', authenticate, socialController.deleteComment);
+
 // Obtener comentarios
 router.get('/comments/:contentType/:contentId', socialController.getComments);
 
 // Eliminar post
 router.delete('/posts/:postId', authenticate, socialController.deletePost);
+
+// Guardar/quitar post de guardados
+router.post('/posts/:postId/save', authenticate, socialController.toggleSavePost);
+
+// Obtener posts guardados por el usuario actual
+router.get('/posts/saved/me', authenticate, socialController.getSavedPosts);
 
 // Eliminar reel
 router.delete('/reels/:reelId', authenticate, socialController.deleteReel);

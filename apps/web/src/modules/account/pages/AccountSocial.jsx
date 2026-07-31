@@ -19,7 +19,7 @@ function AccountSocial() {
         {/* Create Post Card */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
               <MessageSquare className="text-white" size={20} />
             </div>
             <input

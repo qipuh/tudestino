@@ -135,7 +135,7 @@ function AboutPage() {
         </div>
 
         {/* CTA */}
-        <div className="bg-gradient-to-r from-primary to-primary-dark text-white p-8 rounded-2xl text-center">
+        <div className="bg-primary text-white p-8 rounded-2xl text-center">
           <h2 className="text-2xl font-bold mb-4" style={{ color: '#ffb547' }}>¿Tienes un negocio turístico en Perú?</h2>
           <p className="mb-6 opacity-90">
             Únete a TuDestino.pe y empieza a aumentar tus reservas e ingresos hoy mismo

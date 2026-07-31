@@ -109,7 +109,7 @@ class Property {
       addressLongitude: json['addressLongitude'] != null
           ? double.tryParse(json['addressLongitude'].toString())
           : null,
-      propertyAmenities: (json['propertyAmenities'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      propertyAmenities: Room.parseAmenities(json['propertyAmenities']),
       breakfastIncluded: json['breakfastIncluded'] ?? false,
       parkingType: json['parkingType'] ?? 'no',
       parkingDetails: json['parkingDetails'],
@@ -117,7 +117,7 @@ class Property {
       checkOutTime: json['checkOutTime'] ?? '12:00',
       childrenAllowed: json['childrenAllowed'] ?? true,
       petsAllowed: json['petsAllowed'] ?? 'no',
-      petFee: json['petFee']?.toDouble(),
+      petFee: json['petFee'] != null ? double.tryParse(json['petFee'].toString()) : null,
       petFeePer: json['petFeePer'],
       additionalRules: json['additionalRules'],
       status: json['status'] ?? 'draft',

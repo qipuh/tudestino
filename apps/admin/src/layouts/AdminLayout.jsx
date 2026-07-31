@@ -15,7 +15,10 @@ import {
   ChevronLeft,
   Bell,
   Image,
-  MapPin
+  MapPin,
+  CreditCard,
+  MessageCircle,
+  Map
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 
@@ -35,6 +38,9 @@ function AdminLayout() {
     { path: '/promotions', icon: Tag, label: 'Promociones' },
     { path: '/sliders', icon: Image, label: 'Sliders' },
     { path: '/attractions', icon: MapPin, label: 'Atractivos Turísticos' },
+    { path: '/settings/payment', icon: CreditCard, label: 'Pasarela de pago' },
+    { path: '/settings/routing', icon: Map, label: 'Ruteo (OpenRouteService)' },
+    { path: '/settings/communications', icon: MessageCircle, label: 'Comunicaciones' },
   ];
 
   const handleLogout = () => {

@@ -572,5 +572,198 @@ router.post('/create-configs-table', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/migrations/create-location-hierarchy
+ * Creates departments, provinces, and districts tables for location normalization
+ */
+router.post('/create-location-hierarchy', async (req, res) => {
+  try {
+    const queryInterface = sequelize.getQueryInterface();
+    const tables = await queryInterface.showAllTables();
+
+    // Check if tables already exist
+    if (tables.includes('departments') && tables.includes('provinces') && tables.includes('districts')) {
+      return res.json({
+        success: true,
+        message: 'Location hierarchy tables already exist',
+        alreadyExists: true,
+      });
+    }
+
+    // Create departments table
+    if (!tables.includes('departments')) {
+      await queryInterface.createTable('departments', {
+        id: {
+          type: DataTypes.CHAR(36),
+          defaultValue: DataTypes.UUIDV4,
+          primaryKey: true,
+        },
+        country_id: {
+          type: DataTypes.INTEGER,
+          allowNull: false,
+          references: { model: 'countries', key: 'id' },
+          onDelete: 'CASCADE',
+        },
+        code: {
+          type: DataTypes.STRING(10),
+          allowNull: false,
+          comment: 'Region/department code',
+        },
+        name: {
+          type: DataTypes.STRING(100),
+          allowNull: false,
+        },
+        native_name: {
+          type: DataTypes.STRING(100),
+          allowNull: true,
+        },
+        latitude: {
+          type: DataTypes.DECIMAL(10, 8),
+          allowNull: true,
+        },
+        longitude: {
+          type: DataTypes.DECIMAL(11, 8),
+          allowNull: true,
+        },
+        created_at: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
+        },
+        updated_at: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          defaultValue: sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
+        },
+      }, {
+        indexes: [
+          { fields: ['country_id'] },
+          { fields: ['code'] },
+          { fields: ['name'] },
+        ],
+      });
+    }
+
+    // Create provinces table
+    if (!tables.includes('provinces')) {
+      await queryInterface.createTable('provinces', {
+        id: {
+          type: DataTypes.CHAR(36),
+          defaultValue: DataTypes.UUIDV4,
+          primaryKey: true,
+        },
+        department_id: {
+          type: DataTypes.CHAR(36),
+          allowNull: false,
+          references: { model: 'departments', key: 'id' },
+          onDelete: 'CASCADE',
+        },
+        code: {
+          type: DataTypes.STRING(10),
+          allowNull: false,
+        },
+        name: {
+          type: DataTypes.STRING(100),
+          allowNull: false,
+        },
+        native_name: {
+          type: DataTypes.STRING(100),
+          allowNull: true,
+        },
+        latitude: {
+          type: DataTypes.DECIMAL(10, 8),
+          allowNull: true,
+        },
+        longitude: {
+          type: DataTypes.DECIMAL(11, 8),
+          allowNull: true,
+        },
+        created_at: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
+        },
+        updated_at: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          defaultValue: sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
+        },
+      }, {
+        indexes: [
+          { fields: ['department_id'] },
+          { fields: ['code'] },
+          { fields: ['name'] },
+        ],
+      });
+    }
+
+    // Create districts table
+    if (!tables.includes('districts')) {
+      await queryInterface.createTable('districts', {
+        id: {
+          type: DataTypes.CHAR(36),
+          defaultValue: DataTypes.UUIDV4,
+          primaryKey: true,
+        },
+        province_id: {
+          type: DataTypes.CHAR(36),
+          allowNull: false,
+          references: { model: 'provinces', key: 'id' },
+          onDelete: 'CASCADE',
+        },
+        code: {
+          type: DataTypes.STRING(10),
+          allowNull: false,
+        },
+        name: {
+          type: DataTypes.STRING(100),
+          allowNull: false,
+        },
+        native_name: {
+          type: DataTypes.STRING(100),
+          allowNull: true,
+        },
+        latitude: {
+          type: DataTypes.DECIMAL(10, 8),
+          allowNull: true,
+        },
+        longitude: {
+          type: DataTypes.DECIMAL(11, 8),
+          allowNull: true,
+        },
+        created_at: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
+        },
+        updated_at: {
+          type: DataTypes.DATE,
+          allowNull: false,
+          defaultValue: sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
+        },
+      }, {
+        indexes: [
+          { fields: ['province_id'] },
+          { fields: ['code'] },
+          { fields: ['name'] },
+        ],
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Location hierarchy tables created successfully',
+      alreadyExists: false,
+    });
+  } catch (error) {
+    console.error('Error creating location hierarchy tables:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating location hierarchy tables',
+      error: error.message,
+    });
+  }
+});
+
 export default router;
 

@@ -89,7 +89,7 @@ function FloatingChatBubble({ recipient, onClose }) {
       <div className="fixed bottom-4 right-4 z-50">
         <button
           onClick={() => setIsMinimized(false)}
-          className="bg-gradient-to-r from-primary to-primary-dark text-white rounded-full p-4 shadow-lg hover:opacity-90 transition flex items-center gap-2 relative"
+          className="bg-primary text-white rounded-full p-4 shadow-lg hover:opacity-90 transition flex items-center gap-2 relative"
         >
           <MessageCircle size={24} />
           <span className="font-semibold">{recipient.name}</span>
@@ -106,7 +106,7 @@ function FloatingChatBubble({ recipient, onClose }) {
   return (
     <div className="fixed bottom-4 right-4 z-50 w-96 h-[500px] bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden border border-gray-200">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-primary-dark text-white p-4 flex items-center justify-between">
+      <div className="bg-primary text-white p-4 flex items-center justify-between">
         <div className="flex items-center gap-3 cursor-pointer" onClick={handleOpenFullChat}>
           {recipient.avatar ? (
             <img
@@ -143,7 +143,7 @@ function FloatingChatBubble({ recipient, onClose }) {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-br from-primary/5 to-white">
+      <div className="flex-1 overflow-y-auto p-4 bg-white">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -174,7 +174,7 @@ function FloatingChatBubble({ recipient, onClose }) {
                   <div
                     className={`max-w-[75%] rounded-lg px-4 py-2 ${
                       isOwn
-                        ? 'bg-gradient-to-r from-primary to-primary-dark text-white'
+                        ? 'bg-primary text-white'
                         : 'bg-white border border-gray-200 text-gray-900'
                     }`}
                   >
@@ -212,7 +212,7 @@ function FloatingChatBubble({ recipient, onClose }) {
           <button
             type="submit"
             disabled={!message.trim() || !currentConversation || loading}
-            className="bg-gradient-to-r from-primary to-primary-dark text-white p-2 rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-primary text-white p-2 rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send size={20} />
           </button>

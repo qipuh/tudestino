@@ -240,7 +240,7 @@ function NotificationsPage() {
                           {/* Avatar del actor si existe */}
                           {actor && (
                             <div className="relative flex-shrink-0">
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/30 overflow-hidden">
+                              <div className="w-12 h-12 rounded-full bg-primary/20 overflow-hidden">
                                 {actor.avatar ? (
                                   <img
                                     src={getImageUrl(actor.avatar, 'social')}

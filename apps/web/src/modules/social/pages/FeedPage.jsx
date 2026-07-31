@@ -63,7 +63,7 @@ function FeedPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-sand">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header with Create Button */}
           <div className="mb-8 flex items-center justify-between">
@@ -76,7 +76,7 @@ function FeedPage() {
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 bg-gradient-to-r from-primary to-primary-dark text-white px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+              className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
             >
               <Plus size={20} />
               <span className="hidden sm:inline">Crear</span>
@@ -89,7 +89,7 @@ function FeedPage() {
               onClick={() => setFeedMode('explore')}
               className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${
                 feedMode === 'explore'
-                  ? 'bg-gradient-to-r from-primary-dark to-secondary text-white shadow-md'
+                  ? 'bg-primary-dark text-white shadow-md'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
@@ -100,7 +100,7 @@ function FeedPage() {
               onClick={() => setFeedMode('following')}
               className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${
                 feedMode === 'following'
-                  ? 'bg-gradient-to-r from-primary-dark to-secondary text-white shadow-md'
+                  ? 'bg-primary-dark text-white shadow-md'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
@@ -111,7 +111,7 @@ function FeedPage() {
               onClick={() => setFeedMode('trending')}
               className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${
                 feedMode === 'trending'
-                  ? 'bg-gradient-to-r from-primary-dark to-secondary text-white shadow-md'
+                  ? 'bg-primary-dark text-white shadow-md'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
@@ -196,7 +196,7 @@ function FeedPage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-dark to-secondary">
+                  <div className="w-full h-full flex items-center justify-center bg-primary-dark">
                     <p className="text-white text-center p-4 text-sm line-clamp-3">
                       {post.content}
                     </p>
@@ -204,7 +204,7 @@ function FeedPage() {
                 )}
 
                 {/* Overlay on hover */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
                   <div className="text-white flex items-center gap-6 transform group-hover:scale-110 transition-transform duration-300">
                     <div className="flex items-center gap-2">
                       <Heart size={26} fill="white" className="drop-shadow-lg" />
@@ -220,7 +220,7 @@ function FeedPage() {
                 {/* Type badge */}
                 <div className="absolute top-3 right-3 opacity-90 group-hover:opacity-100 transition-opacity">
                   {post.type === 'reel' ? (
-                    <div className="bg-gradient-to-r from-secondary to-primary rounded-full p-2 shadow-lg">
+                    <div className="bg-primary rounded-full p-2 shadow-lg">
                       <Play size={16} className="text-white" fill="white" />
                     </div>
                   ) : (
@@ -233,9 +233,9 @@ function FeedPage() {
                 </div>
 
                 {/* User info */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4">
+                <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-secondary to-primary flex items-center justify-center text-xs font-bold overflow-hidden ring-2 ring-white/30">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold overflow-hidden ring-2 ring-white/30">
                       {post.user?.avatar ? (
                         <img src={getImageUrl(post.user.avatar, 'social')} alt={post.user.name} className="w-full h-full object-cover" />
                       ) : (

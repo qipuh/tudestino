@@ -118,7 +118,7 @@ export const updateBookingStatus = async (req, res) => {
 // Verificar disponibilidad
 export const checkAvailability = async (req, res) => {
   try {
-    const { propertyId, checkIn, checkOut } = req.query;
+    const { propertyId, checkIn, checkOut, roomId } = req.query;
 
     if (!propertyId || !checkIn || !checkOut) {
       return res.status(400).json({
@@ -130,7 +130,8 @@ export const checkAvailability = async (req, res) => {
     const available = await bookingsService.checkAvailability(
       propertyId,
       checkIn,
-      checkOut
+      checkOut,
+      roomId || null
     );
 
     res.json({

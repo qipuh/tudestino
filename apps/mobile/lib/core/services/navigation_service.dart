@@ -17,6 +17,22 @@ import '../../modules/social/reels_screen.dart';
 import '../../modules/notifications/notifications_screen.dart';
 import '../../modules/favorites/favorites_screen.dart';
 import '../../modules/messaging/messages_screen.dart';
+import '../../modules/routes/record_route_screen.dart';
+import '../../modules/routes/save_route_screen.dart';
+import '../../modules/routes/routes_feed_screen.dart';
+import '../../modules/routes/route_detail_screen.dart';
+import '../../modules/verification/verify_identity_screen.dart';
+import '../../modules/properties/tour_detail_screen.dart';
+import '../../modules/social/create_post_screen.dart';
+import '../../modules/properties/attraction_detail_screen.dart';
+import '../../modules/properties/business_detail_screen.dart';
+import '../../modules/profile/account_settings_screen.dart';
+import '../../modules/profile/help_support_screen.dart';
+import '../../modules/bookings/payment_method_screen.dart';
+import '../../models/gps_route.dart';
+import '../../modules/routes/plan_route_screen.dart';
+import '../../modules/routes/edit_route_screen.dart';
+import '../../core/services/route_tracking_service.dart' show RouteMilestoneDraft;
 
 class NavigationService {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -31,9 +47,11 @@ class NavigationService {
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
 
       case '/search':
+        final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
           builder: (_) => SearchScreen(
-            initialLocation: settings.arguments as Map<String, dynamic>?,
+            initialLocation: args,
+            category: args?['category'] as String? ?? 'hotel',
           ),
         );
 
@@ -69,6 +87,7 @@ class NavigationService {
             checkOut: args['checkOut'] as DateTime?,
             adults: args['adults'] as int? ?? 2,
             children: args['children'] as int? ?? 0,
+            category: args['category'] as String?,
           ),
         );
 
@@ -142,15 +161,94 @@ class NavigationService {
           ),
         );
 
-      case '/create-post':
+      case '/routes-feed':
+        return MaterialPageRoute(builder: (_) => const RoutesFeedScreen());
+
+      case '/record-route':
+        final args = settings.arguments as Map<String, dynamic>? ?? {};
         return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            appBar: AppBar(title: const Text('Crear Publicación')),
-            body: const Center(
-              child: Text('Próximamente: Crear publicación con cámara y galería'),
-            ),
+          builder: (_) => RecordRouteScreen(
+            activityType: args['activityType'] as String?,
+            referenceTrackPoints: args['referenceTrackPoints'] as List<TrackPoint>?,
           ),
         );
+
+      case '/plan-route':
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => PlanRouteScreen(
+            mode: args['mode'] as PlanRouteMode? ?? PlanRouteMode.search,
+            activityType: args['activityType'] as String?,
+            fixedDestination: args['fixedDestination'] as GeoPoint?,
+            fixedDestinationLabel: args['fixedDestinationLabel'] as String?,
+            referenceTrackPoints: args['referenceTrackPoints'] as List<TrackPoint>?,
+          ),
+        );
+
+      case '/save-route':
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => SaveRouteScreen(
+            trackPoints: args['trackPoints'] as List<TrackPoint>,
+            distanceKm: args['distanceKm'] as double,
+            durationSeconds: args['durationSeconds'] as int,
+            elevationGainM: args['elevationGainM'] as double,
+            avgSpeedKmh: args['avgSpeedKmh'] as double,
+            startedAt: args['startedAt'] as DateTime?,
+            activityType: args['activityType'] as String,
+            milestones: args['milestones'] as List<RouteMilestoneDraft>? ?? const [],
+          ),
+        );
+
+      case '/route-detail':
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => RouteDetailScreen(routeId: args['routeId'] as String),
+        );
+
+      case '/edit-route':
+        final route = settings.arguments as GpsRoute;
+        return MaterialPageRoute(builder: (_) => EditRouteScreen(route: route));
+
+      case '/verify-identity':
+        return MaterialPageRoute(builder: (_) => const VerifyIdentityScreen());
+
+      case '/tour-detail':
+        final tourId = settings.arguments as String;
+        return MaterialPageRoute(
+          builder: (_) => TourDetailScreen(tourId: tourId),
+        );
+
+      case '/attraction-detail':
+        final attractionId = settings.arguments as String;
+        return MaterialPageRoute(
+          builder: (_) => AttractionDetailScreen(attractionId: attractionId),
+        );
+
+      case '/business-detail':
+        final businessId = settings.arguments as String;
+        return MaterialPageRoute(
+          builder: (_) => BusinessDetailScreen(businessId: businessId),
+        );
+
+      case '/account-settings':
+        return MaterialPageRoute(builder: (_) => const AccountSettingsScreen());
+
+      case '/help-support':
+        return MaterialPageRoute(builder: (_) => const HelpSupportScreen());
+
+      case '/card-payment':
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => PaymentMethodScreen(
+            bookingId: args['bookingId'] as String,
+            amount: args['amount'] as double,
+            propertyName: args['propertyName'] as String,
+          ),
+        );
+
+      case '/create-post':
+        return MaterialPageRoute(builder: (_) => const CreatePostScreen());
 
       default:
         return MaterialPageRoute(

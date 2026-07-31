@@ -15,6 +15,15 @@ const Booking = sequelize.define('Booking', {
       key: 'id',
     },
   },
+  roomId: {
+    type: DataTypes.CHAR(36),
+    allowNull: true,
+    comment: 'Tipo de habitación específico reservado - null en reservas creadas antes de este campo',
+    references: {
+      model: 'rooms',
+      key: 'id',
+    },
+  },
   guestId: {
     type: DataTypes.CHAR(36),
     allowNull: false,
@@ -63,7 +72,7 @@ const Booking = sequelize.define('Booking', {
   },
   currency: {
     type: DataTypes.STRING(3),
-    defaultValue: 'USD',
+    defaultValue: 'PEN',
   },
   // Estado de la reserva
   status: {

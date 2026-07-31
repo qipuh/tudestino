@@ -116,7 +116,7 @@ function EventRegistration({ eventId, eventData, tickets = [] }) {
 
   if (registered) {
     return (
-      <div className="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 rounded-lg p-5">
+      <div className="bg-green-50 border-2 border-green-200 rounded-lg p-5">
         <div className="flex items-start gap-3 mb-3">
           <div className="p-2 bg-green-500 rounded-full">
             <UserCheck className="text-white" size={20} />
@@ -249,7 +249,7 @@ function EventRegistration({ eventId, eventData, tickets = [] }) {
       {/* Total y botón de registro */}
       {hasSelection && (
         <div className="border-t pt-4 mt-4">
-          <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg p-4 mb-3">
+          <div className="bg-primary/5 rounded-lg p-4 mb-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-gray-700">Total a pagar:</span>
               <span className="text-2xl font-bold text-primary">

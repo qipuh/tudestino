@@ -244,7 +244,7 @@ function AccountProfile() {
                   className="w-24 h-24 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center">
                   <User className="text-white" size={40} />
                 </div>
               )}

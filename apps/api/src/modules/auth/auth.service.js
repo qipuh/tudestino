@@ -140,12 +140,13 @@ class AuthService {
     // Crear URL de reset
     const resetUrl = `${process.env.WEB_URL}/reset-password?token=${resetToken}&email=${email}`;
 
-    // Enviar email (por ahora solo log, necesitarás configurar servicio de email)
-    console.log('🔐 Reset Password URL:', resetUrl);
-    console.log('Token expires at:', resetExpires);
-
-    // TODO: Enviar email con el link de recuperación
-    // await emailService.sendPasswordResetEmail(email, resetUrl);
+    try {
+      await verificationService.sendPasswordResetEmail(email, resetUrl, user.name);
+    } catch (error) {
+      // No revelar el fallo de envío al usuario (mismo mensaje genérico
+      // de siempre) - pero sí dejarlo en el log para que un admin lo note.
+      console.error('Error enviando email de recuperación:', error.message);
+    }
 
     return {
       message: 'Si el email existe, recibirás instrucciones para restablecer tu contraseña',

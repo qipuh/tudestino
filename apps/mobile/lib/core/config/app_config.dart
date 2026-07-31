@@ -6,7 +6,7 @@ class AppConfig {
   static const Map<String, String> _apiUrls = {
     'development': 'http://localhost:3000/api',
     'development_android': 'http://192.168.0.16:3000/api',
-    'production': 'https://tudestino.lat/api',
+    'production': 'https://api.tudestino.pe/api',
   };
   
   // Getter para obtener la URL base según el ambiente
@@ -30,7 +30,7 @@ class AppConfig {
   static String get webUrl {
     switch (_environment) {
       case 'production':
-        return 'https://tudestino.lat';
+        return 'https://tudestino.pe';
       case 'development':
       case 'development_android':
       default:

@@ -2,6 +2,7 @@ import Conversation from './conversation.model.js';
 import Message from './message.model.js';
 import User from '../users/user.model-mysql.js';
 import { Op } from 'sequelize';
+import { createMessageNotification } from '../notifications/notification.helper.js';
 
 // Obtener o crear una conversación entre dos usuarios
 export const getOrCreateConversation = async (user1Id, user2Id, bookingId = null) => {
@@ -131,6 +132,8 @@ export const sendMessage = async (conversationId, senderId, content) => {
     attributes: ['id', 'name', 'avatar'],
   });
   messageData.sender = sender;
+
+  createMessageNotification(receiverId, senderId, conversationId);
 
   return messageData;
 };

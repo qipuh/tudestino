@@ -17,15 +17,30 @@ import BusinessFollow from '../modules/businesses/business-follow.model.js';
 import UserSocialPost from '../modules/social/user-social-post.model.js';
 import ServiceReview from '../modules/reviews/service-review.model.js';
 import Country from '../modules/countries/country.model.js';
+import Department from '../modules/locations/department.model.js';
+import Province from '../modules/locations/province.model.js';
+import District from '../modules/locations/district.model.js';
 import Tour from '../modules/tours/tour.model.js';
 import Attraction from '../modules/attractions/attraction.model.js';
 import AttractionImage from '../modules/attractions/attraction-image.model.js';
 import AttractionTag from '../modules/attractions/attraction-tag.model.js';
+import Route from '../modules/routes/route.model.js';
+import RouteMilestone from '../modules/routes/route-milestone.model.js';
 
 export const setupAssociations = () => {
   // User - Property (Host relationship)
   User.hasMany(Property, { foreignKey: 'hostId', as: 'properties' });
   Property.belongsTo(User, { foreignKey: 'hostId', as: 'host' });
+
+  // User - Route (rutas GPS compartidas)
+  User.hasMany(Route, { foreignKey: 'userId', as: 'routes' });
+  Route.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+  // Route - RouteMilestone (fotos/comentarios pinchados en el recorrido)
+  Route.hasMany(RouteMilestone, { foreignKey: 'routeId', as: 'milestones' });
+  RouteMilestone.belongsTo(Route, { foreignKey: 'routeId', as: 'route' });
+  User.hasMany(RouteMilestone, { foreignKey: 'userId', as: 'routeMilestones' });
+  RouteMilestone.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
   // User - Booking (Guest relationship)
   User.hasMany(Booking, { foreignKey: 'guestId', as: 'guestBookings' });
@@ -174,5 +189,19 @@ export const setupAssociations = () => {
   User.hasMany(Attraction, { foreignKey: 'createdBy', as: 'attractions' });
   Attraction.belongsTo(User, { foreignKey: 'createdBy', as: 'creator' });
 
-  console.log('✅ Model associations configured (including Business module and Attractions)');
+  // ==================== LOCATION HIERARCHY ASSOCIATIONS ====================
+
+  // Country - Department
+  Country.hasMany(Department, { foreignKey: 'countryId', as: 'departments' });
+  Department.belongsTo(Country, { foreignKey: 'countryId', as: 'country' });
+
+  // Department - Province
+  Department.hasMany(Province, { foreignKey: 'departmentId', as: 'provinces' });
+  Province.belongsTo(Department, { foreignKey: 'departmentId', as: 'department' });
+
+  // Province - District
+  Province.hasMany(District, { foreignKey: 'provinceId', as: 'districts' });
+  District.belongsTo(Province, { foreignKey: 'provinceId', as: 'province' });
+
+  console.log('✅ Model associations configured (including Business module, Attractions, and Location hierarchy)');
 };

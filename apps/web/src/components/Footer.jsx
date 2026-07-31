@@ -26,6 +26,7 @@ function Footer() {
       title: 'Comunidad',
       links: [
         { to: '/tudestino', label: 'Red social' },
+        { to: '/rutas', label: 'Rutas compartidas' },
         { to: '/events', label: 'Eventos' },
         { to: '/blog', label: 'Blog' },
       ]
@@ -51,7 +52,7 @@ function Footer() {
   ];
 
   return (
-    <footer className="border-t border-gray-200 bg-gray-50 mt-12">
+    <footer className="border-t border-line bg-sand mt-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Desktop - Grid normal */}
         <div className="hidden md:grid md:grid-cols-4 gap-6">

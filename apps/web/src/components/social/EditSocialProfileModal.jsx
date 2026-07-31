@@ -213,7 +213,7 @@ function EditSocialProfileModal({ isOpen, onClose, profile, onSave }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4 backdrop-blur-sm">
       <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-primary/5 to-transparent">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-primary/5">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
               <User className="text-primary" size={24} />
@@ -443,7 +443,7 @@ function EditSocialProfileModal({ isOpen, onClose, profile, onSave }) {
                 {destinations.map((dest) => (
                   <span
                     key={dest.name}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-full text-sm font-medium shadow-sm hover:shadow-md transition-all"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium shadow-sm hover:shadow-md transition-all"
                   >
                     <MapPin size={14} />
                     {dest.name}

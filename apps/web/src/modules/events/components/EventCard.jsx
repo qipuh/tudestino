@@ -105,7 +105,7 @@ function EventCard({ event }) {
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+            <div className="w-full h-full bg-primary/20 flex items-center justify-center">
               <Calendar size={64} className="text-primary/30" />
             </div>
           )}

@@ -18,8 +18,10 @@ router.get('/check-availability', checkAvailability);
 // Rutas protegidas
 router.use(authenticate);
 
-// Crear una reserva (solo guests y hosts) - requiere verificación de identidad
-router.post('/', authorize('guest', 'host', 'admin'), requireVerifiedIdentity, createBooking);
+// Crear una reserva - cualquier rol autenticado puede reservar como viajero
+// (un host o business_owner también puede querer alojarse en otra propiedad)
+// - requiere verificación de identidad
+router.post('/', authorize('guest', 'host', 'business_owner', 'admin'), requireVerifiedIdentity, createBooking);
 
 // Obtener mis reservas
 router.get('/my-bookings', getMyBookings);

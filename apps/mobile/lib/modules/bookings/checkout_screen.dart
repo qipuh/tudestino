@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../../providers/properties_provider.dart';
 import '../../providers/bookings_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -134,11 +135,66 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     if (mounted) {
       if (success) {
-        // Mostrar confirmación y navegar
+        final bookingId = bookingsProvider.lastCreatedBookingId;
+        if (bookingId == null) {
+          // No debería pasar si success es true, pero por si acaso no
+          // dejamos al usuario colgado sin saber qué pasó con su reserva.
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => _buildSuccessDialog(property, room),
+          );
+          return;
+        }
+
+        final paid = await Navigator.of(context).pushNamed(
+          '/card-payment',
+          arguments: {
+            'bookingId': bookingId,
+            'amount': _calculateTotal(room),
+            'propertyName': property.displayName,
+          },
+        );
+
+        if (!mounted) return;
+
+        if (paid == true) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => _buildSuccessDialog(property, room),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Tu reserva quedó pendiente de pago. Puedes completarla desde "Mis reservas".'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      } else if (bookingsProvider.errorCode == 'IDENTITY_NOT_VERIFIED') {
         showDialog(
           context: context,
-          barrierDismissible: false,
-          builder: (context) => _buildSuccessDialog(property, room),
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text('Verifica tu identidad'),
+            content: const Text(
+              'Para reservar necesitamos confirmar quién eres. Es rápido: solo necesitas tu documento y una selfie.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Ahora no'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pushNamed('/verify-identity');
+                },
+                child: const Text('Verificar identidad'),
+              ),
+            ],
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -230,7 +286,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final propertiesProvider = Provider.of<PropertiesProvider>(context);
     final property = propertiesProvider.selectedProperty;
     final theme = Theme.of(context);
-    final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
 
     if (propertiesProvider.isLoading || property == null) {
       return Scaffold(
@@ -274,7 +329,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 const SizedBox(height: 20),
 
                 // Desglose de precios
-                _buildPriceBreakdown(room, theme, currencyFormat),
+                _buildPriceBreakdown(room, theme),
 
                 const SizedBox(height: 20),
 
@@ -292,7 +347,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomBar(property, room, theme, currencyFormat),
+      bottomNavigationBar: _buildBottomBar(property, room, theme),
     );
   }
 
@@ -650,7 +705,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildPriceBreakdown(Room room, ThemeData theme, NumberFormat currencyFormat) {
+  Widget _buildPriceBreakdown(Room room, ThemeData theme) {
     final subtotal = _calculateSubtotal(room);
     final cleaning = _calculateCleaningFee(room);
     final service = _calculateServiceFee(room);
@@ -683,32 +738,32 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const SizedBox(height: 16),
 
           _buildPriceRow(
-            '${currencyFormat.format(room.pricePerNight)} x $nights ${nights == 1 ? "noche" : "noches"}',
-            currencyFormat.format(subtotal),
+            '${CurrencyFormatter.format(room.pricePerNight)} x $nights ${nights == 1 ? "noche" : "noches"}',
+            CurrencyFormatter.format(subtotal),
             false,
           ),
           const SizedBox(height: 8),
           _buildPriceRow(
             'Tarifa de limpieza',
-            currencyFormat.format(cleaning),
+            CurrencyFormatter.format(cleaning),
             false,
           ),
           const SizedBox(height: 8),
           _buildPriceRow(
             'Tarifa de servicio',
-            currencyFormat.format(service),
+            CurrencyFormatter.format(service),
             false,
           ),
           const SizedBox(height: 8),
           _buildPriceRow(
             'Impuestos',
-            currencyFormat.format(taxes),
+            CurrencyFormatter.format(taxes),
             false,
           ),
           const Divider(height: 24),
           _buildPriceRow(
             'Total',
-            currencyFormat.format(total),
+            CurrencyFormatter.format(total),
             true,
             theme.primaryColor,
           ),
@@ -789,7 +844,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             Icons.pets_outlined,
             'Mascotas',
             property.petsAllowed == 'yes'
-                ? 'Se permiten mascotas${property.petFee != null ? " (+${NumberFormat.currency(symbol: '\$', decimalDigits: 0).format(property.petFee)})" : ""}'
+                ? 'Se permiten mascotas${property.petFee != null ? " (+${CurrencyFormatter.format(property.petFee!)})" : ""}'
                 : 'No se permiten mascotas',
             theme,
           ),
@@ -921,7 +976,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildBottomBar(Property property, Room room, ThemeData theme, NumberFormat currencyFormat) {
+  Widget _buildBottomBar(Property property, Room room, ThemeData theme) {
     final total = _calculateTotal(room);
 
     return Container(
@@ -953,7 +1008,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    currencyFormat.format(total),
+                    CurrencyFormatter.format(total),
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,

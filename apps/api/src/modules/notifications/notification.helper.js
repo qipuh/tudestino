@@ -1,10 +1,28 @@
 import Notification from './notification.model.js';
 import User from '../users/user.model-mysql.js';
 import { Op } from 'sequelize';
+import { sendPushNotification } from '../../config/firebase-admin.js';
 
 /**
  * Helper para crear notificaciones automáticamente
  */
+
+// Crea la notificación en BD (como antes) y de paso intenta enviar el push -
+// silencioso si Firebase no está configurado o el usuario no tiene fcmToken.
+const createNotificationAndPush = async (payload) => {
+  const notification = await Notification.create(payload);
+
+  const recipient = await User.findByPk(payload.userId, { attributes: ['fcmToken'] });
+  if (recipient?.fcmToken) {
+    await sendPushNotification(recipient.fcmToken, {
+      title: payload.title,
+      message: payload.message,
+      data: { type: payload.type, relatedId: payload.relatedId || '' },
+    });
+  }
+
+  return notification;
+};
 
 // Notificación de nuevo seguidor
 export const createFollowerNotification = async (followedUserId, followerUserId) => {
@@ -15,7 +33,7 @@ export const createFollowerNotification = async (followedUserId, followerUserId)
 
     if (!follower) return;
 
-    await Notification.create({
+    await createNotificationAndPush({
       userId: followedUserId,
       actorId: followerUserId,
       type: 'new_follower',
@@ -59,7 +77,7 @@ export const createPostLikeNotification = async (postOwnerId, likerUserId, postI
 
     if (recentNotification) return;
 
-    await Notification.create({
+    await createNotificationAndPush({
       userId: postOwnerId,
       actorId: likerUserId,
       type: 'post_liked',
@@ -102,7 +120,7 @@ export const createReelLikeNotification = async (reelOwnerId, likerUserId, reelI
 
     if (recentNotification) return;
 
-    await Notification.create({
+    await createNotificationAndPush({
       userId: reelOwnerId,
       actorId: likerUserId,
       type: 'reel_liked',
@@ -131,7 +149,7 @@ export const createCommentNotification = async (postOwnerId, commenterId, postId
 
     if (!commenter) return;
 
-    await Notification.create({
+    await createNotificationAndPush({
       userId: postOwnerId,
       actorId: commenterId,
       type: 'comment_received',
@@ -174,7 +192,7 @@ export const createCommentLikeNotification = async (commentOwnerId, likerUserId,
 
     if (recentNotification) return;
 
-    await Notification.create({
+    await createNotificationAndPush({
       userId: commentOwnerId,
       actorId: likerUserId,
       type: 'comment_liked',
@@ -195,7 +213,7 @@ export const createCommentLikeNotification = async (commentOwnerId, likerUserId,
 // Notificación de reserva confirmada
 export const createBookingConfirmedNotification = async (guestId, bookingId, propertyName) => {
   try {
-    await Notification.create({
+    await createNotificationAndPush({
       userId: guestId,
       type: 'booking_confirmed',
       title: 'Reserva confirmada',
@@ -216,7 +234,7 @@ export const createBookingRequestNotification = async (hostId, guestId, bookingI
 
     if (!guest) return;
 
-    await Notification.create({
+    await createNotificationAndPush({
       userId: hostId,
       actorId: guestId,
       type: 'booking_request',
@@ -244,7 +262,7 @@ export const createMessageNotification = async (receiverId, senderId, conversati
 
     if (!sender) return;
 
-    await Notification.create({
+    await createNotificationAndPush({
       userId: receiverId,
       actorId: senderId,
       type: 'message_received',

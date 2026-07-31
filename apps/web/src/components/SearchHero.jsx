@@ -206,33 +206,33 @@ function SearchHero() {
   const totalGuests = searchParams.adults + searchParams.children;
 
   return (
-    <div className="relative bg-primary px-4 flex items-center" style={{ height: '55vh', minHeight: '450px' }}>
+    <div className="relative bg-white px-4 pt-12 pb-10 md:pt-16 md:pb-14">
       <div className="max-w-5xl mx-auto w-full">
         {/* Título principal */}
-        <div className="text-center mb-6 md:mb-8">
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-3 md:mb-4 px-4">
+        <div className="text-center mb-8 md:mb-10">
+          <h1 className="font-display text-3xl md:text-5xl lg:text-6xl font-medium tracking-tight text-ink mb-4 md:mb-5 px-4">
             Encuentra tu próximo destino
           </h1>
-          <p className="text-base md:text-lg lg:text-xl text-white/90 px-4">
+          <p className="text-base md:text-lg font-light text-mute px-4">
             Descubre alojamientos, tours, restaurantes y más
           </p>
         </div>
 
         {/* Tabs de categorías */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-2 mb-4">
+        <div className="mb-4">
           <div className="flex flex-wrap gap-2 justify-center">
             {categories.map((category) => (
               <button
                 key={category.id}
                 type="button"
                 onClick={() => setActiveCategory(category.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-normal border transition-all ${
                   activeCategory === category.id
-                    ? 'bg-white text-primary shadow-lg scale-105'
-                    : 'bg-white/20 text-white hover:bg-white/30'
+                    ? 'bg-primary border-primary text-white shadow-card'
+                    : 'bg-white border-line text-ink hover:border-primary/50'
                 }`}
               >
-                <category.icon size={18} />
+                <category.icon size={16} strokeWidth={1.5} />
                 <span className="hidden sm:inline">{category.name}</span>
               </button>
             ))}
@@ -240,7 +240,7 @@ function SearchHero() {
         </div>
 
         {/* Barra de búsqueda principal */}
-        <form onSubmit={handleSearch} className="bg-white rounded-2xl shadow-2xl p-2">
+        <form onSubmit={handleSearch} className="bg-white border border-line rounded-2xl shadow-card p-2">
           <div className="flex flex-col md:grid gap-2" style={{
             gridTemplateColumns: activeCategory === 'hotel' || activeCategory === 'tour'
               ? '1.5fr 1fr 1fr 0.8fr'
@@ -249,9 +249,9 @@ function SearchHero() {
             {/* Búsqueda por texto/nombre */}
             <div className="relative">
               <div className="flex items-center px-4 md:px-6 py-3 rounded-2xl hover:bg-gray-50 transition">
-                <Search className="text-gray-400 mr-2 md:mr-3 flex-shrink-0" size={20} />
+                <Search className="text-gray-400 mr-2 md:mr-3 flex-shrink-0" size={20} strokeWidth={1.5} />
                 <div className="flex-1 min-w-0">
-                  <label className="block text-xs font-semibold text-gray-900 mb-1">
+                  <label className="block text-[11px] font-medium uppercase tracking-wide text-mute mb-1">
                     {activeCategory === 'hotel' ? '¿Qué buscas?' : activeCategory === 'tour' ? 'Buscar tours' : activeCategory === 'restaurant' ? 'Buscar restaurantes' : activeCategory === 'event' ? 'Buscar eventos' : 'Buscar entretenimiento'}
                   </label>
                   <input
@@ -269,9 +269,9 @@ function SearchHero() {
             {/* Ubicación con autocompletado */}
             <div className="relative">
               <div className="flex items-center px-4 md:px-6 py-3 rounded-2xl hover:bg-gray-50 transition">
-                <MapPin className="text-gray-400 mr-2 md:mr-3 flex-shrink-0" size={20} />
+                <MapPin className="text-gray-400 mr-2 md:mr-3 flex-shrink-0" size={20} strokeWidth={1.5} />
                 <div className="flex-1 min-w-0">
-                  <label className="block text-xs font-semibold text-gray-900 mb-1">
+                  <label className="block text-[11px] font-medium uppercase tracking-wide text-mute mb-1">
                     Ubicación
                   </label>
                   <input
@@ -334,9 +334,9 @@ function SearchHero() {
                         setShowDatePicker(true);
                       }}
                     >
-                      <Calendar className="text-gray-400 flex-shrink-0" size={16} />
+                      <Calendar className="text-gray-400 flex-shrink-0" size={16} strokeWidth={1.5} />
                       <div className="flex-1 min-w-0">
-                        <label className="block text-xs font-semibold text-gray-700 mb-0.5">Llegada</label>
+                        <label className="block text-[11px] font-medium uppercase tracking-wide text-mute mb-0.5">Llegada</label>
                         <div className="text-sm font-medium text-gray-900 truncate">
                           {searchParams.checkIn ? formatDate(searchParams.checkIn) : 'Fecha'}
                         </div>
@@ -351,9 +351,9 @@ function SearchHero() {
                         }
                       }}
                     >
-                      <Calendar className="text-gray-400 flex-shrink-0" size={16} />
+                      <Calendar className="text-gray-400 flex-shrink-0" size={16} strokeWidth={1.5} />
                       <div className="flex-1 min-w-0">
-                        <label className="block text-xs font-semibold text-gray-700 mb-0.5">Salida</label>
+                        <label className="block text-[11px] font-medium uppercase tracking-wide text-mute mb-0.5">Salida</label>
                         <div className="text-sm font-medium text-gray-900 truncate">
                           {searchParams.checkOut ? formatDate(searchParams.checkOut) : 'Fecha'}
                         </div>
@@ -372,9 +372,9 @@ function SearchHero() {
                     className="flex-1 flex items-center px-4 md:px-6 py-3 rounded-2xl hover:bg-gray-50 transition cursor-pointer"
                     onClick={() => setShowGuestPicker(!showGuestPicker)}
                   >
-                    <Users className="text-gray-400 mr-2 md:mr-3 flex-shrink-0" size={20} />
+                    <Users className="text-gray-400 mr-2 md:mr-3 flex-shrink-0" size={20} strokeWidth={1.5} />
                     <div className="flex-1 min-w-0">
-                      <label className="block text-xs font-semibold text-gray-900 mb-1">
+                      <label className="block text-[11px] font-medium uppercase tracking-wide text-mute mb-1">
                         Personas
                       </label>
                       <div className="text-sm text-gray-600">
@@ -386,7 +386,7 @@ function SearchHero() {
                   {/* Botón de búsqueda */}
                   <button
                     type="submit"
-                    className="bg-gradient-to-r from-secondary to-primary text-white p-3 md:p-4 rounded-full hover:opacity-90 transition shadow-lg flex items-center justify-center flex-shrink-0"
+                    className="bg-primary text-white p-3 md:p-4 rounded-full hover:bg-primary-dark transition shadow-card flex items-center justify-center flex-shrink-0"
                     aria-label="Buscar"
                   >
                     <Search size={20} className="md:hidden" />
@@ -478,7 +478,7 @@ function SearchHero() {
               <div className="relative flex items-center justify-end">
                 <button
                   type="submit"
-                  className="bg-gradient-to-r from-secondary to-primary text-white px-8 py-4 rounded-2xl hover:opacity-90 transition shadow-lg flex items-center justify-center gap-2 font-semibold"
+                  className="bg-primary text-white px-8 py-4 rounded-2xl hover:bg-primary-dark transition shadow-card flex items-center justify-center gap-2 font-semibold"
                   aria-label="Buscar"
                 >
                   <Search size={20} />
@@ -565,7 +565,7 @@ function SearchHero() {
 
               {/* Resumen de noches */}
               {searchParams.checkIn && searchParams.checkOut && (
-                <div className="mt-4 text-center text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg py-2">
+                <div className="mt-4 text-center text-sm text-ink bg-sand border border-line rounded-lg py-2">
                   {Math.ceil((new Date(searchParams.checkOut) - new Date(searchParams.checkIn)) / (1000 * 60 * 60 * 24))} noche{Math.ceil((new Date(searchParams.checkOut) - new Date(searchParams.checkIn)) / (1000 * 60 * 60 * 24)) !== 1 ? 's' : ''}
                 </div>
               )}
@@ -575,7 +575,7 @@ function SearchHero() {
 
         {/* Mensaje de ubicación detectada */}
         {userLocation && (
-          <div className="text-center mt-4 text-white/80 text-sm">
+          <div className="text-center mt-4 text-mute text-sm">
             📍 Ubicación detectada: {userLocation.city}, {userLocation.country}
           </div>
         )}

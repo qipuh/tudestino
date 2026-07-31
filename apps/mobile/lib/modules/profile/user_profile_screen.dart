@@ -161,14 +161,14 @@ class _UserProfileScreenState extends State<UserProfileScreen>
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              expandedHeight: 280,
               floating: false,
               pinned: true,
               backgroundColor: Colors.white,
               elevation: innerBoxIsScrolled ? 1 : 0,
-              flexibleSpace: FlexibleSpaceBar(
-                background: _buildHeader(theme, isOwnProfile),
-              ),
+              automaticallyImplyLeading: true,
+            ),
+            SliverToBoxAdapter(
+              child: _buildHeader(theme, isOwnProfile),
             ),
           ];
         },
@@ -252,10 +252,8 @@ class _UserProfileScreenState extends State<UserProfileScreen>
           ],
         ),
       ),
-      child: SafeArea(
-        child: Column(
+      child: Column(
           children: [
-            const SizedBox(height: 20),
             // Avatar
             Container(
               decoration: BoxDecoration(
@@ -288,8 +286,11 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             // Name
             Text(
               _profileUser!.name,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 24,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -299,8 +300,9 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             if (_profileUser!.username != null)
               Text(
                 '@${_profileUser!.username}',
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   color: Colors.grey.shade600,
                 ),
               ),
@@ -374,7 +376,6 @@ class _UserProfileScreenState extends State<UserProfileScreen>
               ),
           ],
         ),
-      ),
     );
   }
 

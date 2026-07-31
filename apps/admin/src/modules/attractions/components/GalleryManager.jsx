@@ -1,9 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Upload, X, ChevronUp, ChevronDown, Image as ImageIcon } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const SERVER_URL = API_URL.replace(/\/api$/, '');
 
 function GalleryManager({ images = [], onChange }) {
   const [previews, setPreviews] = useState(images);
   const [uploading, setUploading] = useState(false);
+
+  // El padre (AttractionForm) carga los datos de la atracción de forma
+  // async, así que "images" llega vacío en el primer render y luego se
+  // actualiza - useState(images) solo toma el valor inicial y nunca más,
+  // sin este efecto las imágenes ya subidas nunca aparecían al editar.
+  useEffect(() => {
+    setPreviews(images);
+  }, [images]);
 
   const handleFileSelect = async (e) => {
     const files = Array.from(e.target.files);
@@ -72,7 +83,7 @@ function GalleryManager({ images = [], onChange }) {
     if (image.url) {
       return image.url.startsWith('http')
         ? image.url
-        : `http://localhost:3000/uploads/attractions/${image.url}`;
+        : `${SERVER_URL}/uploads/attractions/${image.url}`;
     }
     return '';
   };

@@ -187,11 +187,11 @@ function AccountPage() {
   };
 
   const tabs = [
-    { id: 'profile', name: 'Perfil', icon: User, color: 'from-blue-500 to-blue-600' },
-    { id: 'security', name: 'Seguridad', icon: Lock, color: 'from-purple-500 to-purple-600' },
-    { id: 'bookings', name: 'Reservas', icon: History, color: 'from-green-500 to-green-600' },
-    { id: 'notifications', name: 'Notificaciones', icon: Bell, color: 'from-yellow-500 to-yellow-600' },
-    { id: 'settings', name: 'Configuración', icon: Settings, color: 'from-gray-500 to-gray-600' },
+    { id: 'profile', name: 'Perfil', icon: User, color: 'bg-blue-600' },
+    { id: 'security', name: 'Seguridad', icon: Lock, color: 'bg-purple-600' },
+    { id: 'bookings', name: 'Reservas', icon: History, color: 'bg-green-600' },
+    { id: 'notifications', name: 'Notificaciones', icon: Bell, color: 'bg-yellow-600' },
+    { id: 'settings', name: 'Configuración', icon: Settings, color: 'bg-gray-600' },
   ];
 
   if (!user) {
@@ -209,7 +209,7 @@ function AccountPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-sand">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Card */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
@@ -230,7 +230,7 @@ function AccountPage() {
           <div className="px-8 pb-8 pt-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary to-secondary p-1 shadow-lg">
+                <div className="w-32 h-32 rounded-full bg-primary p-1 shadow-lg">
                   <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
                     {user.avatar ? (
                       <img
@@ -316,7 +316,7 @@ function AccountPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
                   activeTab === tab.id
-                    ? `bg-gradient-to-r ${tab.color} text-white shadow-lg hover:shadow-xl transform hover:scale-105`
+                    ? `${tab.color} text-white shadow-lg hover:shadow-xl transform hover:scale-105`
                     : 'bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50 shadow-sm hover:shadow-md'
                 }`}
               >
@@ -354,7 +354,7 @@ function AccountPage() {
                 {!isEditing ? (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                    className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
                   >
                     <Edit2 size={18} />
                     Editar
@@ -371,7 +371,7 @@ function AccountPage() {
                     <button
                       onClick={handleSubmit}
                       disabled={loading}
-                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Save size={18} />
                       Guardar
@@ -455,7 +455,7 @@ function AccountPage() {
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                      <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
                         <Mail size={24} className="text-white" />
                       </div>
                       <div>
@@ -466,7 +466,7 @@ function AccountPage() {
 
                     {user.phone && (
                       <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                        <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">
                           <Phone size={24} className="text-white" />
                         </div>
                         <div>
@@ -478,7 +478,7 @@ function AccountPage() {
 
                     {user.location && (
                       <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center">
                           <MapPin size={24} className="text-white" />
                         </div>
                         <div>
@@ -489,7 +489,7 @@ function AccountPage() {
                     )}
 
                     <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                      <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                      <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center">
                         <Calendar size={24} className="text-white" />
                       </div>
                       <div>
@@ -565,7 +565,7 @@ function AccountPage() {
 
                     <button
                       type="submit"
-                      className="w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                      className="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
                     >
                       Actualizar contraseña
                     </button>
@@ -577,10 +577,10 @@ function AccountPage() {
                     <Shield size={20} className="text-primary" />
                     Verificación de identidad
                   </h3>
-                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6">
+                  <div className="bg-sand rounded-xl p-6">
                     {user.emailVerified ? (
                       <div className="text-center">
-                        <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                           <CheckCircle size={32} className="text-white" />
                         </div>
                         <h4 className="text-lg font-bold text-gray-900 mb-2">¡Cuenta verificada!</h4>
@@ -588,12 +588,12 @@ function AccountPage() {
                       </div>
                     ) : (
                       <div className="text-center">
-                        <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div className="w-16 h-16 bg-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
                           <AlertCircle size={32} className="text-white" />
                         </div>
                         <h4 className="text-lg font-bold text-gray-900 mb-2">Verifica tu cuenta</h4>
                         <p className="text-gray-600 mb-4">Aumenta la seguridad verificando tu identidad</p>
-                        <button className="px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all">
+                        <button className="px-6 py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all">
                           Verificar ahora
                         </button>
                       </div>
@@ -614,13 +614,13 @@ function AccountPage() {
               </div>
 
               {bookings.length === 0 ? (
-                <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl">
-                  <div className="w-24 h-24 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="text-center py-16 bg-sand rounded-2xl">
+                  <div className="w-24 h-24 bg-gray-400 rounded-full flex items-center justify-center mx-auto mb-6">
                     <History size={48} className="text-white" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">No tienes reservas</h3>
                   <p className="text-gray-600 mb-6">Comienza a explorar y reserva tu próxima aventura</p>
-                  <button className="px-8 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all">
+                  <button className="px-8 py-3 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all">
                     Explorar destinos
                   </button>
                 </div>
@@ -629,7 +629,7 @@ function AccountPage() {
                   {bookings.map((booking) => {
                     const badge = getStatusBadge(booking.status);
                     return (
-                      <div key={booking.id} className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-2xl p-6 hover:shadow-xl transition-all transform hover:scale-105">
+                      <div key={booking.id} className="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:shadow-xl transition-all transform hover:scale-105">
                         <div className="flex justify-between items-start mb-4">
                           <div>
                             <h3 className="text-lg font-bold text-gray-900">{booking.property?.title}</h3>
@@ -680,14 +680,14 @@ function AccountPage() {
                   { title: 'Mensajes de chat', desc: 'Recibe notificaciones de nuevos mensajes', checked: true },
                   { title: 'Promociones y ofertas', desc: 'Recibe ofertas especiales y promociones', checked: false },
                 ].map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl hover:shadow-md transition-all">
+                  <div key={index} className="flex items-center justify-between p-6 bg-sand rounded-xl hover:shadow-md transition-all">
                     <div className="flex-1">
                       <h3 className="font-bold text-gray-900 mb-1">{item.title}</h3>
                       <p className="text-sm text-gray-600">{item.desc}</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer ml-4">
                       <input type="checkbox" className="sr-only peer" defaultChecked={item.checked} />
-                      <div className="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-primary peer-checked:to-primary-dark shadow-lg"></div>
+                      <div className="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary shadow-lg"></div>
                     </label>
                   </div>
                 ))}
@@ -703,7 +703,7 @@ function AccountPage() {
               </div>
 
               <div className="space-y-8">
-                <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6">
+                <div className="bg-sand rounded-xl p-6">
                   <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <Globe size={20} className="text-primary" />
                     Idioma y región
@@ -718,7 +718,7 @@ function AccountPage() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6">
+                <div className="bg-green-50 rounded-xl p-6">
                   <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <CreditCard size={20} className="text-primary" />
                     Moneda
@@ -732,7 +732,7 @@ function AccountPage() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-6 border-2 border-red-200">
+                <div className="bg-red-50 rounded-xl p-6 border-2 border-red-200">
                   <h3 className="font-bold text-red-700 mb-3 flex items-center gap-2">
                     <Trash2 size={20} />
                     Zona peligrosa
@@ -740,7 +740,7 @@ function AccountPage() {
                   <p className="text-sm text-gray-700 mb-4">
                     Una vez que elimines tu cuenta, no hay vuelta atrás. Por favor, está seguro.
                   </p>
-                  <button className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all">
+                  <button className="px-6 py-3 bg-red-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all">
                     Eliminar mi cuenta
                   </button>
                 </div>

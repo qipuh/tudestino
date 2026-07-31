@@ -35,7 +35,7 @@ class Room {
       guestCapacity: json['guestCapacity'] ?? 1,
       beds: (json['beds'] as List?)?.map((bed) => Bed.fromJson(bed)).toList() ?? [],
       pricePerNight: double.tryParse(json['pricePerNight']?.toString() ?? '0') ?? 0.0,
-      amenities: (json['amenities'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      amenities: parseAmenities(json['amenities']),
       images: (json['images'] as List?)?.map((e) => e.toString()).toList() ?? [],
       isAvailable: json['isAvailable'] ?? true,
     );
@@ -55,6 +55,24 @@ class Room {
       'images': images,
       'isAvailable': isAvailable,
     };
+  }
+
+  /// Datos reales de producción guardan `amenities` de dos formas distintas
+  /// según la versión del formulario con la que se creó la propiedad:
+  /// como lista plana (`["wifi","tv"]`) o como objeto categorizado
+  /// (`{basic:[...], extras:[...], bathroom:[...]}`). Acepta ambas.
+  static List<String> parseAmenities(dynamic raw) {
+    if (raw is List) {
+      return raw.map((e) => e.toString()).toList();
+    }
+    if (raw is Map) {
+      return raw.values
+          .whereType<List>()
+          .expand((list) => list)
+          .map((e) => e.toString())
+          .toList();
+    }
+    return [];
   }
 }
 

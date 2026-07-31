@@ -1,9 +1,17 @@
 import * as socialService from './social.service.js';
-import { Post, Reel, Like, Comment } from './social.model.sequelize.js';
+import { Post, Reel, Like, Comment, SavedPost } from './social.model.sequelize.js';
 import User from '../users/user.model-mysql.js';
 import CommentLike from './commentLike.model.js';
 import BusinessSocialPost from '../businesses/business-social-post.model.js';
 import Business from '../businesses/business.model.js';
+import Route from '../routes/route.model.js';
+import {
+  createFollowerNotification,
+  createPostLikeNotification,
+  createReelLikeNotification,
+  createCommentLikeNotification,
+  createCommentNotification,
+} from '../notifications/notification.helper.js';
 
 // ==================== PROFILE CONTROLLERS ====================
 
@@ -134,6 +142,7 @@ export const followUser = async (req, res) => {
     const { userId } = req.params;
 
     const result = await socialService.followUser(followerId, userId);
+    createFollowerNotification(userId, followerId);
 
     res.json({
       success: true,
@@ -687,7 +696,7 @@ export const toggleLike = async (req, res) => {
     const userId = req.user.id;
 
     // Validar tipo de contenido
-    if (!['post', 'reel', 'comment'].includes(contentType)) {
+    if (!['post', 'reel', 'comment', 'route'].includes(contentType)) {
       return res.status(400).json({ message: 'Tipo de contenido inválido' });
     }
 
@@ -711,6 +720,8 @@ export const toggleLike = async (req, res) => {
         await Reel.decrement('likesCount', { where: { id: contentId } });
       } else if (contentType === 'comment') {
         await Comment.decrement('likesCount', { where: { id: contentId } });
+      } else if (contentType === 'route') {
+        await Route.decrement('likesCount', { where: { id: contentId } });
       }
 
       res.json({ success: true, message: 'Like eliminado', data: { liked: false } });
@@ -722,13 +733,21 @@ export const toggleLike = async (req, res) => {
         contentId,
       });
 
-      // Incrementar contador según el tipo
+      // Incrementar contador según el tipo, y avisarle al dueño del contenido
       if (contentType === 'post') {
         await Post.increment('likesCount', { where: { id: contentId } });
+        const post = await Post.findByPk(contentId, { attributes: ['userId'] });
+        if (post) createPostLikeNotification(post.userId, userId, contentId);
       } else if (contentType === 'reel') {
         await Reel.increment('likesCount', { where: { id: contentId } });
+        const reel = await Reel.findByPk(contentId, { attributes: ['userId'] });
+        if (reel) createReelLikeNotification(reel.userId, userId, contentId);
       } else if (contentType === 'comment') {
         await Comment.increment('likesCount', { where: { id: contentId } });
+        const comment = await Comment.findByPk(contentId, { attributes: ['userId'] });
+        if (comment) createCommentLikeNotification(comment.userId, userId, contentId);
+      } else if (contentType === 'route') {
+        await Route.increment('likesCount', { where: { id: contentId } });
       }
 
       res.json({ success: true, message: 'Like agregado', data: { liked: true } });
@@ -749,7 +768,7 @@ export const addComment = async (req, res) => {
     const userId = req.user.id;
 
     // Validar tipo de contenido
-    if (!['post', 'reel'].includes(contentType)) {
+    if (!['post', 'reel', 'route'].includes(contentType)) {
       return res.status(400).json({ message: 'Tipo de contenido inválido' });
     }
 
@@ -782,11 +801,17 @@ export const addComment = async (req, res) => {
         where: { id: parentCommentId },
       });
     } else {
-      // Si es un comentario principal, incrementar el contador del post/reel
-      const Model = contentType === 'post' ? Post : Reel;
+      // Si es un comentario principal, incrementar el contador del post/reel/route
+      const Model = contentType === 'post' ? Post : contentType === 'reel' ? Reel : Route;
       await Model.increment('commentsCount', {
         where: { id: contentId },
       });
+
+      // Avisarle al dueño del post/reel (route todavía no tiene este tipo de notificación)
+      if (contentType === 'post' || contentType === 'reel') {
+        const owner = await Model.findByPk(contentId, { attributes: ['userId'] });
+        if (owner) createCommentNotification(owner.userId, userId, contentId, text.trim());
+      }
     }
 
     // Obtener comentario con información del usuario
@@ -813,6 +838,37 @@ export const addComment = async (req, res) => {
   } catch (error) {
     console.error('Error adding comment:', error);
     res.status(500).json({ success: false, message: 'Error al agregar comentario', error: error.message });
+  }
+};
+
+// DELETE /api/social/comments/:commentId
+// Comment no tiene columna isActive - a diferencia de post/reel (soft
+// delete), acá se borra la fila de verdad, igual que deleteMilestone.
+export const deleteComment = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const userId = req.user.id;
+
+    const comment = await Comment.findByPk(commentId);
+    if (!comment) {
+      return res.status(404).json({ success: false, message: 'Comentario no encontrado' });
+    }
+    if (comment.userId !== userId) {
+      return res.status(403).json({ success: false, message: 'No tienes permiso para eliminar este comentario' });
+    }
+
+    if (comment.parentCommentId) {
+      await Comment.decrement('repliesCount', { where: { id: comment.parentCommentId } });
+    } else {
+      const Model = comment.contentType === 'post' ? Post : comment.contentType === 'reel' ? Reel : Route;
+      await Model.decrement('commentsCount', { where: { id: comment.contentId } });
+    }
+
+    await comment.destroy();
+    res.json({ success: true, message: 'Comentario eliminado' });
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    res.status(500).json({ success: false, message: 'Error al eliminar comentario', error: error.message });
   }
 };
 
@@ -979,5 +1035,59 @@ export const deleteReel = async (req, res) => {
   } catch (error) {
     console.error('Error deleting reel:', error);
     res.status(500).json({ success: false, message: 'Error al eliminar el reel', error: error.message });
+  }
+};
+
+// ==================== SAVED POSTS ====================
+
+/**
+ * Guardar/quitar un post de guardados (bookmark toggle)
+ * POST /api/social/posts/:postId/save
+ */
+export const toggleSavePost = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { postId } = req.params;
+
+    const existing = await SavedPost.findOne({ where: { userId, postId } });
+
+    if (existing) {
+      await existing.destroy();
+      return res.json({ success: true, isSaved: false });
+    }
+
+    await SavedPost.create({ userId, postId });
+    res.json({ success: true, isSaved: true });
+  } catch (error) {
+    console.error('Error toggling save post:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Obtener posts guardados por el usuario actual
+ * GET /api/social/posts/saved
+ */
+export const getSavedPosts = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const saved = await SavedPost.findAll({
+      where: { userId },
+      order: [['createdAt', 'DESC']],
+    });
+
+    const posts = await Promise.all(
+      saved.map((s) =>
+        Post.findByPk(s.postId, {
+          include: [{ model: User, as: 'user', attributes: ['id', 'name', 'email', 'avatar', 'username'] }],
+        })
+      )
+    );
+
+    res.json({ success: true, data: posts.filter(Boolean) });
+  } catch (error) {
+    console.error('Error getting saved posts:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };

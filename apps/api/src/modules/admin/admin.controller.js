@@ -1,5 +1,6 @@
 import adminService from './admin.service.js';
 import * as verificationService from '../verification/verification.service.js';
+import { getAllBookingsForAdmin } from '../bookings/bookings.service.js';
 import { asyncHandler } from '../../middleware/errorHandler.js';
 
 /**
@@ -38,6 +39,43 @@ export const getAllUsers = asyncHandler(async (req, res) => {
     limit: parseInt(limit) || 10,
     search,
     role
+  });
+
+  res.json({
+    success: true,
+    data: result
+  });
+});
+
+/**
+ * Get all businesses with pagination
+ */
+export const getAllBusinesses = asyncHandler(async (req, res) => {
+  const { page, limit, search, type } = req.query;
+
+  const result = await adminService.getAllBusinesses({
+    page: parseInt(page) || 1,
+    limit: parseInt(limit) || 10,
+    search,
+    type
+  });
+
+  res.json({
+    success: true,
+    data: result
+  });
+});
+
+/**
+ * Get all bookings with pagination (admin)
+ */
+export const getAllBookings = asyncHandler(async (req, res) => {
+  const { page, limit, status } = req.query;
+
+  const result = await getAllBookingsForAdmin({
+    page: parseInt(page) || 1,
+    limit: parseInt(limit) || 20,
+    status,
   });
 
   res.json({

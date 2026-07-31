@@ -27,7 +27,7 @@ class ProfileScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              // TODO: Settings screen
+              Navigator.of(context).pushNamed('/account-settings');
             },
           ),
         ],
@@ -147,9 +147,7 @@ class ProfileScreen extends StatelessWidget {
                     title: 'Favoritos',
                     subtitle: 'Propiedades guardadas',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Próximamente')),
-                      );
+                      Navigator.of(context).pushNamed('/favorites');
                     },
                   ),
                   if (user.role == 'host')
@@ -166,11 +164,9 @@ class ProfileScreen extends StatelessWidget {
                   _buildMenuItem(
                     icon: Icons.notifications,
                     title: 'Notificaciones',
-                    subtitle: 'Preferencias de notificaciones',
+                    subtitle: 'Ver tus notificaciones',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Próximamente')),
-                      );
+                      Navigator.of(context).pushNamed('/notifications');
                     },
                   ),
                   _buildMenuItem(
@@ -178,9 +174,7 @@ class ProfileScreen extends StatelessWidget {
                     title: 'Ayuda y Soporte',
                     subtitle: 'Centro de ayuda',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Próximamente')),
-                      );
+                      Navigator.of(context).pushNamed('/help-support');
                     },
                   ),
                   _buildMenuItem(

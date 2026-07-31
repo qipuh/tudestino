@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "1034729357978",
+    "project_id": "adapptika-229af",
+    "storage_bucket": "adapptika-229af.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034729357978:android:5b4192357d02ed866d1523",
+        "android_client_info": {
+          "package_name": "com.adapptika.tudestino"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZGFhbHcqvvfXluSR6538jGNc6aRc4qZA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034729357978:android:13ae60045d2055216d1523",
+        "android_client_info": {
+          "package_name": "com.httpsms"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZGFhbHcqvvfXluSR6538jGNc6aRc4qZA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034729357978:android:c77bc4d5917edb596d1523",
+        "android_client_info": {
+          "package_name": "com.tucolegio.tucolegio_alumnos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZGFhbHcqvvfXluSR6538jGNc6aRc4qZA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

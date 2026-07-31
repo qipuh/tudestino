@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/property.dart';
 import '../models/attraction.dart';
 import '../models/tour.dart';
+import '../models/business_result.dart';
+import '../models/business_detail.dart';
 import '../core/services/api_service.dart';
 
 class PropertiesProvider with ChangeNotifier {
@@ -10,8 +12,15 @@ class PropertiesProvider with ChangeNotifier {
   List<Property> _properties = [];
   List<Property> _searchResults = [];
   Property? _selectedProperty;
+  Tour? _selectedTour;
+  Attraction? _selectedAttraction;
+  BusinessDetail? _selectedBusiness;
+  List<BusinessPhoto> _businessPhotos = [];
+  List<MenuItem> _businessMenu = [];
   List<Attraction> _attractions = [];
+  List<Attraction> _attractionResults = [];
   List<Tour> _tours = [];
+  List<BusinessResult> _businessResults = [];
   bool _isLoading = false;
   String? _error;
 
@@ -20,10 +29,76 @@ class PropertiesProvider with ChangeNotifier {
   List<Property> get properties => _properties;
   List<Property> get searchResults => _searchResults;
   Property? get selectedProperty => _selectedProperty;
+  Tour? get selectedTour => _selectedTour;
+  Attraction? get selectedAttraction => _selectedAttraction;
+  BusinessDetail? get selectedBusiness => _selectedBusiness;
+  List<BusinessPhoto> get businessPhotos => _businessPhotos;
+  List<MenuItem> get businessMenu => _businessMenu;
   List<Attraction> get attractions => _attractions;
+  List<Attraction> get attractionResults => _attractionResults;
   List<Tour> get tours => _tours;
+  List<BusinessResult> get businessResults => _businessResults;
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  /// Búsqueda de atractivos turísticos por ciudad/texto.
+  Future<void> searchAttractions({String? location}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final queryParams = <String, String>{'limit': '30'};
+      if (location != null && location.isNotEmpty) {
+        queryParams['city'] = location;
+      }
+      final uri = Uri.parse('/attractions').replace(queryParameters: queryParams);
+      final response = await _apiService.get(uri.toString());
+
+      if (response.data['success']) {
+        final data = response.data['data']['attractions'] as List? ?? [];
+        _attractionResults =
+            data.map((json) => Attraction.fromJson(json)).toList();
+      } else {
+        _error = response.data['message'];
+      }
+    } catch (e) {
+      _error = 'Error al buscar atractivos';
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  /// Búsqueda por categoría (restaurant/tours/entertainment/spa) - usa
+  /// /search/all, distinto del endpoint /search/properties (solo hoteles).
+  Future<void> searchByCategory(String category, {String? location}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final queryParams = <String, String>{'category': category, 'limit': '30'};
+      if (location != null && location.isNotEmpty) {
+        queryParams['location'] = location;
+      }
+      final uri = Uri.parse('/search/all').replace(queryParameters: queryParams);
+      final response = await _apiService.get(uri.toString());
+
+      if (response.data['success']) {
+        final results = response.data['data']['results'] as List? ?? [];
+        _businessResults =
+            results.map((json) => BusinessResult.fromJson(json)).toList();
+      } else {
+        _error = response.data['message'];
+      }
+    } catch (e) {
+      _error = 'Error al buscar';
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
 
   Future<void> loadFeaturedProperties() async {
     _isLoading = true;
@@ -119,6 +194,87 @@ class PropertiesProvider with ChangeNotifier {
       }
     } catch (e) {
       _error = 'Error al cargar detalle de propiedad';
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> loadTourDetail(String tourId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.get('/tours/$tourId');
+
+      if (response.data['success']) {
+        _selectedTour = Tour.fromJson(response.data['data']);
+      } else {
+        _error = response.data['message'];
+      }
+    } catch (e) {
+      _error = 'Error al cargar detalle del tour';
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> loadAttractionDetail(String attractionId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.get('/attractions/$attractionId');
+
+      if (response.data['success']) {
+        _selectedAttraction = Attraction.fromJson(response.data['data']);
+      } else {
+        _error = response.data['message'];
+      }
+    } catch (e) {
+      _error = 'Error al cargar detalle del atractivo';
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> loadBusinessDetail(String businessId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response =
+          await _apiService.get('/businesses/$businessId?include=true');
+
+      if (response.data['success']) {
+        _selectedBusiness = BusinessDetail.fromJson(response.data['data']);
+      } else {
+        _error = response.data['message'];
+      }
+
+      final photosResponse =
+          await _apiService.get('/businesses/$businessId/photos');
+      if (photosResponse.data['success']) {
+        final data = photosResponse.data['data'] as List? ?? [];
+        _businessPhotos =
+            data.map((json) => BusinessPhoto.fromJson(json)).toList();
+      }
+
+      // El menú solo aplica a restaurantes/entretenimiento - para el resto
+      // (hoteles, tours, spa) el endpoint devuelve simplemente una lista vacía.
+      final menuResponse =
+          await _apiService.get('/businesses/$businessId/menu');
+      if (menuResponse.data['success']) {
+        final data = menuResponse.data['data'] as List? ?? [];
+        _businessMenu = data.map((json) => MenuItem.fromJson(json)).toList();
+      }
+    } catch (e) {
+      _error = 'Error al cargar detalle del negocio';
     }
 
     _isLoading = false;

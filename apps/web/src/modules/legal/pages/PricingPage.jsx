@@ -12,7 +12,7 @@ function PricingPage() {
         </div>
 
         {/* Hero pricing card */}
-        <div className="bg-gradient-to-br from-primary to-primary-dark text-white rounded-2xl p-8 mb-12 text-center">
+        <div className="bg-primary text-white rounded-2xl p-8 mb-12 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <DollarSign size={40} />
             <h2 className="text-5xl font-bold">0</h2>
@@ -222,7 +222,7 @@ function PricingPage() {
         </div>
 
         {/* CTA */}
-        <div className="bg-gradient-to-r from-primary to-primary-dark text-white p-8 rounded-2xl text-center">
+        <div className="bg-primary text-white p-8 rounded-2xl text-center">
           <h2 className="text-2xl font-bold mb-4" style={{ color: '#ffb547' }}>¿Listo para empezar?</h2>
           <p className="mb-6 opacity-90">
             Registra tu negocio gratis y empieza a recibir reservas hoy mismo

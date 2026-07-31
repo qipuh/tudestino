@@ -89,8 +89,11 @@ class _ReelsScreenState extends State<ReelsScreen> {
                       const SizedBox(height: 8),
                       if (authProvider.isAuthenticated)
                         ElevatedButton.icon(
-                          onPressed: () {
-                            // TODO: Navigate to create reel
+                          onPressed: () async {
+                            final created = await Navigator.of(context).pushNamed('/create-post');
+                            if (created == true && context.mounted) {
+                              Provider.of<SocialProvider>(context, listen: false).loadReels();
+                            }
                           },
                           icon: const Icon(Icons.add),
                           label: const Text('Crear reel'),
@@ -148,11 +151,11 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
     try {
       print('Initializing video: ${widget.reel.videoUrl}');
 
+      // Sin httpHeaders manuales: forzar 'Connection: keep-alive' rompía la
+      // inicialización en Android (ExoPlayer) - el mismo video sí cargaba
+      // en el preview de comentarios, que no manda ese header.
       _controller = VideoPlayerController.networkUrl(
         Uri.parse(widget.reel.videoUrl),
-        httpHeaders: {
-          'Connection': 'keep-alive',
-        },
       );
 
       _controller.addListener(() {
@@ -488,6 +491,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
         builder: (context) => CommentsScreen(
           contentType: 'reel',
           contentId: widget.reel.id,
+          reel: widget.reel,
         ),
       ),
     );

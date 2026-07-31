@@ -89,7 +89,7 @@ function BlogPage() {
               alt={blogPosts[0].title}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+            <div className="absolute inset-0 bg-black/40"></div>
             <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
               <span className="inline-block bg-primary px-3 py-1 rounded-full text-sm mb-3">
                 {blogPosts[0].category}
@@ -147,7 +147,7 @@ function BlogPage() {
         </div>
 
         {/* Newsletter */}
-        <div className="bg-gradient-to-r from-primary to-primary-dark text-white rounded-2xl p-8 text-center">
+        <div className="bg-primary text-white rounded-2xl p-8 text-center">
           <h2 className="text-2xl font-bold mb-3">Suscríbete a nuestro newsletter</h2>
           <p className="mb-6 opacity-90">
             Recibe consejos, guías y novedades para hacer crecer tu negocio turístico

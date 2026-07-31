@@ -27,7 +27,7 @@
     "booking",
     "accommodation"
   ],
-  "author": "TuDestino Team",
+  "author": "Adapptika",
   "license": "MIT",
   "devDependencies": {
     "baseline-browser-mapping": "^2.9.7",

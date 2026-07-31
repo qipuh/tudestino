@@ -393,7 +393,7 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess, busin
         `}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-primary to-primary-dark p-4 flex items-center justify-between">
+        <div className="bg-primary p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={handleClose}
@@ -439,7 +439,7 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess, busin
           <div className="p-4 space-y-4">
             {/* User Info */}
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-primary-dark flex items-center justify-center text-white font-bold text-xl overflow-hidden">
+              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl overflow-hidden">
                 {user?.avatar ? (
                   <img src={getImageUrl(user.avatar, 'social')} alt={user.name} className="w-full h-full rounded-full object-cover" />
                 ) : (
@@ -602,7 +602,7 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess, busin
                   onClick={() => !uploading && fileInputRef.current?.click()}
                   className="cursor-pointer text-center py-8"
                 >
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-primary/10 to-primary-dark/10 rounded-full flex items-center justify-center">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
                     {contentType === 'reel' ? (
                       <Video size={32} className="text-primary" />
                     ) : (
@@ -756,7 +756,7 @@ function CreateContentSidebar({ isOpen, onClose, type = 'post', onSuccess, busin
               w-full py-4 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-2
               ${uploading || selectedFiles.length === 0 || !caption.trim()
                 ? 'bg-gray-300 cursor-not-allowed'
-                : 'bg-gradient-to-r from-primary to-primary-dark hover:opacity-90 shadow-lg hover:shadow-xl'
+                : 'bg-primary hover:opacity-90 shadow-lg hover:shadow-xl'
               }
             `}
           >

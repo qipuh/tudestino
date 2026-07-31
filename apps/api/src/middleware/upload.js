@@ -35,6 +35,18 @@ if (!fs.existsSync(avatarsDir)) {
   fs.mkdirSync(avatarsDir, { recursive: true });
 }
 
+// Create routes directory (fotos de portada de rutas GPS compartidas)
+const routesDir = path.join(uploadsDir, 'routes');
+if (!fs.existsSync(routesDir)) {
+  fs.mkdirSync(routesDir, { recursive: true });
+}
+
+// Create milestones directory (fotos de hitos pinchados en el recorrido)
+const milestonesDir = path.join(uploadsDir, 'milestones');
+if (!fs.existsSync(milestonesDir)) {
+  fs.mkdirSync(milestonesDir, { recursive: true });
+}
+
 // Configure storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -110,6 +122,46 @@ export const uploadAvatar = multer({
   storage: avatarStorage,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB max file size
+  },
+  fileFilter: imageFilter,
+});
+
+// Configure storage for route cover photos
+const routeCoverStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, routesDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'route-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+// Create multer instance for route cover photos (imagen única, no el track GPS)
+export const uploadRouteCover = multer({
+  storage: routeCoverStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB max file size
+  },
+  fileFilter: imageFilter,
+});
+
+// Configure storage for milestone photos
+const milestonePhotoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, milestonesDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'milestone-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+// Create multer instance for milestone photos (foto+comentario pinchados en el recorrido)
+export const uploadMilestonePhoto = multer({
+  storage: milestonePhotoStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB max file size
   },
   fileFilter: imageFilter,
 });

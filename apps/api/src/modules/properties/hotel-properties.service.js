@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import { Property, Room } from './hotel-property.model.js';
 import User from '../users/user.model-mysql.js';
 import Business from '../businesses/business.model.js';
@@ -13,8 +14,23 @@ class PropertiesService {
   }
 
   async getProperties(filters = {}) {
-    const { page = 1, limit = 20, ...queryFilters } = filters;
+    // OJO: nunca esparcir queryFilters directo al where - cualquier query
+    // param desconocido (ej. "search" de un fetch mal armado) se traducía
+    // en un filtro por una columna que no existe y tumbaba el endpoint con
+    // un error SQL crudo ("Unknown column"). Solo "search" se soporta como
+    // texto libre por ahora; el resto de query params se ignora.
+    const { page = 1, limit = 20, search } = filters;
     const offset = (page - 1) * limit;
+
+    const queryFilters = search
+      ? {
+          [Op.or]: [
+            { hotelName: { [Op.like]: `%${search}%` } },
+            { propertyName: { [Op.like]: `%${search}%` } },
+            { addressCity: { [Op.like]: `%${search}%` } },
+          ],
+        }
+      : {};
 
     const properties = await Property.findAll({
       where: { status: 'published', ...queryFilters },

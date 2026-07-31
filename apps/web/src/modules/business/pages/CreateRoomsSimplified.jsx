@@ -931,7 +931,7 @@ function CreateRoomsSimplified() {
                           imageUrl = image;
                         } else {
                           // Es una ruta relativa como /uploads/rooms/filename.jpg
-                          const baseUrl = import.meta.env.VITE_API_URL.replace('/api', '');
+                          const baseUrl = import.meta.env.VITE_SERVER_URL || import.meta.env.VITE_API_URL.replace(/\/api$/, '');
                           imageUrl = `${baseUrl}${image}`;
                         }
                       } else {

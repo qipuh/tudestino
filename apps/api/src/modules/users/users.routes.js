@@ -7,6 +7,8 @@ import {
   getUserById,
   getBookingHistory,
   uploadAvatarImage,
+  setFcmToken,
+  clearFcmToken,
 } from './users.controller.js';
 
 const router = express.Router();
@@ -19,6 +21,8 @@ router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
 router.get('/bookings', getBookingHistory);
 router.post('/upload-avatar', uploadAvatar.single('avatar'), uploadAvatarImage);
+router.post('/fcm-token', setFcmToken);
+router.delete('/fcm-token', clearFcmToken);
 router.get('/:id', getUserById);
 
 export default router;

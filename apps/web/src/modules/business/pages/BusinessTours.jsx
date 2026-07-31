@@ -144,7 +144,7 @@ function BusinessTours() {
                   className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
                 >
                   {/* Tour Image */}
-                  <div className="relative h-48 bg-gradient-to-br from-primary to-primary-dark">
+                  <div className="relative h-48 bg-primary">
                     {tour.coverImage ? (
                       <img
                         src={getImageUrl(tour.coverImage, 'tours')}

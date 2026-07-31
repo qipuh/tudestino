@@ -91,7 +91,7 @@ function BusinessResourcesPage() {
         </div>
 
         {/* Video tutoriales */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 mb-12">
+        <div className="bg-blue-50 rounded-2xl p-8 mb-12">
           <div className="flex items-center gap-3 mb-6">
             <Video className="text-primary" size={32} />
             <h2 className="text-3xl font-bold text-gray-900">Video Tutoriales</h2>
@@ -157,7 +157,7 @@ function BusinessResourcesPage() {
         </div>
 
         {/* Comunidad */}
-        <div className="bg-gradient-to-r from-primary to-primary-dark text-white rounded-2xl p-8 mb-12">
+        <div className="bg-primary text-white rounded-2xl p-8 mb-12">
           <div className="flex items-center gap-3 mb-4">
             <MessageCircle size={32} />
             <h2 className="text-3xl font-bold">Comunidad de Empresarios</h2>

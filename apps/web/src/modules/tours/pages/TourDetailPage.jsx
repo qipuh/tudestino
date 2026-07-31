@@ -178,7 +178,7 @@ function TourDetailPage() {
               />
 
               {/* Info y Botones superpuestos - Diseño Premium */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-3 sm:p-4 lg:p-6">
+              <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-3 sm:p-4 lg:p-6">
                 <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                   {/* Lado izquierdo: Logo, nombre, seguidores, ubicación */}
                   <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
@@ -303,7 +303,7 @@ function TourDetailPage() {
             </div>
 
             {/* Info y Botones superpuestos */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-3 sm:p-4 lg:p-6">
+            <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-3 sm:p-4 lg:p-6">
               <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                 <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                   {businessLogo ? (

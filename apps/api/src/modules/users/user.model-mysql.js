@@ -50,6 +50,11 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  fcmToken: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Token de Firebase Cloud Messaging del último dispositivo del usuario',
+  },
   isVerified: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,

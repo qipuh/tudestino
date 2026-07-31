@@ -1,6 +1,8 @@
+import { Op } from 'sequelize';
 import User from '../users/user.model-mysql.js';
-import Property from '../properties/property.model.js';
+import { Property } from '../properties/hotel-property.model.js';
 import Booking from '../bookings/booking.model.js';
+import Business from '../businesses/business.model.js';
 import Config from './config.model.js';
 
 class AdminService {
@@ -14,7 +16,6 @@ class AdminService {
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const firstDayOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-      // Total counts using MongoDB/Mongoose
       const [
         totalUsers,
         totalProperties,
@@ -22,25 +23,25 @@ class AdminService {
         newUsersThisMonth,
         newPropertiesThisMonth,
         newUsersLastMonth,
-        newPropertiesLastMonth
+        newPropertiesLastMonth,
+        revenueResult
       ] = await Promise.all([
         User.count(),
-        Property.countDocuments(),
-        Booking.countDocuments(),
-        User.count({ createdAt: { $gte: firstDayOfMonth } }),
-        Property.countDocuments({ createdAt: { $gte: firstDayOfMonth } }),
+        Property.count(),
+        Booking.count(),
+        User.count({ where: { createdAt: { [Op.gte]: firstDayOfMonth } } }),
+        Property.count({ where: { createdAt: { [Op.gte]: firstDayOfMonth } } }),
         User.count({
-          createdAt: {
-            $gte: firstDayOfLastMonth,
-            $lt: firstDayOfMonth
-          }
+          where: {
+            createdAt: { [Op.gte]: firstDayOfLastMonth, [Op.lt]: firstDayOfMonth },
+          },
         }),
-        Property.countDocuments({
-          createdAt: {
-            $gte: firstDayOfLastMonth,
-            $lt: firstDayOfMonth
-          }
-        })
+        Property.count({
+          where: {
+            createdAt: { [Op.gte]: firstDayOfLastMonth, [Op.lt]: firstDayOfMonth },
+          },
+        }),
+        Booking.sum('totalPrice', { where: { status: 'confirmed' } }),
       ]);
 
       // Calculate growth percentages
@@ -52,12 +53,7 @@ class AdminService {
         ? Math.round(((newPropertiesThisMonth - newPropertiesLastMonth) / newPropertiesLastMonth) * 100)
         : 0;
 
-      // Calculate total revenue (sum of all confirmed bookings)
-      const revenueResult = await Booking.aggregate([
-        { $match: { status: 'confirmed' } },
-        { $group: { _id: null, total: { $sum: '$totalPrice' } } }
-      ]);
-      const totalRevenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
+      const totalRevenue = revenueResult || 0;
 
       return {
         totalUsers,
@@ -102,9 +98,9 @@ class AdminService {
       const where = {};
 
       if (search) {
-        where.$or = [
-          { name: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } }
+        where[Op.or] = [
+          { name: { [Op.like]: `%${search}%` } },
+          { email: { [Op.like]: `%${search}%` } },
         ];
       }
 
@@ -112,14 +108,8 @@ class AdminService {
         where.role = role;
       }
 
-      // Using MySQL User model (Sequelize)
       const { count, rows } = await User.findAndCountAll({
-        where: search ? {
-          [Symbol.for('or')]: [
-            { name: { [Symbol.for('like')]: `%${search}%` } },
-            { email: { [Symbol.for('like')]: `%${search}%` } }
-          ]
-        } : (role ? { role } : {}),
+        where,
         limit,
         offset,
         order: [['createdAt', 'DESC']],
@@ -134,6 +124,42 @@ class AdminService {
       };
     } catch (error) {
       console.error('Error getting all users:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all businesses with pagination (hoteles, restaurantes, tours, etc.)
+   */
+  async getAllBusinesses({ page = 1, limit = 10, search = '', type = null }) {
+    try {
+      const offset = (page - 1) * limit;
+      const where = {};
+
+      if (search) {
+        where.name = { [Op.like]: `%${search}%` };
+      }
+
+      if (type) {
+        where.businessType = type;
+      }
+
+      const { count, rows } = await Business.findAndCountAll({
+        where,
+        limit,
+        offset,
+        order: [['createdAt', 'DESC']],
+        include: [{ model: User, as: 'owner', attributes: ['id', 'name', 'email'] }],
+      });
+
+      return {
+        businesses: rows,
+        total: count,
+        page: parseInt(page),
+        totalPages: Math.ceil(count / limit),
+      };
+    } catch (error) {
+      console.error('Error getting all businesses:', error);
       throw error;
     }
   }

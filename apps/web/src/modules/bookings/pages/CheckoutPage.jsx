@@ -4,6 +4,7 @@ import { CreditCard, Lock, Calendar, Users, Home, ArrowLeft, Check } from 'lucid
 import useAuthStore from '../../../store/authStore';
 import useBookingStore from '../../../store/bookingStore';
 import PayPalButton from '../components/PayPalButton';
+import { chargeBookingWithCulqi } from '../services/paymentService';
 
 function CheckoutPage() {
   const navigate = useNavigate();
@@ -56,13 +57,33 @@ function CheckoutPage() {
       // Configurar Culqi
       window.Culqi.publicKey = publicKey;
 
-      // Configuración de Culqi
+      // Configuración de Culqi. OJO: "order" espera el ID de una Orden real
+      // creada contra la API de Culqi (para Yape/PagoEfectivo con
+      // expiración) - un string inventado como "BOOKING-123" hace que
+      // Culqi.settings() falle su propia validación y el widget nunca
+      // aparezca ("No ha ingresado la configuración o no es válida").
+      // Sin "order", Culqi usa el flujo simple de token (tarjeta).
       window.Culqi.settings({
         title: 'TuDestino - Reserva de Alojamiento',
         currency: 'PEN',
         amount: Math.round(bookingData.priceBreakdown.total * 100), // Culqi usa centavos
-        order: `BOOKING-${Date.now()}`,
         description: `Reserva en ${bookingData.property.propertyName || 'Propiedad'}`,
+      });
+
+      // Habilitar más métodos de pago dentro del mismo modal de Culqi
+      // (tarjeta sigue siendo el único que procesamos como token simple;
+      // yape/billetera/bancaMovil usan su propio flujo dentro del widget).
+      window.Culqi.options({
+        lang: 'auto',
+        installments: true,
+        paymentMethods: {
+          tarjeta: true,
+          yape: true,
+          bancaMovil: true,
+          agente: true,
+          billetera: true,
+          cuotealo: false,
+        },
       });
 
       // Callback cuando se obtiene el token
@@ -95,7 +116,7 @@ function CheckoutPage() {
     try {
       setProcessingPayment(true);
 
-      // Crear la reserva en el backend
+      // Crear la reserva en el backend (aún sin cobrar)
       const bookingPayload = {
         propertyId: bookingData.propertyId,
         hostId: bookingData.hostId,
@@ -110,11 +131,20 @@ function CheckoutPage() {
         totalPrice: bookingData.priceBreakdown.total,
         rooms: bookingData.selectedRooms,
         paymentMethod: paymentData.paymentMethod || 'culqi',
-        paymentToken: paymentData.paymentToken || paymentData.orderId,
-        paymentDetails: paymentData,
       };
 
-      const result = await createBooking(bookingPayload);
+      const booking = await createBooking(bookingPayload);
+
+      // El cargo real con Culqi solo se hace server-side, con la llave
+      // secreta y verificando dueño de la reserva - nunca se marca "pagada"
+      // solo porque el cliente lo diga. PayPal ya cobra en su propio SDK
+      // (actions.order.capture), así que ese camino no pasa por Culqi.
+      if (paymentData.paymentMethod === 'culqi') {
+        const chargeResult = await chargeBookingWithCulqi(booking.id, paymentData.paymentToken);
+        if (!chargeResult.success) {
+          throw new Error(chargeResult.message || 'No se pudo procesar el pago');
+        }
+      }
 
       // Limpiar sessionStorage
       sessionStorage.removeItem('pendingBooking');
@@ -128,8 +158,9 @@ function CheckoutPage() {
         navigate('/bookings');
       }, 3000);
     } catch (error) {
-      console.error('Error al crear la reserva:', error);
-      alert('Error al procesar la reserva. Por favor contacta con soporte.');
+      console.error('Error al procesar la reserva:', error);
+      const message = error.response?.data?.message || error.message || 'Error al procesar la reserva. Por favor contacta con soporte.';
+      alert(message);
       setProcessingPayment(false);
     }
   };
@@ -468,7 +499,7 @@ function CheckoutPage() {
                       w-full py-4 rounded-lg font-bold text-white text-lg transition-all
                       ${processingPayment
                         ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-primary to-primary-dark hover:opacity-90 shadow-lg hover:shadow-xl'
+                        : 'bg-primary hover:opacity-90 shadow-lg hover:shadow-xl'
                       }
                     `}
                   >

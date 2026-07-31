@@ -2,10 +2,44 @@ import Booking from './booking.model.js';
 import { Property, Room } from '../properties/hotel-property.model.js';
 import User from '../users/user.model-mysql.js';
 import { Op } from 'sequelize';
+import {
+  createBookingRequestNotification,
+  createBookingConfirmedNotification,
+} from '../notifications/notification.helper.js';
+
+// Condición de solapamiento de fechas reutilizada en varios chequeos de
+// disponibilidad - una reserva existente choca con [checkIn, checkOut] si
+// empieza dentro del rango, termina dentro del rango, o lo contiene entero.
+const buildDateOverlapWhere = (checkIn, checkOut) => ({
+  [Op.or]: [
+    { checkIn: { [Op.between]: [checkIn, checkOut] } },
+    { checkOut: { [Op.between]: [checkIn, checkOut] } },
+    {
+      [Op.and]: [
+        { checkIn: { [Op.lte]: checkIn } },
+        { checkOut: { [Op.gte]: checkOut } },
+      ],
+    },
+  ],
+});
+
+// Cuenta reservas activas que se solapan con las fechas dadas PARA UN TIPO
+// DE HABITACIÓN ESPECÍFICO - la propiedad puede tener varios tipos con
+// varias unidades cada uno, así que el chequeo nunca debe ser a nivel de
+// toda la propiedad.
+const countOverlappingBookings = async (roomId, checkIn, checkOut) => {
+  return Booking.count({
+    where: {
+      roomId,
+      status: { [Op.notIn]: ['cancelled', 'rejected'] },
+      ...buildDateOverlapWhere(checkIn, checkOut),
+    },
+  });
+};
 
 // Crear una nueva reserva
 export const createBooking = async (bookingData) => {
-  const { propertyId, guestId, checkIn, checkOut, guests } = bookingData;
+  const { propertyId, roomId, guestId, checkIn, checkOut } = bookingData;
 
   // Verificar que la propiedad existe y obtener sus habitaciones
   const property = await Property.findByPk(propertyId, {
@@ -25,30 +59,19 @@ export const createBooking = async (bookingData) => {
     throw new Error('Esta propiedad no tiene habitaciones configuradas');
   }
 
-  // Verificar que las fechas no se crucen con reservas existentes
-  const conflictingBooking = await Booking.findOne({
-    where: {
-      propertyId,
-      status: { [Op.notIn]: ['cancelled', 'rejected'] },
-      [Op.or]: [
-        {
-          checkIn: { [Op.between]: [checkIn, checkOut] }
-        },
-        {
-          checkOut: { [Op.between]: [checkIn, checkOut] }
-        },
-        {
-          [Op.and]: [
-            { checkIn: { [Op.lte]: checkIn } },
-            { checkOut: { [Op.gte]: checkOut } }
-          ]
-        }
-      ]
-    }
-  });
+  const room = roomId ? property.rooms.find((r) => r.id === roomId) : property.rooms[0];
 
-  if (conflictingBooking) {
-    throw new Error('Las fechas seleccionadas no están disponibles');
+  if (!room) {
+    throw new Error('Habitación no encontrada');
+  }
+
+  // Verificar que queden unidades libres de ESTE tipo de habitación para
+  // las fechas pedidas - no basta con que la propiedad tenga otras
+  // reservas, hay que contar contra la cantidad de unidades de este tipo.
+  const overlappingCount = await countOverlappingBookings(room.id, checkIn, checkOut);
+
+  if (overlappingCount >= room.quantity) {
+    throw new Error('No quedan habitaciones de este tipo disponibles para las fechas seleccionadas');
   }
 
   // Calcular el total de noches
@@ -60,9 +83,7 @@ export const createBooking = async (bookingData) => {
     throw new Error('La fecha de salida debe ser posterior a la fecha de entrada');
   }
 
-  // Calcular precios basados en la primera habitación (simplificado por ahora)
-  const firstRoom = property.rooms[0];
-  const basePrice = Number(firstRoom.pricePerNight) * nights;
+  const basePrice = Number(room.pricePerNight) * nights;
   const cleaningFee = 0; // TODO: Agregar lógica de cleaning fee
   const serviceFee = basePrice * 0.10; // 10% de comisión
   const totalPrice = basePrice + cleaningFee + serviceFee;
@@ -70,15 +91,18 @@ export const createBooking = async (bookingData) => {
   // Crear la reserva
   const booking = await Booking.create({
     ...bookingData,
+    roomId: room.id,
     hostId: property.hostId,
-    basePrice: firstRoom.pricePerNight,
+    basePrice: room.pricePerNight,
     cleaningFee,
     serviceFee,
     totalPrice,
-    currency: 'USD',
+    currency: 'PEN',
     status: 'pending',
     paymentStatus: 'pending',
   });
+
+  createBookingRequestNotification(property.hostId, guestId, booking.id, property.hotelName || property.propertyName);
 
   return booking;
 };
@@ -217,6 +241,17 @@ export const updateBookingStatus = async (id, userId, status, userRole) => {
 
   await booking.save();
 
+  if (status === 'confirmed') {
+    const property = await Property.findByPk(booking.propertyId, {
+      attributes: ['hotelName', 'propertyName'],
+    });
+    createBookingConfirmedNotification(
+      booking.guestId,
+      booking.id,
+      property?.hotelName || property?.propertyName || 'tu alojamiento'
+    );
+  }
+
   return booking;
 };
 
@@ -241,30 +276,74 @@ export const updatePaymentStatus = async (id, paymentData) => {
   return booking;
 };
 
-// Verificar disponibilidad de fechas
-export const checkAvailability = async (propertyId, checkIn, checkOut) => {
-  const conflictingBooking = await Booking.findOne({
-    where: {
-      propertyId,
-      status: { [Op.notIn]: ['cancelled', 'rejected'] },
-      [Op.or]: [
-        {
-          checkIn: { [Op.between]: [checkIn, checkOut] }
-        },
-        {
-          checkOut: { [Op.between]: [checkIn, checkOut] }
-        },
-        {
-          [Op.and]: [
-            { checkIn: { [Op.lte]: checkIn } },
-            { checkOut: { [Op.gte]: checkOut } }
-          ]
-        }
-      ]
-    }
+// Verificar disponibilidad de fechas - si se pasa roomId, chequea ese tipo
+// de habitación puntual; si no, la propiedad está "disponible" mientras
+// AL MENOS UN tipo de habitación tenga unidades libres para esas fechas.
+export const checkAvailability = async (propertyId, checkIn, checkOut, roomId = null) => {
+  if (roomId) {
+    const room = await Room.findByPk(roomId);
+    if (!room) return false;
+    const overlappingCount = await countOverlappingBookings(roomId, checkIn, checkOut);
+    return overlappingCount < room.quantity;
+  }
+
+  const rooms = await Room.findAll({ where: { propertyId } });
+  if (rooms.length === 0) return false;
+
+  const availabilityChecks = await Promise.all(
+    rooms.map(async (room) => {
+      const overlappingCount = await countOverlappingBookings(room.id, checkIn, checkOut);
+      return overlappingCount < room.quantity;
+    })
+  );
+
+  return availabilityChecks.some(Boolean);
+};
+
+// Obtener todas las reservas para el panel admin, con datos de propiedad,
+// huésped y anfitrión ya resueltos - separado de getAllBookings (que usan
+// getGuestBookings/getHostBookings) para no cargar esos joins extra en
+// cada consulta de "mis reservas" del propio usuario.
+export const getAllBookingsForAdmin = async ({ page = 1, limit = 20, status = null }) => {
+  const where = {};
+  if (status) {
+    where.status = status;
+  }
+
+  const offset = (page - 1) * limit;
+
+  const { count, rows } = await Booking.findAndCountAll({
+    where,
+    limit,
+    offset,
+    order: [['createdAt', 'DESC']],
   });
 
-  return !conflictingBooking;
+  const bookings = await Promise.all(
+    rows.map(async (booking) => {
+      const bookingData = booking.toJSON();
+
+      const [property, guest, host] = await Promise.all([
+        Property.findByPk(booking.propertyId, {
+          attributes: ['id', 'hotelName', 'propertyName', 'addressCity', 'addressCountry'],
+        }).catch(() => null),
+        User.findByPk(booking.guestId, { attributes: ['id', 'name', 'email'] }).catch(() => null),
+        User.findByPk(booking.hostId, { attributes: ['id', 'name', 'email'] }).catch(() => null),
+      ]);
+
+      bookingData.property = property;
+      bookingData.guest = guest;
+      bookingData.host = host;
+      return bookingData;
+    })
+  );
+
+  return {
+    bookings,
+    total: count,
+    page: parseInt(page),
+    totalPages: Math.ceil(count / limit),
+  };
 };
 
 // Obtener reservas de un huésped

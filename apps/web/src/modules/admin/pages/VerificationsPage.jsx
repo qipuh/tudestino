@@ -174,7 +174,7 @@ function VerificationsPage() {
               {selectedVerification ? (
                 <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                   {/* Header del detalle */}
-                  <div className="bg-gradient-to-r from-primary to-secondary px-6 py-4">
+                  <div className="bg-primary px-6 py-4">
                     <h2 className="text-xl font-bold text-white">
                       Detalles de Verificación
                     </h2>

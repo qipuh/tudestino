@@ -4,6 +4,8 @@ import {
   getStats,
   getRecentUsers,
   getAllUsers,
+  getAllBusinesses,
+  getAllBookings,
   updateUserStatus,
   deleteUser,
   getWhatsAppConfig,
@@ -25,6 +27,8 @@ router.get('/stats', getStats);
 // Users management
 router.get('/users', getAllUsers);
 router.get('/users/recent', getRecentUsers);
+router.get('/businesses', getAllBusinesses);
+router.get('/bookings', getAllBookings);
 router.patch('/users/:userId/status', updateUserStatus);
 router.delete('/users/:userId', deleteUser);
 

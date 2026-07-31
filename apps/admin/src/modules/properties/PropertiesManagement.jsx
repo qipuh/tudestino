@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Eye, MapPin, User, Link as LinkIcon, Building2 } from 'lucide-react';
+import { Search, Eye, MapPin, User, Link as LinkIcon, Building2, X } from 'lucide-react';
 import api from '../../services/api';
 
 function PropertiesManagement() {
@@ -8,6 +8,7 @@ function PropertiesManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [page, setPage] = useState(1);
+  const [selectedBusiness, setSelectedBusiness] = useState(null);
 
   useEffect(() => {
     fetchBusinesses();
@@ -54,13 +55,20 @@ function PropertiesManagement() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar negocios..."
+              onKeyDown={(e) => { if (e.key === 'Enter') { setPage(1); fetchBusinesses(); } }}
+              placeholder="Buscar negocios... (Enter para buscar)"
               className="w-full pl-10 pr-4 py-2 border rounded-lg"
             />
           </div>
+          <button
+            onClick={() => { setPage(1); fetchBusinesses(); }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Buscar
+          </button>
           <select
             value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
+            onChange={(e) => { setFilterType(e.target.value); setPage(1); }}
             className="px-4 py-2 border rounded-lg"
           >
             <option value="all">Todos</option>
@@ -139,7 +147,11 @@ function PropertiesManagement() {
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <button className="text-blue-600 hover:text-blue-900 p-2">
+                    <button
+                      onClick={() => setSelectedBusiness(business)}
+                      className="text-blue-600 hover:text-blue-900 p-2"
+                      title="Ver detalle"
+                    >
                       <Eye className="w-5 h-5" />
                     </button>
                   </td>
@@ -149,6 +161,45 @@ function PropertiesManagement() {
           </tbody>
         </table>
       </div>
+
+      {selectedBusiness && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-lg font-bold text-gray-900">Detalle del negocio</h2>
+              <button onClick={() => setSelectedBusiness(null)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="space-y-3 text-sm">
+              <div>
+                <span className="text-gray-500">Nombre:</span>{' '}
+                <span className="font-medium text-gray-900">{selectedBusiness.name || selectedBusiness.propertyName}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Tipo:</span>{' '}
+                <span className="font-medium text-gray-900">{selectedBusiness.businessType || selectedBusiness.type}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Dueño:</span>{' '}
+                <span className="font-medium text-gray-900">{selectedBusiness.owner?.name} ({selectedBusiness.owner?.email})</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Ciudad:</span>{' '}
+                <span className="font-medium text-gray-900">{selectedBusiness.addressCity || selectedBusiness.location?.city || 'N/D'}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Verificación:</span>{' '}
+                <span className="font-medium text-gray-900">{selectedBusiness.verificationStatus || 'N/D'}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Creado:</span>{' '}
+                <span className="font-medium text-gray-900">{formatDate(selectedBusiness.createdAt)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

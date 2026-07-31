@@ -94,7 +94,7 @@ function UserAccountLayout({ children, activeMenu }) {
         className={`fixed left-0 top-0 h-screen transition-all duration-300 z-30 ${
           sidebarOpen ? 'w-64' : 'w-16'
         }`}
-        style={{ backgroundColor: '#002c91' }}
+        style={{ backgroundColor: '#C1502E' }}
       >
         <div className="flex flex-col h-full">
           {/* User info */}
@@ -179,12 +179,12 @@ function UserAccountLayout({ children, activeMenu }) {
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="absolute -right-3 top-24 bg-white rounded-full p-1.5 shadow-lg hover:shadow-xl transition-all z-50 border-2"
-            style={{ borderColor: '#002c91' }}
+            style={{ borderColor: '#C1502E' }}
           >
             {sidebarOpen ? (
-              <ChevronLeft size={16} style={{ color: '#002c91' }} />
+              <ChevronLeft size={16} style={{ color: '#C1502E' }} />
             ) : (
-              <ChevronRight size={16} style={{ color: '#002c91' }} />
+              <ChevronRight size={16} style={{ color: '#C1502E' }} />
             )}
           </button>
 

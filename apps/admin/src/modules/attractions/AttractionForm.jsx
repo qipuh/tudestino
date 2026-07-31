@@ -4,6 +4,7 @@ import { attractionsService } from '../../services/attractions.service';
 import GalleryManager from './components/GalleryManager';
 import PlaceTagging from './components/PlaceTagging';
 import MapSelector from './components/MapSelector';
+import LocationPicker from '../../components/LocationPicker';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -27,6 +28,12 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
     city: '',
     region: '',
     country: '',
+    location: {
+      countryId: '',
+      departmentId: '',
+      provinceId: '',
+      districtId: '',
+    },
     hasDistanceMarkers: false,
     startPoint: '',
     endPoint: '',
@@ -55,6 +62,12 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
         city: attraction.city || '',
         region: attraction.region || '',
         country: attraction.country || '',
+        location: {
+          countryId: attraction.location?.countryId || '',
+          departmentId: attraction.location?.departmentId || '',
+          provinceId: attraction.location?.provinceId || '',
+          districtId: attraction.location?.districtId || '',
+        },
         hasDistanceMarkers: attraction.hasDistanceMarkers || false,
         startPoint: attraction.startPoint ? JSON.stringify(attraction.startPoint) : '',
         endPoint: attraction.endPoint ? JSON.stringify(attraction.endPoint) : '',
@@ -66,7 +79,7 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
       if (attraction.coverImage) {
         const imageUrl = attraction.coverImage.startsWith('http')
           ? attraction.coverImage
-          : `${API_URL.replace('/api', '')}/uploads/attractions/${attraction.coverImage}`;
+          : `${API_URL.replace(/\/api$/, '')}/uploads/attractions/${attraction.coverImage}`;
         setCoverImagePreview(imageUrl);
       }
 
@@ -127,6 +140,13 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
     setCoverImagePreview(null);
   };
 
+  const handleLocationChange = (locationData) => {
+    setFormData(prev => ({
+      ...prev,
+      location: locationData,
+    }));
+  };
+
   const handleMapChange = (data) => {
     setFormData(prev => ({
       ...prev,
@@ -185,6 +205,7 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
       if (formData.city) submitFormData.append('city', formData.city);
       if (formData.region) submitFormData.append('region', formData.region);
       if (formData.country) submitFormData.append('country', formData.country);
+      if (formData.location.districtId) submitFormData.append('districtId', formData.location.districtId);
 
       submitFormData.append('hasDistanceMarkers', formData.hasDistanceMarkers);
       if (formData.startPoint) submitFormData.append('startPoint', formData.startPoint);
@@ -411,12 +432,21 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
               onChange={handleMapChange}
             />
 
-            {/* Additional Location Info */}
+            {/* Location Hierarchy Picker */}
             <div className="mt-6 pt-6 border-t">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">Información Adicional</h3>
+              <LocationPicker
+                value={formData.location}
+                onChange={handleLocationChange}
+                label="Ubicación Jerárquica"
+              />
+            </div>
+
+            {/* Additional Address Info (deprecated) */}
+            <div className="mt-6 pt-6 border-t opacity-50">
+              <h3 className="text-xs font-semibold text-gray-500 mb-3 uppercase">Información Adicional (Deprecada)</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="address" className="block text-xs font-medium text-gray-600 mb-1">
                     Dirección
                   </label>
                   <input
@@ -425,50 +455,8 @@ function AttractionForm({ attraction, onSuccess, onCancel }) {
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
                     placeholder="Dirección completa"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-                    Ciudad
-                  </label>
-                  <input
-                    type="text"
-                    id="city"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Ciudad"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="region" className="block text-sm font-medium text-gray-700 mb-2">
-                    Región/Estado
-                  </label>
-                  <input
-                    type="text"
-                    id="region"
-                    name="region"
-                    value={formData.region}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Región"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
-                    País
-                  </label>
-                  <input
-                    type="text"
-                    id="country"
-                    name="country"
-                    value={formData.country}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="País"
                   />
                 </div>
               </div>

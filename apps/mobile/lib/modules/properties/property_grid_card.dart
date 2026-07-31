@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:intl/intl.dart';
+import 'package:ionicons/ionicons.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/utils/currency_formatter.dart';
+import '../../providers/favorites_provider.dart';
+import 'package:provider/provider.dart';
 import '../../models/property.dart';
 
 class PropertyGridCard extends StatelessWidget {
@@ -21,15 +25,13 @@ class PropertyGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
-    final theme = Theme.of(context);
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.line),
       ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
           Navigator.of(context).pushNamed(
@@ -58,80 +60,48 @@ class PropertyGridCard extends StatelessWidget {
                       imageUrl: property.rooms.first.images.first,
                       fit: BoxFit.cover,
                       placeholder: (context, url) => Container(
-                        color: Colors.grey.shade200,
+                        color: AppTheme.sand,
                         child: const Center(
                           child: CircularProgressIndicator(),
                         ),
                       ),
                       errorWidget: (context, url, error) => Container(
-                        color: Colors.grey.shade200,
-                        child: Icon(Icons.hotel, size: 40, color: Colors.grey.shade400),
+                        color: AppTheme.sand,
+                        child: const Icon(Ionicons.bed_outline,
+                            size: 40, color: AppTheme.mute),
                       ),
                     )
                   else
                     Container(
-                      color: Colors.grey.shade200,
-                      child: Icon(Icons.hotel, size: 40, color: Colors.grey.shade400),
+                      color: AppTheme.sand,
+                      child: const Icon(Ionicons.bed_outline,
+                          size: 40, color: AppTheme.mute),
                     ),
 
-                  // Rating badge (top right)
-                  if (property.ratingAverage >= 4.0)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black87,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.star,
-                              size: 12,
-                              color: Colors.amber,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              property.ratingAverage.toStringAsFixed(1),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                  // Favorite button (top left)
+                  // Corazón de favorito (arriba derecha)
                   Positioned(
                     top: 8,
-                    left: 8,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(230),
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.favorite_border),
-                        iconSize: 20,
-                        color: Colors.black87,
-                        padding: const EdgeInsets.all(6),
-                        constraints: const BoxConstraints(
-                          minWidth: 32,
-                          minHeight: 32,
-                        ),
-                        onPressed: () {
-                          // TODO: Toggle favorite
-                        },
-                      ),
+                    right: 8,
+                    child: Consumer<FavoritesProvider>(
+                      builder: (context, favoritesProvider, _) {
+                        final isFav = favoritesProvider.isFavorite(property.id);
+                        return GestureDetector(
+                          onTap: () => favoritesProvider.toggleFavorite(property.id),
+                          child: Container(
+                            width: 26,
+                            height: 26,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.32),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isFav ? Ionicons.heart : Ionicons.heart_outline,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -153,28 +123,28 @@ class PropertyGridCard extends StatelessWidget {
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
-                        color: Colors.black87,
+                        color: AppTheme.ink,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
 
-                    // Location
+                    // Ubicación
                     Row(
                       children: [
-                        Icon(
-                          Icons.location_on,
-                          size: 14,
-                          color: Colors.grey.shade600,
+                        const Icon(
+                          Ionicons.location_outline,
+                          size: 13,
+                          color: AppTheme.mute,
                         ),
-                        const SizedBox(width: 2),
+                        const SizedBox(width: 3),
                         Expanded(
                           child: Text(
-                            '${property.addressCity}, ${property.addressCountry}',
-                            style: TextStyle(
+                            property.addressCity,
+                            style: const TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade600,
+                              color: AppTheme.mute,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -185,47 +155,27 @@ class PropertyGridCard extends StatelessWidget {
 
                     const Spacer(),
 
-                    // Price
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Expanded(
-                          child: RichText(
-                            text: TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: currencyFormat.format(property.minPrice),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                    color: theme.primaryColor,
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: '/noche',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
+                    // Precio
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: CurrencyFormatter.format(property.minPrice),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: AppTheme.primaryColor,
                             ),
                           ),
-                        ),
-                        if (property.accommodationType == 'hotel' && property.hotelCategory != null)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: List.generate(
-                              property.hotelCategory!,
-                              (index) => Icon(
-                                Icons.star,
-                                size: 10,
-                                color: Colors.amber.shade600,
-                              ),
+                          const TextSpan(
+                            text: '/noche',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.mute,
                             ),
                           ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),

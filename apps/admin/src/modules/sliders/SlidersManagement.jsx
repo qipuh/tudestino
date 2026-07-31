@@ -113,7 +113,7 @@ function SlidersManagement() {
   const getImageUrl = (imageUrl) => {
     if (!imageUrl) return '';
     if (imageUrl.startsWith('http')) return imageUrl;
-    return `${API_URL.replace('/api', '')}/uploads/sliders/${imageUrl}`;
+    return `${API_URL.replace(/\/api$/, '')}/uploads/sliders/${imageUrl}`;
   };
 
   if (loading) {

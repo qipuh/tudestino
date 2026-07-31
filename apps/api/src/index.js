@@ -4,6 +4,7 @@ import { createServer } from 'http';
 import cors from 'cors';
 import { connectDB } from './config/database-mysql.js';
 import { setupAssociations } from './config/associations.js';
+import { initFirebaseAdmin } from './config/firebase-admin.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initializeSocket } from './config/socket.js';
 import passport from './config/passport.js';
@@ -21,6 +22,8 @@ import searchRoutes from './modules/search/search.routes.js';
 import adminRoutes from './modules/admin/admin.routes.js';
 import socialRoutes from './modules/social/social.routes.js';
 import postsRoutes from './modules/social/posts.routes.js';
+import routesRoutes from './modules/routes/routes.routes.js';
+import routingRoutes from './modules/routing/routing.routes.js';
 import migrationsRoutes from './modules/migrations/migrations.routes.js';
 import restaurantRoutes from './modules/restaurants/restaurants.routes.js';
 import entertainmentRoutes from './modules/entertainment/entertainment.routes.js';
@@ -29,10 +32,14 @@ import businessesRoutes from './modules/businesses/index.js';
 import toursRoutes from './modules/tours/tour.routes.js';
 import uploadRoutes from './modules/upload/upload.routes.js';
 import countriesRoutes from './modules/countries/countries.routes.js';
+import locationsRoutes from './modules/locations/locations.routes.js';
 import slidersRoutes from './modules/sliders/slider.routes.js';
 import attractionsRoutes from './modules/attractions/attraction.routes.js';
 import notificationRoutes from './modules/notifications/notification.routes.js';
 import verificationRoutes from './modules/verification/verification.routes.js';
+import favoritesRoutes from './modules/favorites/favorites.routes.js';
+import settingsRoutes from './modules/settings/settings.routes.js';
+import promotionsRoutes from './modules/promotions/promotions.routes.js';
 
 const app = express();
 const server = createServer(app);
@@ -61,6 +68,7 @@ app.use((req, res, next) => {
 // Database connection and model associations
 setupAssociations();
 connectDB();
+initFirebaseAdmin();
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -74,6 +82,8 @@ app.use('/api/search', searchRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/social', socialRoutes);
 app.use('/api/social', postsRoutes);
+app.use('/api/routes', routesRoutes);
+app.use('/api/routing', routingRoutes);
 app.use('/api/migrations', migrationsRoutes);
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/entertainment', entertainmentRoutes);
@@ -82,10 +92,14 @@ app.use('/api/businesses', businessesRoutes);
 app.use('/api/tours', toursRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/countries', countriesRoutes);
+app.use('/api/locations', locationsRoutes);
 app.use('/api/sliders', slidersRoutes);
 app.use('/api/attractions', attractionsRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/verification', verificationRoutes);
+app.use('/api/favorites', favoritesRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/promotions', promotionsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

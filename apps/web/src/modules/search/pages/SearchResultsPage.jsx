@@ -482,7 +482,7 @@ function SearchResultsPage() {
 
                     {/* Badge destacado para ratings altos */}
                     {item.rating >= 4.5 && (
-                      <div className="absolute top-3 right-3 bg-gradient-to-r from-primary to-primary-dark px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
+                      <div className="absolute top-3 right-3 bg-primary px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
                         <Star size={14} className="fill-white text-white" />
                         <span className="text-sm font-bold text-white">Destacado</span>
                       </div>

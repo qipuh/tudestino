@@ -377,7 +377,7 @@ function BusinessDetail({ businessIdProp }) {
                   />
 
                   {/* Info y Botones superpuestos - Diseño Premium */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-6">
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-6">
                     <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
                       {/* Lado izquierdo: Logo, nombre, seguidores, ubicación */}
                       <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -523,7 +523,7 @@ function BusinessDetail({ businessIdProp }) {
 
                   {/* Info y Botones superpuestos */}
                   <div className="absolute bottom-4 left-0 right-0 px-4">
-                    <div className="bg-gradient-to-t from-black/90 via-black/60 to-transparent backdrop-blur-sm p-4 rounded-xl">
+                    <div className="bg-black/50 backdrop-blur-sm p-4 rounded-xl">
                       <div className="flex items-center justify-between gap-4">
                         {/* Lado izquierdo: Logo, nombre, seguidores, ubicación */}
                         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -662,7 +662,7 @@ function BusinessDetail({ businessIdProp }) {
               </div>
 
               {/* Info y Botones superpuestos */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-6">
+              <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-6">
                 <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
                   {/* Lado izquierdo: Logo, nombre, seguidores, ubicación */}
                   <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -1188,7 +1188,7 @@ function BusinessDetail({ businessIdProp }) {
                           className="w-full h-48 object-cover"
                         />
                       ) : (
-                        <div className="w-full h-48 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                        <div className="w-full h-48 bg-purple-100 flex items-center justify-center">
                           <span className="text-6xl">💆</span>
                         </div>
                       )}
@@ -1279,7 +1279,7 @@ function BusinessDetail({ businessIdProp }) {
                             )}
                           </div>
                         ) : (
-                          <div className="h-56 bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center">
+                          <div className="h-56 bg-blue-100 flex items-center justify-center">
                             <span className="text-7xl">🗺️</span>
                           </div>
                         )}
@@ -1479,7 +1479,7 @@ function BusinessDetail({ businessIdProp }) {
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               to={`/business/${business.id}/manage`}
-              className="px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg font-bold flex items-center gap-2 transition-all"
+              className="px-6 py-3 bg-primary text-white rounded-lg hover:shadow-lg font-bold flex items-center gap-2 transition-all"
             >
               <Grid size={20} />
               Panel de Gestión

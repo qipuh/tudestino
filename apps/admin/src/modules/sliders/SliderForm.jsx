@@ -33,7 +33,7 @@ function SliderForm({ slider, onSuccess, onCancel }) {
       if (slider.imageUrl) {
         const imageUrl = slider.imageUrl.startsWith('http')
           ? slider.imageUrl
-          : `${API_URL.replace('/api', '')}/uploads/sliders/${slider.imageUrl}`;
+          : `${API_URL.replace(/\/api$/, '')}/uploads/sliders/${slider.imageUrl}`;
         setImagePreview(imageUrl);
       }
     }

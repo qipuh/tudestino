@@ -71,6 +71,9 @@ import PricingPage from '@modules/legal/pages/PricingPage';
 import BusinessesPage from '@modules/businesses/pages/BusinessesPage';
 import BusinessFormPage from '@modules/businesses/pages/BusinessFormPage';
 import BusinessDetailPage from '@modules/businesses/pages/BusinessDetailPage';
+import ReservationsPage from '@modules/reservations/pages/ReservationsPage';
+import ServicesPage from '@modules/services/pages/ServicesPage';
+import ServiceFormPage from '@modules/services/pages/ServiceFormPage';
 import useAuthStore from './store/authStore';
 
 function App() {
@@ -158,6 +161,10 @@ function App() {
         <Route path="businesses/new" element={<BusinessFormPage />} />
         <Route path="businesses/:id" element={<BusinessDetailPage />} />
         <Route path="businesses/:id/edit" element={<BusinessFormPage />} />
+        <Route path="businesses/:businessId/reservations" element={<ReservationsPage />} />
+        <Route path="businesses/:businessId/services" element={<ServicesPage />} />
+        <Route path="businesses/:businessId/services/new" element={<ServiceFormPage />} />
+        <Route path="businesses/:businessId/services/:serviceId/edit" element={<ServiceFormPage />} />
 
         {/* Events Routes */}
         <Route path="events" element={<EventsListPage />} />

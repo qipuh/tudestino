@@ -1196,9 +1196,9 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
-          mainAxisSpacing: 16,
+          mainAxisSpacing: 4,
           crossAxisSpacing: 8,
-          childAspectRatio: 0.85,
+          childAspectRatio: 1.05,
         ),
         itemCount: items.length,
         itemBuilder: (context, index) {
@@ -1252,40 +1252,40 @@ class _HomeScreenState extends State<HomeScreen> {
                 alignment: Alignment.center,
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 26,
-                    backgroundColor: AppTheme.sand,
-                    backgroundImage: user?.profilePicture != null
-                        ? NetworkImage(user!.profilePicture!)
-                        : null,
-                    child: user?.profilePicture == null
-                        ? const Icon(Ionicons.person_outline,
-                            color: AppTheme.mute)
-                        : null,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      authProvider.isAuthenticated
-                          ? (user?.name ?? 'Usuario')
-                          : 'Invitado',
-                      style: GoogleFonts.bricolageGrotesque(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.ink,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+            if (authProvider.isAuthenticated) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 26,
+                      backgroundColor: AppTheme.sand,
+                      backgroundImage: user?.profilePicture != null
+                          ? NetworkImage(user!.profilePicture!)
+                          : null,
+                      child: user?.profilePicture == null
+                          ? const Icon(Ionicons.person_outline,
+                              color: AppTheme.mute)
+                          : null,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        user?.name ?? 'Usuario',
+                        style: GoogleFonts.bricolageGrotesque(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.ink,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const Divider(height: 1),
+              const Divider(height: 1),
+            ],
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.only(top: 16),
@@ -1293,11 +1293,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     buildGrid(navItems),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Divider(height: 1),
-                    ),
-                    buildGrid(accountItems),
+                    if (authProvider.isAuthenticated) ...[
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Divider(height: 1),
+                      ),
+                      buildGrid(accountItems),
+                    ],
                     if (!authProvider.isAuthenticated) ...[
                       const SizedBox(height: 24),
                       Padding(

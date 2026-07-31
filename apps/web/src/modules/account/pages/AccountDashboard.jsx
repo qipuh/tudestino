@@ -50,15 +50,17 @@ function AccountDashboard() {
         console.error('Error loading bookings:', error);
       }
 
-      // Cargar eventos (si existen)
-      try {
-        const eventsRes = await api.get('/events/my-events');
-        setStats(prev => ({
-          ...prev,
-          events: eventsRes.data?.length || 0
-        }));
-      } catch (error) {
-        console.error('Error loading events:', error);
+      // Cargar eventos organizados (solo business_owner/admin)
+      if (user?.role === 'business_owner' || user?.role === 'admin') {
+        try {
+          const eventsRes = await api.get('/events/organizer/my-events');
+          setStats(prev => ({
+            ...prev,
+            events: eventsRes.data?.length || 0
+          }));
+        } catch (error) {
+          console.error('Error loading events:', error);
+        }
       }
 
     } catch (error) {
@@ -128,19 +130,21 @@ function AccountDashboard() {
             <div className="text-sm text-gray-600">Reservas</div>
           </Link>
 
-          <Link
-            to="/account/events"
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition group"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition">
-                <Ticket className="text-purple-600" size={24} />
+          {(user?.role === 'business_owner' || user?.role === 'admin') && (
+            <Link
+              to="/account/events"
+              className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition group"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition">
+                  <Ticket className="text-purple-600" size={24} />
+                </div>
+                <TrendingUp className="text-gray-400" size={20} />
               </div>
-              <TrendingUp className="text-gray-400" size={20} />
-            </div>
-            <div className="text-3xl font-bold text-gray-900 mb-1">{stats.events}</div>
-            <div className="text-sm text-gray-600">Eventos</div>
-          </Link>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{stats.events}</div>
+              <div className="text-sm text-gray-600">Eventos</div>
+            </Link>
+          )}
 
           <Link
             to="/messages"

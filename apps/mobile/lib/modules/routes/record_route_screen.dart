@@ -124,6 +124,9 @@ class _RecordRouteScreenState extends State<RecordRouteScreen> {
   }
 
   Future<void> _handleStart(RouteProvider provider) async {
+    final confirmed = await _showLocationDisclosure();
+    if (!confirmed) return;
+
     setState(() => _starting = true);
     try {
       await provider.tracking.start();
@@ -136,6 +139,48 @@ class _RecordRouteScreenState extends State<RecordRouteScreen> {
     } finally {
       if (mounted) setState(() => _starting = false);
     }
+  }
+
+  Future<bool> _showLocationDisclosure() async {
+    return await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Acceso a ubicación en segundo plano'),
+        content: const SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Esta app grabará tu ubicación GPS continuamente mientras registras tu ruta, incluso si la pantalla está apagada o cierras la app.',
+                style: TextStyle(fontSize: 14),
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Los datos se guardan localmente en tu dispositivo y se sincronizan al servidor cuando hay conexión. La grabación se puede detener en cualquier momento.',
+                style: TextStyle(fontSize: 14),
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Usado para: Trekking, ciclismo, montañismo y otras actividades outdoor.',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Continuar'),
+          ),
+        ],
+      ),
+    ) ?? false;
   }
 
   Future<void> _handleStop(RouteProvider provider) async {

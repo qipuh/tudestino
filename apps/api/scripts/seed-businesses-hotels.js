@@ -1,6 +1,17 @@
 import sequelize from '../src/config/database-mysql.js';
 import Business from '../src/modules/businesses/business.model.js';
 
+const ADMIN_ID = 'b39c964c-350e-4c61-8ebf-4504ad60f1ad';
+
+function generateSlug(name) {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
 const hotels = [
   {
     name: "Gran Kuntur Wasi Hotel Casa y Campo",
@@ -514,9 +525,19 @@ async function seed() {
     console.log('DB conectada');
 
     for (const data of hotels) {
+      const slug = generateSlug(data.name);
+      const businessData = {
+        ...data,
+        ownerId: ADMIN_ID,
+        slug,
+        businessType: 'hotel',
+        hotelSubtype: 'hotel',
+        hotelCategory: data.category
+      };
+
       const [business, created] = await Business.findOrCreate({
-        where: { name: data.name },
-        defaults: data
+        where: { slug },
+        defaults: businessData
       });
 
       if (created) {

@@ -16,7 +16,12 @@ class OfflineMapService {
   static TileLayer? _tileLayer;
 
   /// Debe llamarse una vez al arrancar la app, antes de mostrar cualquier
-  /// mapa (ver main.dart).
+  /// mapa (ver main.dart). Si falla (ej. ObjectBox no pudo inicializar en
+  /// ese dispositivo), queda `_initialised == false` y las pantallas de
+  /// rutas caen a un TileLayer normal por red en vez de quedar con el mapa
+  /// en blanco para siempre - antes `getTileProvider()`/`buildTileLayer()`
+  /// armaban igual el FMTCTileProvider aunque el backend nunca se hubiera
+  /// inicializado, y cada tile fallaba en silencio.
   static Future<void> initialise() async {
     if (_initialised) return;
     await FMTCObjectBoxBackend().initialise();
@@ -31,7 +36,11 @@ class OfflineMapService {
   /// cachea un único singleton - crear uno nuevo en cada rebuild (ej. cada
   /// vez que llega una posición GPS nueva y el widget se redibuja) es caro
   /// y fue la causa de la lentitud reportada en dispositivo real.
-  static TileProvider getTileProvider() {
+  ///
+  /// Devuelve `null` si FMTC nunca se inicializó - el caller debe usar un
+  /// `TileProvider` normal en ese caso (ver `buildTileLayer`).
+  static TileProvider? getTileProvider() {
+    if (!_initialised) return null;
     return _tileProvider ??=
         FMTCTileProvider(stores: const {_storeName: BrowseStoreStrategy.readUpdateCreate});
   }
@@ -39,10 +48,11 @@ class OfflineMapService {
   /// Igual que `getTileProvider`: un solo `TileLayer` cacheado y reusado en
   /// las 4 pantallas con mapa, en vez de reconstruirlo en cada build().
   static TileLayer buildTileLayer() {
+    final provider = getTileProvider();
     return _tileLayer ??= TileLayer(
       urlTemplate: _tileUrlTemplate,
       userAgentPackageName: _userAgentPackageName,
-      tileProvider: getTileProvider(),
+      tileProvider: provider, // null -> flutter_map usa NetworkTileProvider
     );
   }
 

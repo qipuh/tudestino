@@ -349,7 +349,13 @@
       "Bash(taskkill //F //IM node.exe)",
       "Bash(npm start *)",
       "Bash(echo \"restarted, PID: $!\")",
-      "Bash(echo \"restarted PID: $!\")"
+      "Bash(echo \"restarted PID: $!\")",
+      "Bash(\"/c/Program Files/PuTTY/plink.exe\" -ssh -batch -pw '4D4pptik@A1225' root@38.250.161.113 \"git -C /var/www/tudestino pull\")",
+      "Bash(plink -i \"C:\\\\Users\\\\Edwin\\\\.ssh\\\\tudestino_rsa\" root@38.250.161.113 \"cd /var/www/tudestino && git pull origin main\")",
+      "Bash(plink -i \"C:\\\\Users\\\\Edwin\\\\.ssh\\\\tudestino_rsa\" root@38.250.161.113 \"cd /var/www/tudestino && node apps/api/scripts/seed-attractions-15.js\")",
+      "Bash(plink -i \"C:\\\\Users\\\\Edwin\\\\.ssh\\\\id_rsa\" root@38.250.161.113 \"cd /var/www/tudestino && git pull origin main\")",
+      "Bash(plink -i \"C:\\\\Users\\\\Edwin\\\\.ssh\\\\vivelo_deploy_key\" root@38.250.161.113 \"cd /var/www/tudestino && git pull origin main && node apps/api/scripts/seed-attractions-15.js\")",
+      "Bash(ssh -i ~/.ssh/id_rsa root@38.250.161.113 \"cd /var/www/tudestino && git pull origin main && node apps/api/scripts/seed-attractions-15.js\")"
     ],
     "deny": [],
     "ask": []

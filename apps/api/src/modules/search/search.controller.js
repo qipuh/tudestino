@@ -2,6 +2,7 @@ import { Op } from 'sequelize';
 import { Property, Room } from '../properties/hotel-property.model.js';
 import User from '../users/user.model-mysql.js';
 import Business from '../businesses/business.model.js';
+import BusinessService from '../businesses/business-service.model.js';
 import Event from '../events/event.model.js';
 import Entertainment from '../entertainment/entertainment.model.js';
 import Attraction from '../attractions/attraction.model.js';
@@ -636,6 +637,71 @@ export const searchAll = async (req, res) => {
         }));
       } catch (error) {
         console.error('Error fetching restaurants:', error.message);
+      }
+    }
+
+    // Buscar en Hotels desde businesses table
+    if (!category || category === 'all' || category === 'hotel') {
+      try {
+        const hotelWhere = {
+          status: 'active',
+          isActive: true,
+          businessType: 'hotel'
+        };
+
+        if (minRating) {
+          hotelWhere.ratingAverage = { [Op.gte]: parseFloat(minRating) };
+        }
+
+        const hotels = await Business.findAll({
+          where: hotelWhere,
+          include: [
+            {
+              model: BusinessService,
+              as: 'businessServices',
+              where: { isActive: true, serviceType: 'property' },
+              required: false,
+              limit: 3,
+              attributes: ['id', 'name', 'description', 'price', 'settings']
+            }
+          ],
+          limit: limitNum,
+          offset
+        });
+
+        results = results.concat(hotels.map(h => {
+          const data = h.toJSON();
+          const addressData = typeof data.address === 'string' ? JSON.parse(data.address) : data.address;
+          let distance = null;
+
+          if (lat && lng && addressData?.latitude && addressData?.longitude) {
+            distance = calculateDistance(lat, lng, parseFloat(addressData.latitude), parseFloat(addressData.longitude));
+          }
+
+          return {
+            id: data.id,
+            type: 'hotel',
+            name: data.name,
+            description: data.description,
+            image: data.logo || data.coverImage,
+            location: {
+              city: addressData?.city,
+              state: addressData?.state,
+              country: addressData?.country,
+              latitude: addressData?.latitude,
+              longitude: addressData?.longitude
+            },
+            rating: data.ratingAverage || 0,
+            reviewCount: data.reviewCount || 0,
+            price: data.businessServices?.[0]?.price || null,
+            priceLabel: 'noche',
+            services: data.businessServices || [],
+            distance: distance ? Math.round(distance * 10) / 10 : null,
+            url: `/businesses/${data.id}`
+          };
+        }));
+      } catch (error) {
+        console.error('Error fetching hotels:', error.message);
       }
     }
 

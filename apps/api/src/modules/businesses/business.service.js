@@ -52,7 +52,7 @@ class BusinessServiceClass {
         options.include = [
           {
             model: BusinessService,
-            as: 'services',
+            as: 'businessServices',
             where: { isActive: true },
             required: false
           },
@@ -92,7 +92,7 @@ class BusinessServiceClass {
         options.include = [
           {
             model: BusinessService,
-            as: 'services',
+            as: 'businessServices',
             where: { isActive: true },
             required: false
           }
@@ -121,7 +121,7 @@ class BusinessServiceClass {
         include: [
           {
             model: BusinessService,
-            as: 'services',
+            as: 'businessServices',
             where: { isActive: true },
             required: false
           }
@@ -219,7 +219,7 @@ class BusinessServiceClass {
         include: [
           {
             model: BusinessService,
-            as: 'services',
+            as: 'businessServices',
             where: { isActive: true },
             required: false
           }

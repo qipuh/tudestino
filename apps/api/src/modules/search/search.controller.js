@@ -671,7 +671,19 @@ export const searchAll = async (req, res) => {
 
         results = results.concat(hotels.map(h => {
           const data = h.toJSON();
-          const addressData = typeof data.address === 'string' ? JSON.parse(data.address) : data.address;
+          let addressData = {};
+
+          try {
+            if (typeof data.address === 'string') {
+              addressData = JSON.parse(data.address);
+            } else if (typeof data.address === 'object') {
+              addressData = data.address;
+            }
+          } catch (e) {
+            // Si address es plain text o JSON inválido, dejar vacío
+            addressData = {};
+          }
+
           let distance = null;
 
           if (lat && lng && addressData?.latitude && addressData?.longitude) {

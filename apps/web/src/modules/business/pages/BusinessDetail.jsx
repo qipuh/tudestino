@@ -73,7 +73,7 @@ const businessTypeLabels = {
 function BusinessDetail({ businessIdProp }) {
   const { id: urlId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, token, isAuthenticated } = useAuthStore();
   const { isVerified, status, loading: verificationLoading } = useVerification();
   const { sidebarOpen, toggleSidebar, setSidebarVisible } = useSidebar();
   const { business, loading, error, fetchBusiness, deleteBusiness } = useBusiness();
@@ -101,8 +101,12 @@ function BusinessDetail({ businessIdProp }) {
   // Usar businessIdProp si está disponible, de lo contrario usar el ID de la URL
   const id = businessIdProp || urlId;
 
-  // Verificar si el usuario actual es el dueño del negocio
-  const isOwner = business && user && business.ownerId === user.id;
+  // Verificar si el usuario actual es el dueño del negocio - exige token +
+  // isAuthenticated, no solo el objeto `user` cacheado en localStorage
+  // (zustand persist), que puede quedar obsoleto/truthy tras un logout
+  // incompleto o expiración de sesión sin limpiar el store por completo,
+  // mostrando los controles de Editar/Eliminar a un visitante sin sesión.
+  const isOwner = Boolean(isAuthenticated && token && business && user && business.ownerId === user.id);
 
   // Enable sidebar on public view, disable on owner view
   useEffect(() => {

@@ -4,10 +4,20 @@ import { MapPin, Star, SlidersHorizontal, Grid, List, Loader2, Map as MapIcon, C
 import api, { getImageUrl } from '@services/api';
 import PropertiesMap from '@components/PropertiesMap';
 import LocationAutocomplete from '@components/LocationAutocomplete';
+import { useSidebar } from '../../../contexts/SidebarContext';
 
 function SearchResultsPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { setSidebarVisible } = useSidebar();
+
+  // Esta página no tiene ReelsSidebar - si sidebarVisible/sidebarOpen
+  // quedó true desde el home (u otra página), MainLayout reservaba un
+  // marginRight de 22rem para un sidebar que aquí nunca se renderiza,
+  // dejando una franja blanca vacía a la derecha.
+  useEffect(() => {
+    setSidebarVisible(false);
+  }, [setSidebarVisible]);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);

@@ -574,8 +574,7 @@ export const searchAll = async (req, res) => {
             limit: 1
           }
         ],
-        limit: limitNum,
-        offset
+        limit: 1000,
       });
 
       results = results.concat(properties.map(p => {
@@ -624,8 +623,7 @@ export const searchAll = async (req, res) => {
 
         const restaurants = await Business.findAll({
           where: restaurantWhere,
-          limit: limitNum,
-          offset
+          limit: 1000,
         });
 
         results = results.concat(restaurants.map(r => {
@@ -687,8 +685,7 @@ export const searchAll = async (req, res) => {
               attributes: ['id', 'name', 'description', 'price', 'settings']
             }
           ],
-          limit: limitNum,
-          offset
+          limit: 1000,
         });
 
         results = results.concat(hotels.map(h => {
@@ -753,8 +750,7 @@ export const searchAll = async (req, res) => {
 
         const events = await Event.findAll({
           where: eventWhere,
-          limit: limitNum,
-          offset,
+          limit: 1000,
           order: [['eventDate', 'ASC']]
         });
 
@@ -809,8 +805,7 @@ export const searchAll = async (req, res) => {
 
         const entertainment = await Business.findAll({
           where: entertainmentWhere,
-          limit: limitNum,
-          offset
+          limit: 1000,
         });
 
         results = results.concat(entertainment.map(e => {
@@ -862,8 +857,7 @@ export const searchAll = async (req, res) => {
 
         const spas = await Business.findAll({
           where: spaWhere,
-          limit: limitNum,
-          offset
+          limit: 1000,
         });
 
         results = results.concat(spas.map(s => {
@@ -921,8 +915,7 @@ export const searchAll = async (req, res) => {
 
         const toursBusinesses = await Business.findAll({
           where: toursWhere,
-          limit: limitNum,
-          offset
+          limit: 1000,
         });
 
         results = results.concat(toursBusinesses.map(t => {
@@ -972,8 +965,7 @@ export const searchAll = async (req, res) => {
 
         const legacyEntertainment = await Entertainment.findAll({
           where: legacyEntertainmentWhere,
-          limit: limitNum,
-          offset
+          limit: 1000,
         });
 
         results = results.concat(legacyEntertainment.map(e => {
@@ -1069,9 +1061,13 @@ export const searchAll = async (req, res) => {
       results = interleaved;
     }
 
-    // Aplicar paginación a resultados combinados
+    // Aplicar paginación real a los resultados combinados - antes cada
+    // bloque de tipo aplicaba su propio offset por separado y acá se
+    // cortaba siempre desde el índice 0, así que páginas >1 perdían o
+    // repetían resultados según el tipo. Ahora cada bloque trae todo
+    // (hasta un tope alto) y la paginación real ocurre una sola vez aquí.
     const totalResults = results.length;
-    const paginatedResults = results.slice(0, limitNum);
+    const paginatedResults = results.slice(offset, offset + limitNum);
 
     res.json({
       success: true,

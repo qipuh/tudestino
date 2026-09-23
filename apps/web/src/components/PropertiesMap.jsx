@@ -14,6 +14,10 @@ L.Icon.Default.mergeOptions({
 
 // Icono personalizado para propiedades (estilo Airbnb)
 const createPropertyIcon = (price, isHovered = false) => {
+  // Sin precio real (negocios importados sin habitaciones/tarifas aún,
+  // o tipos que no tienen precio como agencias/guías) - un pin de mapa
+  // genérico en vez de un engañoso "S/0".
+  const label = price ? `S/${price}` : '📍';
   return L.divIcon({
     className: 'custom-marker',
     html: `
@@ -32,7 +36,7 @@ const createPropertyIcon = (price, isHovered = false) => {
         cursor: pointer;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       ">
-        S/${price}
+        ${label}
       </div>
     `,
     iconSize: [70, 36],
@@ -207,8 +211,14 @@ function PropertiesMap({
 
                 <div className="flex items-center gap-1 text-sm font-bold">
                   <DollarSign size={14} />
-                  <span>S/{price}</span>
-                  <span className="text-xs font-normal text-gray-600">/ noche</span>
+                  {price ? (
+                    <>
+                      <span>S/{price}</span>
+                      <span className="text-xs font-normal text-gray-600">/ noche</span>
+                    </>
+                  ) : (
+                    <span className="text-xs font-normal text-gray-600">Consultar precio</span>
+                  )}
                 </div>
               </div>
             </Popup>

@@ -413,7 +413,7 @@ function SearchResultsPage() {
 
   if (loading) {
     return (
-      <div className="w-full h-screen flex items-center justify-center">
+      <div className="w-full h-dvh flex items-center justify-center">
         <div className="flex flex-col items-center justify-center">
           <Loader2 className="animate-spin text-primary mb-4" size={48} />
           <p className="text-gray-600">Buscando propiedades...</p>
@@ -423,9 +423,11 @@ function SearchResultsPage() {
   }
 
   return (
-    <div className="w-full h-screen flex flex-col overflow-hidden">
-      {/* Header fijo - Resumen + filtros horizontales */}
-      <div className="flex-shrink-0 bg-white border-b shadow-sm">
+    <div className="w-full h-dvh flex flex-col overflow-hidden">
+      {/* Header fijo - Resumen + filtros horizontales. z-20 explícito:
+          el mapa de Leaflet crea sus propios panes con z-index interno
+          que si no se acota puede terminar por encima de este header. */}
+      <div className="relative z-20 flex-shrink-0 bg-white border-b shadow-sm">
         <div className="max-w-screen-2xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             {/* Izquierda: Resumen compacto */}
@@ -633,7 +635,7 @@ function SearchResultsPage() {
       </div>
 
       {/* Contenido principal - Resultados + Mapa */}
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative z-0 overflow-hidden">
         {results.length === 0 ? (
           <div className="h-full flex items-center justify-center">
             <div className="text-center px-6">
@@ -645,8 +647,10 @@ function SearchResultsPage() {
           </div>
         ) : (
           <>
-            {/* MÓVIL: mapa de fondo full-screen + bottom sheet arrastrable, mismo patrón que la app */}
-            <div className="lg:hidden absolute inset-0">
+            {/* MÓVIL: mapa de fondo full-screen + bottom sheet arrastrable, mismo patrón que la app.
+                z-0 explícito: Leaflet crea panes internos con z-index propio (400-700) que sin
+                acotar el contenedor pueden terminar por encima del header/filtros. */}
+            <div className="lg:hidden absolute inset-0 z-0">
               <PropertiesMap
                 properties={mapProperties}
                 hoveredPropertyId={hoveredItemId}

@@ -1038,6 +1038,37 @@ export const searchAll = async (req, res) => {
         }
     }
 
+    // Con category='all' cada bloque (property/restaurant/tours/...) se
+    // concatena en orden fijo y luego se corta a limitNum - si un solo
+    // tipo (ej. hoteles) ya llena el límite, los demás tipos nunca
+    // aparecían aunque existieran de sobra. Se intercala por tipo antes
+    // de paginar para que "Todos" muestre variedad real.
+    if ((!category || category === 'all') && (sortBy === 'relevance' || sortBy === 'random' || !sortBy)) {
+      const byType = {};
+      const typeOrder = [];
+      for (const item of results) {
+        if (!byType[item.type]) {
+          byType[item.type] = [];
+          typeOrder.push(item.type);
+        }
+        byType[item.type].push(item);
+      }
+      const interleaved = [];
+      let i = 0;
+      let addedAny = true;
+      while (addedAny) {
+        addedAny = false;
+        for (const key of typeOrder) {
+          if (byType[key][i]) {
+            interleaved.push(byType[key][i]);
+            addedAny = true;
+          }
+        }
+        i++;
+      }
+      results = interleaved;
+    }
+
     // Aplicar paginación a resultados combinados
     const totalResults = results.length;
     const paginatedResults = results.slice(0, limitNum);

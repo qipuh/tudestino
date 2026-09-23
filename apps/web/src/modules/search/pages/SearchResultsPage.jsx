@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { MapPin, Star, SlidersHorizontal, Grid, List, Loader2, Map as MapIcon, Calendar, Search } from 'lucide-react';
+import { MapPin, Star, SlidersHorizontal, Grid, List, Loader2, Map as MapIcon, Calendar, Locate, X } from 'lucide-react';
 import api, { getImageUrl } from '@services/api';
 import PropertiesMap from '@components/PropertiesMap';
 import LocationAutocomplete from '@components/LocationAutocomplete';
@@ -18,6 +18,7 @@ function SearchResultsPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [totalResults, setTotalResults] = useState(0);
+  const [locatingMe, setLocatingMe] = useState(false);
 
   // Filtros adicionales
   const [filters, setFilters] = useState({
@@ -161,6 +162,44 @@ function SearchResultsPage() {
     navigate(`/search?${params.toString()}`);
   };
 
+  // "Cerca de mí" - geolocalización del navegador + reverse geocoding
+  // (Nominatim, gratis) para mostrar un nombre de lugar legible. El radio
+  // de 50km ya se aplica en el backend (searchAll filtra por distance).
+  const handleUseMyLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Tu navegador no soporta geolocalización');
+      return;
+    }
+    setLocatingMe(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude: uLat, longitude: uLon } = pos.coords;
+        let label = 'Mi ubicación actual';
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${uLat}&lon=${uLon}`
+          );
+          const data = await res.json();
+          label =
+            data.address?.city || data.address?.town || data.address?.village || data.address?.county || label;
+        } catch (err) {
+          console.error('Error reverse geocoding:', err);
+        }
+        const params = new URLSearchParams(searchParams);
+        params.set('location', label);
+        params.set('lat', uLat);
+        params.set('lng', uLon);
+        navigate(`/search?${params.toString()}`);
+        setLocatingMe(false);
+      },
+      (err) => {
+        console.error('Geolocation error:', err);
+        alert('No pudimos acceder a tu ubicación. Revisa los permisos del navegador.');
+        setLocatingMe(false);
+      }
+    );
+  };
+
   const clearFilters = () => {
     setFilters({
       category: 'all',
@@ -216,42 +255,36 @@ function SearchResultsPage() {
 
   return (
     <div className="w-full h-screen flex flex-col overflow-hidden">
-      {/* Header fijo - Resumen y filtros COMPACTO */}
+      {/* Header fijo - Resumen + filtros horizontales */}
       <div className="flex-shrink-0 bg-white border-b shadow-sm">
         <div className="max-w-screen-2xl mx-auto px-6 py-3">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
             {/* Izquierda: Resumen compacto */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <h1 className="text-lg font-semibold whitespace-nowrap">
                 {totalResults > 0 ? totalResults : results.length} resultados
-                {location && ` • ${location.split(',')[0]}`}
               </h1>
+              {location && (
+                <span className="flex items-center gap-1 bg-primary/10 text-primary text-sm font-medium px-2.5 py-1 rounded-full">
+                  <MapPin size={13} />
+                  {location.split(',')[0]}
+                  <button
+                    onClick={() => handleLocationSelect({ label: '', lat: null, lon: null })}
+                    className="ml-0.5 hover:text-primary-dark"
+                  >
+                    <X size={13} />
+                  </button>
+                </span>
+              )}
               {totalGuests > 0 && (
                 <span className="text-sm text-gray-600 flex items-center gap-1">
                   👥 {totalGuests}
                 </span>
               )}
-
-              {/* Campo de búsqueda */}
-              <div className="relative">
-                {loading ? (
-                  <Loader2 size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary animate-spin" />
-                ) : (
-                  <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                )}
-                <input
-                  type="text"
-                  value={filters.query}
-                  onChange={(e) => handleFilterChange('query', e.target.value)}
-                  placeholder="Buscar por nombre..."
-                  className="pl-9 pr-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary w-64"
-                />
-              </div>
             </div>
 
-            {/* Centro/Derecha: Controles */}
+            {/* Derecha: Controles */}
             <div className="flex items-center gap-3">
-              {/* Botón Filtros */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center gap-2 px-3 py-1.5 border rounded-lg hover:bg-gray-50 transition text-sm relative"
@@ -263,7 +296,6 @@ function SearchResultsPage() {
                     {[
                       filters.category !== 'all',
                       filters.businessType !== '',
-                      filters.query !== '',
                       filters.minRating !== '',
                       filters.minPrice !== '',
                       filters.maxPrice !== ''
@@ -272,7 +304,6 @@ function SearchResultsPage() {
                 )}
               </button>
 
-              {/* Ordenar */}
               <select
                 value={filters.sortBy}
                 onChange={(e) => handleFilterChange('sortBy', e.target.value)}
@@ -284,7 +315,6 @@ function SearchResultsPage() {
                 <option value="rating">Mejor valorados</option>
               </select>
 
-              {/* Botón Mostrar/Ocultar Mapa */}
               {results.length > 0 && (
                 <button
                   onClick={() => setShowMap(!showMap)}
@@ -295,7 +325,6 @@ function SearchResultsPage() {
                 </button>
               )}
 
-              {/* Vista */}
               <div className="flex border rounded-lg overflow-hidden">
                 <button
                   onClick={() => setViewMode('grid')}
@@ -313,78 +342,72 @@ function SearchResultsPage() {
             </div>
           </div>
 
-        </div>
-      </div>
+          {/* Barra de filtros horizontal - togglable */}
+          {showFilters && (
+            <div className="flex flex-wrap items-end gap-3 pt-3 mt-3 border-t">
+              <div className="w-64">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Ubicación</label>
+                <div className="flex gap-1.5">
+                  <div className="flex-1">
+                    <LocationAutocomplete value={location} onSelect={handleLocationSelect} placeholder="Ciudad o distrito..." />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleUseMyLocation}
+                    disabled={locatingMe}
+                    title="Buscar cerca de mí"
+                    className="flex items-center justify-center w-9 h-9 border rounded-lg hover:bg-gray-50 transition text-primary disabled:opacity-50 flex-shrink-0"
+                  >
+                    {locatingMe ? <Loader2 size={16} className="animate-spin" /> : <Locate size={16} />}
+                  </button>
+                </div>
+              </div>
 
-      {/* Contenido principal - Filtros (sidebar) + Resultados + Mapa */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar de filtros - togglable con el botón "Filtros" de arriba */}
-        {showFilters && (
-          <div className="w-72 flex-shrink-0 border-r bg-white overflow-y-auto p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-700">Filtros de búsqueda</h3>
-              {hasActiveFilters() && (
-                <button
-                  onClick={clearFilters}
-                  className="text-xs text-primary hover:text-primary-dark font-medium transition"
+              <div className="w-40">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Categoría</label>
+                <select
+                  value={filters.category}
+                  onChange={(e) => handleFilterChange('category', e.target.value)}
+                  className="w-full px-2 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  Limpiar
-                </button>
+                  <option value="all">Todos</option>
+                  <option value="hotel">Alojamientos</option>
+                  <option value="restaurant">Restaurantes</option>
+                  <option value="tours">Tours y Excursiones</option>
+                </select>
+              </div>
+
+              {filters.category === 'tours' && (
+                <div className="w-44">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
+                  <select
+                    value={filters.businessType}
+                    onChange={(e) => handleFilterChange('businessType', e.target.value)}
+                    className="w-full px-2 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">Agencias y guías</option>
+                    <option value="travel_agency">Agencias de Viaje</option>
+                    <option value="tour_guide">Guías de Turismo</option>
+                  </select>
+                </div>
               )}
-            </div>
 
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Ubicación</label>
-              <LocationAutocomplete value={location} onSelect={handleLocationSelect} />
-            </div>
+              <div className="w-36">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Rating mínimo</label>
+                <select
+                  value={filters.minRating}
+                  onChange={(e) => handleFilterChange('minRating', e.target.value)}
+                  className="w-full px-2 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">Cualquiera</option>
+                  <option value="4.5">4.5+</option>
+                  <option value="4.0">4.0+</option>
+                  <option value="3.5">3.5+</option>
+                  <option value="3.0">3.0+</option>
+                </select>
+              </div>
 
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Categoría</label>
-              <select
-                value={filters.category}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="all">Todos</option>
-                <option value="hotel">Alojamientos</option>
-                <option value="restaurant">Restaurantes</option>
-                <option value="event">Eventos</option>
-                <option value="entertainment">Entretenimiento</option>
-                <option value="spa">Spa y Bienestar</option>
-                <option value="tours">Tours y Excursiones</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de negocio</label>
-              <select
-                value={filters.businessType}
-                onChange={(e) => handleFilterChange('businessType', e.target.value)}
-                className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="">Todos</option>
-                <option value="travel_agency">Agencias de Viaje</option>
-                <option value="tour_guide">Guías de Turismo</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Rating mínimo</label>
-              <select
-                value={filters.minRating}
-                onChange={(e) => handleFilterChange('minRating', e.target.value)}
-                className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="">Cualquiera</option>
-                <option value="4.5">4.5+</option>
-                <option value="4.0">4.0+</option>
-                <option value="3.5">3.5+</option>
-                <option value="3.0">3.0+</option>
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
+              <div className="w-28">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Precio mín.</label>
                 <input
                   type="number"
@@ -392,10 +415,10 @@ function SearchResultsPage() {
                   onChange={(e) => handleFilterChange('minPrice', e.target.value)}
                   placeholder="S/ Min"
                   min="0"
-                  className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-2 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
-              <div>
+              <div className="w-28">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Precio máx.</label>
                 <input
                   type="number"
@@ -403,12 +426,25 @@ function SearchResultsPage() {
                   onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
                   placeholder="S/ Max"
                   min="0"
-                  className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-2 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
+
+              {hasActiveFilters() && (
+                <button
+                  onClick={clearFilters}
+                  className="text-sm text-primary hover:text-primary-dark font-medium transition pb-2.5"
+                >
+                  Limpiar filtros
+                </button>
+              )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      </div>
+
+      {/* Contenido principal - Resultados + Mapa */}
+      <div className="flex-1 flex overflow-hidden">
 
         {results.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">

@@ -169,6 +169,13 @@ export const importPlaces = async ({ type, places }) => {
   for (const place of places) {
     try {
       if (type === 'hotel') {
+        const existing = await HotelProperty.findOne({
+          where: { hotelName: place.name, addressCity: place.city || 'Sin ciudad' },
+        });
+        if (existing) {
+          skipped.push({ name: place.name, reason: 'Ya importado antes (mismo nombre y ciudad)' });
+          continue;
+        }
         const row = await HotelProperty.create({
           hostId: systemUser.id,
           accommodationType: 'hotel',
@@ -186,6 +193,11 @@ export const importPlaces = async ({ type, places }) => {
         });
         created.push(row.id);
       } else if (type === 'restaurant' || type === 'travel_agency' || type === 'tour_guide') {
+        const existing = await Business.findOne({ where: { name: place.name, businessType: type } });
+        if (existing) {
+          skipped.push({ name: place.name, reason: 'Ya importado antes (mismo nombre y tipo)' });
+          continue;
+        }
         const slug =
           place.name
             .toLowerCase()

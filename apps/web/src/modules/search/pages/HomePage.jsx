@@ -645,7 +645,7 @@ function HomePage() {
                 {attractions.map((attraction) => (
                     <Link
                       key={attraction.id}
-                      to={`/attractions/${attraction.id}`}
+                      to={`/attractions/${attraction.slug || attraction.id}`}
                       className="group bg-white border border-gray-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 flex-shrink-0 snap-start w-[85%] sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)]"
                     >
                       <div className="h-48 sm:h-56 bg-sand relative overflow-hidden">

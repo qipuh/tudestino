@@ -32,6 +32,87 @@ function AttractionDetail() {
     fetchAttraction();
   }, [id]);
 
+  // SEO: título, meta description, canonical, Open Graph y JSON-LD por
+  // atractivo - sin esto Google indexa el mismo título/descripción
+  // genérico de index.html en todas las páginas, sin importar el contenido.
+  useEffect(() => {
+    if (!attraction) return;
+
+    const seoTitle = attraction.metaTitle || `${attraction.title} - TuDestino`;
+    const seoDescription = attraction.metaDescription || attraction.description?.slice(0, 160) || '';
+    const canonicalUrl = `${window.location.origin}/attractions/${attraction.slug || attraction.id}`;
+    const image = attraction.coverImage ? getImageUrl(attraction.coverImage, 'attractions') : undefined;
+
+    const prevTitle = document.title;
+    document.title = seoTitle;
+
+    const setMeta = (selector, attr, value) => {
+      if (!value) return null;
+      let el = document.querySelector(selector);
+      const created = !el;
+      if (!el) {
+        el = document.createElement('meta');
+        const [, key, keyValue] = selector.match(/\[(\w+)="([^"]+)"\]/);
+        el.setAttribute(key, keyValue);
+        document.head.appendChild(el);
+      }
+      el.setAttribute(attr, value);
+      return { el, created };
+    };
+
+    const managed = [
+      setMeta('meta[name="description"]', 'content', seoDescription),
+      setMeta('meta[property="og:title"]', 'content', seoTitle),
+      setMeta('meta[property="og:description"]', 'content', seoDescription),
+      setMeta('meta[property="og:image"]', 'content', image),
+      setMeta('meta[property="og:type"]', 'content', 'place'),
+      setMeta('meta[name="twitter:card"]', 'content', 'summary_large_image'),
+    ].filter(Boolean);
+
+    let canonical = document.querySelector('link[rel="canonical"]');
+    const canonicalCreated = !canonical;
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', canonicalUrl);
+
+    const jsonLd = document.createElement('script');
+    jsonLd.type = 'application/ld+json';
+    jsonLd.id = 'attraction-jsonld';
+    jsonLd.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'TouristAttraction',
+      name: attraction.title,
+      description: attraction.description,
+      image,
+      url: canonicalUrl,
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: attraction.city || undefined,
+        addressRegion: attraction.region || undefined,
+        addressCountry: attraction.country || 'PE',
+      },
+      geo:
+        attraction.latitude && attraction.longitude
+          ? {
+              '@type': 'GeoCoordinates',
+              latitude: attraction.latitude,
+              longitude: attraction.longitude,
+            }
+          : undefined,
+    });
+    document.head.appendChild(jsonLd);
+
+    return () => {
+      document.title = prevTitle;
+      managed.forEach(({ el, created }) => created && el.remove());
+      if (canonicalCreated) canonical.remove();
+      document.getElementById('attraction-jsonld')?.remove();
+    };
+  }, [attraction]);
+
   const fetchAttraction = async () => {
     try {
       setLoading(true);

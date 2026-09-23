@@ -134,7 +134,10 @@ class AttractionController {
     try {
       const { id } = req.params;
 
-      const attraction = await Attraction.findByPk(id, {
+      // Acepta slug (URLs SEO-friendly) o UUID (compat con links viejos).
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      const attraction = await Attraction.findOne({
+        where: isUuid ? { id } : { slug: id },
         include: [
           {
             model: AttractionImage,

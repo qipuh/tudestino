@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Star, TrendingUp, Home, Building2, Castle, TreePine, Map, Calendar, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { MapPin, Star, TrendingUp, Home, Building2, Map, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import SearchHero from '@components/SearchHero';
 import ReelsSidebar from '../../../components/social/ReelsSidebar';
 import api, { getImageUrl } from '../../../services/api';
@@ -137,24 +137,19 @@ function HomePage() {
     .slice(0, 8);
 
   // Categorías de búsqueda
+  // Mismas categorías que /search: Alojamientos, Restaurantes y Tours y
+  // Excursiones (agencias de viaje + guías de turismo incluidas ahí).
   const categories = [
     { name: 'Alojamientos', icon: Building2, type: 'hotel', link: '/search?category=hotel', searchParam: 'category=hotel' },
     { name: 'Restaurantes', icon: Home, type: 'restaurant', link: '/search?category=restaurant', searchParam: 'category=restaurant' },
-    { name: 'Eventos', icon: Castle, type: 'event', link: '/events', searchParam: 'category=event' },
-    { name: 'Entretenimiento', icon: TreePine, type: 'entertainment', link: '/search?category=entertainment', searchParam: 'category=entertainment' },
-    { name: 'Spa y Bienestar', icon: Sparkles, type: 'spa', link: '/search?category=spa', searchParam: 'category=spa' },
     { name: 'Tours y Excursiones', icon: Map, type: 'tours', link: '/search?category=tours', searchParam: 'category=tours' },
-    { name: 'Información Turística', icon: MapPin, type: 'attractions', link: '/search?businessType=tour', searchParam: 'businessType=tour' },
   ];
 
   // Agrupar por tipo
   const itemsByType = {
     property: businesses.filter(p => !p.type || p.type === 'property' || p.type === 'hotel' || p.accommodationType),
     restaurant: businesses.filter(p => p.type === 'restaurant'),
-    event: businesses.filter(p => p.type === 'event'),
-    entertainment: businesses.filter(p => p.type === 'entertainment'),
-    spa: businesses.filter(p => p.type === 'spa'),
-    tours: businesses.filter(p => p.type === 'tours'),
+    tours: businesses.filter(p => p.type === 'tours' || p.type === 'travel_agency' || p.type === 'tour_guide'),
   };
 
   // Función para obtener la URL del negocio (usando slug cuando sea posible)
@@ -486,9 +481,6 @@ function HomePage() {
           const typeToCategory = {
             property: 'hotel',
             restaurant: 'restaurant',
-            event: 'event',
-            entertainment: 'entertainment',
-            spa: 'spa',
             tours: 'tours'
           };
           const categoryType = typeToCategory[type];

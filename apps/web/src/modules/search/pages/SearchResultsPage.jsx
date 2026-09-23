@@ -459,7 +459,7 @@ function SearchResultsPage() {
           <>
             {/* Lista de resultados - Scrolleable sin scrollbar visible */}
             <div
-              className={showMap ? 'w-[60%] overflow-y-scroll scrollbar-hide' : 'w-full overflow-y-scroll scrollbar-hide'}
+              className={showMap ? 'w-1/2 overflow-y-scroll scrollbar-hide' : 'w-full overflow-y-scroll scrollbar-hide'}
               style={{
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none'
@@ -471,7 +471,7 @@ function SearchResultsPage() {
                   className={
                     viewMode === 'grid'
                       ? showMap
-                        ? 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 relative'
+                        ? 'grid grid-cols-1 lg:grid-cols-2 gap-5 relative'
                         : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative'
                       : 'space-y-4'
                   }
@@ -665,7 +665,7 @@ function SearchResultsPage() {
 
             {/* Mapa lateral sticky - 100% altura */}
             {showMap && (
-              <div className="w-[40%] h-full relative">
+              <div className="w-1/2 h-full relative">
                 <PropertiesMap
                   properties={results.filter(item => item.location?.latitude && item.location?.longitude).map(item => {
                     const uniqueId = `${item.type}-${item.id}`;

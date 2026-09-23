@@ -29,6 +29,8 @@ function SearchResultsPage() {
   const [hasMore, setHasMore] = useState(true);
   const [totalResults, setTotalResults] = useState(0);
   const [locatingMe, setLocatingMe] = useState(false);
+  const [sheetExpanded, setSheetExpanded] = useState(false); // bottom sheet móvil
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Filtros adicionales
   const [filters, setFilters] = useState({
@@ -252,6 +254,163 @@ function SearchResultsPage() {
     ? `${new Date(checkIn).toLocaleDateString()} - ${new Date(checkOut).toLocaleDateString()}`
     : '';
 
+  const getTypeIcon = (type) => {
+    switch (type) {
+      case 'property': return '🏨';
+      case 'restaurant': return '🍽️';
+      case 'event': return '🎉';
+      case 'entertainment': return '🎵';
+      case 'spa': return '💆';
+      case 'tours': return '🗺️';
+      case 'travel_agency': return '🧳';
+      case 'tour_guide': return '🧭';
+      default: return '📍';
+    }
+  };
+
+  const getTypeLabel = (type) => {
+    switch (type) {
+      case 'property': return 'Alojamiento';
+      case 'restaurant': return 'Restaurante';
+      case 'event': return 'Evento';
+      case 'entertainment': return 'Entretenimiento';
+      case 'spa': return 'Spa y Bienestar';
+      case 'tours': return 'Tours';
+      case 'travel_agency': return 'Agencia de Viaje';
+      case 'tour_guide': return 'Guía de Turismo';
+      default: return '';
+    }
+  };
+
+  // Card de resultado - compartida entre el grid de escritorio (lista +
+  // mapa lado a lado) y el bottom sheet de móvil (mapa de fondo).
+  const renderResultCard = (item, compact = false) => (
+    <Link
+      key={`${item.type}-${item.id}`}
+      to={getBusinessUrl(item)}
+      onMouseEnter={() => setHoveredItemId(`${item.type}-${item.id}`)}
+      onMouseLeave={() => setHoveredItemId(null)}
+      className={`group border-2 rounded-2xl overflow-hidden transition-all duration-300 ${
+        hoveredItemId === `${item.type}-${item.id}`
+          ? 'border-primary ring-4 ring-primary ring-opacity-30 shadow-2xl scale-[1.02] z-10'
+          : 'border-gray-200 hover:border-primary hover:shadow-xl'
+      }`}
+    >
+      <div className={`${compact ? 'h-28' : 'h-48'} bg-gray-200 relative overflow-hidden`}>
+        {item.image ? (
+          <img
+            src={getImageUrl(item.image)}
+            alt={item.name}
+            className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+          />
+        ) : (
+          <div className={`w-full h-full flex items-center justify-center text-gray-400 ${compact ? 'text-2xl' : 'text-4xl'}`}>
+            {getTypeIcon(item.type)}
+          </div>
+        )}
+
+        <div className={`absolute top-2 left-2 bg-white/95 backdrop-blur-sm px-2 py-0.5 rounded-full font-medium text-gray-700 flex items-center gap-1 ${compact ? 'text-[10px]' : 'text-xs'}`}>
+          <span>{getTypeIcon(item.type)}</span>
+          {!compact && <span>{getTypeLabel(item.type)}</span>}
+        </div>
+
+        {item.rating >= 4.5 && (
+          <div className={`absolute top-2 right-2 bg-primary rounded-full shadow-lg flex items-center gap-1 ${compact ? 'px-1.5 py-0.5' : 'px-3 py-1.5 gap-1.5'}`}>
+            <Star size={compact ? 10 : 14} className="fill-white text-white" />
+            {!compact && <span className="text-sm font-bold text-white">Destacado</span>}
+          </div>
+        )}
+
+        {item.distance != null && !compact && (
+          <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium text-gray-700">
+            A {item.distance} km
+          </div>
+        )}
+
+        {item.type === 'event' && item.isFree && (
+          <div className="absolute bottom-2 right-2 bg-green-500 text-white px-2 py-0.5 rounded-full text-[10px] font-bold">
+            GRATIS
+          </div>
+        )}
+      </div>
+      <div className={compact ? 'p-2.5' : 'p-4'}>
+        <h3 className={`font-semibold truncate group-hover:text-primary transition ${compact ? 'text-sm' : 'text-lg'}`}>
+          {item.name}
+        </h3>
+        <div className={`flex items-center gap-1 text-gray-600 mt-1 ${compact ? 'text-xs' : 'text-sm'}`}>
+          <MapPin size={compact ? 11 : 14} className="text-primary flex-shrink-0" />
+          <span className="truncate">{item.location.city}, {item.location.country}</span>
+        </div>
+
+        {item.rating > 0 && (
+          <div className="flex items-center gap-1 mt-1.5">
+            <Star size={compact ? 11 : 14} className="fill-yellow-400 text-yellow-400" />
+            <span className={`font-medium ${compact ? 'text-xs' : 'text-sm'}`}>
+              {typeof item.rating === 'number' ? item.rating.toFixed(1) : item.rating}
+            </span>
+            {!compact && <span className="text-sm text-gray-600">({item.reviewCount || 0})</span>}
+          </div>
+        )}
+
+        <div className={compact ? 'mt-2' : 'mt-3'}>
+          {item.type === 'property' && item.price && (
+            <>
+              <span className={`font-bold text-primary-dark ${compact ? 'text-sm' : 'text-lg'}`}>S/{item.price}</span>
+              <span className={`text-gray-600 ${compact ? 'text-xs' : ''}`}> / {item.priceLabel}</span>
+            </>
+          )}
+
+          {!compact && item.type === 'restaurant' && item.cuisineTypes && item.cuisineTypes.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {item.cuisineTypes.slice(0, 2).map((cuisine, idx) => (
+                <span key={idx} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
+                  {cuisine}
+                </span>
+              ))}
+              {item.priceRange && (
+                <span className="text-xs text-gray-600 ml-1">{'$'.repeat(item.priceRange)}</span>
+              )}
+            </div>
+          )}
+
+          {!compact && item.type === 'event' && item.startDate && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Calendar size={14} className="text-primary" />
+              <span>{new Date(item.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
+            </div>
+          )}
+
+          {!compact && item.type === 'entertainment' && (
+            <div className="flex items-center gap-2">
+              {item.coverCharge && <span className="text-sm text-gray-600">Cover: S/{item.coverCharge}</span>}
+              {item.priceRange && <span className="text-xs text-gray-600">{'$'.repeat(item.priceRange)}</span>}
+            </div>
+          )}
+
+          {!compact && item.type === 'spa' && item.description && (
+            <span className="text-sm text-gray-600 line-clamp-2">{item.description}</span>
+          )}
+
+          {item.type === 'tours' && item.price && (
+            <span className={`font-bold text-primary-dark ${compact ? 'text-sm' : 'text-lg'}`}>S/{item.price}</span>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+
+  const mapProperties = results
+    .filter((item) => item.location?.latitude && item.location?.longitude)
+    .map((item) => ({
+      ...item,
+      id: `${item.type}-${item.id}`,
+      addressLatitude: item.location.latitude,
+      addressLongitude: item.location.longitude,
+      addressCity: item.location.city,
+      addressCountry: item.location.country,
+      price: item.price || 0,
+    }));
+
   if (loading) {
     return (
       <div className="w-full h-screen flex items-center justify-center">
@@ -293,8 +452,8 @@ function SearchResultsPage() {
               )}
             </div>
 
-            {/* Derecha: Controles */}
-            <div className="flex items-center gap-3">
+            {/* Derecha: Controles - versión escritorio */}
+            <div className="hidden lg:flex items-center gap-3">
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center gap-2 px-3 py-1.5 border rounded-lg hover:bg-gray-50 transition text-sm relative"
@@ -350,11 +509,31 @@ function SearchResultsPage() {
                 </button>
               </div>
             </div>
+
+            {/* Derecha: Controles - versión móvil (solo botón Filtros, abre sheet) */}
+            <button
+              onClick={() => setShowMobileFilters(true)}
+              className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-sm relative flex-shrink-0"
+            >
+              <SlidersHorizontal size={15} />
+              Filtros
+              {hasActiveFilters() && (
+                <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                  {[
+                    filters.category !== 'all',
+                    filters.businessType !== '',
+                    filters.minRating !== '',
+                    filters.minPrice !== '',
+                    filters.maxPrice !== ''
+                  ].filter(Boolean).length}
+                </span>
+              )}
+            </button>
           </div>
 
-          {/* Barra de filtros horizontal - togglable */}
+          {/* Barra de filtros horizontal - solo escritorio, togglable */}
           {showFilters && (
-            <div className="flex flex-wrap items-end gap-3 pt-3 mt-3 border-t">
+            <div className="hidden lg:flex flex-wrap items-end gap-3 pt-3 mt-3 border-t">
               <div className="w-64">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Ubicación</label>
                 <div className="flex gap-1.5">
@@ -454,11 +633,10 @@ function SearchResultsPage() {
       </div>
 
       {/* Contenido principal - Resultados + Mapa */}
-      <div className="flex-1 flex overflow-hidden">
-
+      <div className="flex-1 relative overflow-hidden">
         {results.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
+          <div className="h-full flex items-center justify-center">
+            <div className="text-center px-6">
               <p className="text-gray-600 text-lg mb-2">
                 No encontramos resultados que coincidan con tu búsqueda
               </p>
@@ -467,236 +645,223 @@ function SearchResultsPage() {
           </div>
         ) : (
           <>
-            {/* Lista de resultados - Scrolleable sin scrollbar visible */}
+            {/* MÓVIL: mapa de fondo full-screen + bottom sheet arrastrable, mismo patrón que la app */}
+            <div className="lg:hidden absolute inset-0">
+              <PropertiesMap
+                properties={mapProperties}
+                hoveredPropertyId={hoveredItemId}
+                onMarkerHover={setHoveredItemId}
+              />
+            </div>
             <div
-              className={showMap ? 'w-1/2 overflow-y-scroll scrollbar-hide' : 'w-full overflow-y-scroll scrollbar-hide'}
-              style={{
-                scrollbarWidth: 'none',
-                msOverflowStyle: 'none'
-              }}
-              onScroll={handleScroll}
+              className="lg:hidden absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl transition-[height] duration-300 ease-out flex flex-col z-10"
+              style={{ height: sheetExpanded ? '85vh' : '38vh' }}
             >
-              <div className="max-w-screen-2xl mx-auto px-6 py-6">
-                <div
-                  className={
-                    viewMode === 'grid'
-                      ? showMap
-                        ? 'grid grid-cols-1 lg:grid-cols-2 gap-5 relative'
-                        : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative'
-                      : 'space-y-4'
-                  }
+              <button type="button" onClick={() => setSheetExpanded((v) => !v)} className="flex-shrink-0 w-full pt-2.5 pb-2">
+                <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto" />
+              </button>
+              <div className="flex items-center justify-between px-4 pb-2 flex-shrink-0">
+                <span className="text-sm font-semibold">
+                  {totalResults > 0 ? totalResults : results.length} resultados
+                </span>
+                <select
+                  value={filters.sortBy}
+                  onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                  className="text-xs border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-              {results.map((item) => {
-                // Función para obtener el icono según el tipo
-                const getTypeIcon = () => {
-                  switch (item.type) {
-                    case 'property': return '🏨';
-                    case 'restaurant': return '🍽️';
-                    case 'event': return '🎉';
-                    case 'entertainment': return '🎵';
-                    case 'spa': return '💆';
-                    case 'tours': return '🗺️';
-                    case 'travel_agency': return '🧳';
-                    case 'tour_guide': return '🧭';
-                    default: return '📍';
-                  }
-                };
-
-                // Función para obtener el label del tipo
-                const getTypeLabel = () => {
-                  switch (item.type) {
-                    case 'property': return 'Alojamiento';
-                    case 'restaurant': return 'Restaurante';
-                    case 'event': return 'Evento';
-                    case 'entertainment': return 'Entretenimiento';
-                    case 'spa': return 'Spa y Bienestar';
-                    case 'tours': return 'Tours';
-                    case 'travel_agency': return 'Agencia de Viaje';
-                    case 'tour_guide': return 'Guía de Turismo';
-                    default: return '';
-                  }
-                };
-
-                return (
-                <Link
-                  key={`${item.type}-${item.id}`}
-                  to={getBusinessUrl(item)}
-                  onMouseEnter={() => setHoveredItemId(`${item.type}-${item.id}`)}
-                  onMouseLeave={() => setHoveredItemId(null)}
-                  className={`group border-2 rounded-2xl overflow-hidden transition-all duration-300 ${
-                    hoveredItemId === `${item.type}-${item.id}`
-                      ? 'border-primary ring-4 ring-primary ring-opacity-30 shadow-2xl scale-[1.02] z-10'
-                      : 'border-gray-200 hover:border-primary hover:shadow-xl'
-                  }`}
-                >
-                  <div className="h-48 bg-gray-200 relative overflow-hidden">
-                    {item.image ? (
-                      <img
-                        src={getImageUrl(item.image)}
-                        alt={item.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-4xl">
-                        {getTypeIcon()}
-                      </div>
-                    )}
-
-                    {/* Badge de tipo */}
-                    <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium text-gray-700 flex items-center gap-1">
-                      <span>{getTypeIcon()}</span>
-                      <span>{getTypeLabel()}</span>
-                    </div>
-
-                    {/* Badge destacado para ratings altos */}
-                    {item.rating >= 4.5 && (
-                      <div className="absolute top-3 right-3 bg-primary px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
-                        <Star size={14} className="fill-white text-white" />
-                        <span className="text-sm font-bold text-white">Destacado</span>
-                      </div>
-                    )}
-
-                    {/* Badge de distancia */}
-                    {item.distance && (
-                      <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium text-gray-700">
-                        A {item.distance} km
-                      </div>
-                    )}
-
-                    {/* Badge de evento gratis */}
-                    {item.type === 'event' && item.isFree && (
-                      <div className="absolute bottom-3 right-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                        GRATIS
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg truncate group-hover:text-primary transition">
-                      {item.name}
-                    </h3>
-                    <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
-                      <MapPin size={14} className="text-primary" />
-                      <span className="truncate">{item.location.city}, {item.location.country}</span>
-                    </div>
-
-                    {/* Rating */}
-                    {item.rating > 0 && (
-                      <div className="flex items-center gap-1 mt-2">
-                        <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium">
-                          {typeof item.rating === 'number' ? item.rating.toFixed(1) : item.rating}
-                        </span>
-                        <span className="text-sm text-gray-600">({item.reviewCount || 0})</span>
-                      </div>
-                    )}
-
-                    {/* Información adicional según tipo */}
-                    <div className="mt-3">
-                      {item.type === 'property' && item.price && (
-                        <>
-                          <span className="text-lg font-bold text-primary-dark">S/{item.price}</span>
-                          <span className="text-gray-600"> / {item.priceLabel}</span>
-                        </>
-                      )}
-
-                      {item.type === 'restaurant' && item.cuisineTypes && item.cuisineTypes.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {item.cuisineTypes.slice(0, 2).map((cuisine, idx) => (
-                            <span key={idx} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
-                              {cuisine}
-                            </span>
-                          ))}
-                          {item.priceRange && (
-                            <span className="text-xs text-gray-600 ml-1">
-                              {'$'.repeat(item.priceRange)}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {item.type === 'event' && item.startDate && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Calendar size={14} className="text-primary" />
-                          <span>{new Date(item.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
-                        </div>
-                      )}
-
-                      {item.type === 'entertainment' && (
-                        <div className="flex items-center gap-2">
-                          {item.coverCharge && (
-                            <span className="text-sm text-gray-600">Cover: S/{item.coverCharge}</span>
-                          )}
-                          {item.priceRange && (
-                            <span className="text-xs text-gray-600">
-                              {'$'.repeat(item.priceRange)}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {item.type === 'spa' && (
-                        <div className="flex items-center gap-2">
-                          {item.description && (
-                            <span className="text-sm text-gray-600 line-clamp-2">{item.description}</span>
-                          )}
-                        </div>
-                      )}
-
-                      {item.type === 'tours' && (
-                        <div className="flex items-center gap-2">
-                          {item.price && (
-                            <span className="text-lg font-bold text-primary-dark">S/{item.price}</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-                );
-              })}
+                  <option value="relevance">Relevancia</option>
+                  <option value="price_asc">Precio ↑</option>
+                  <option value="price_desc">Precio ↓</option>
+                  <option value="rating">Mejor valorados</option>
+                </select>
+              </div>
+              <div
+                className="flex-1 overflow-y-auto px-3 pb-4 scrollbar-hide"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                onScroll={handleScroll}
+              >
+                <div className="grid grid-cols-2 gap-3">
+                  {results.map((item) => renderResultCard(item, true))}
                 </div>
-
-                {/* Indicador de carga infinita */}
                 {loadingMore && (
-                  <div className="flex justify-center items-center py-8">
-                    <Loader2 className="animate-spin text-primary" size={32} />
-                    <span className="ml-3 text-gray-600">Cargando más resultados...</span>
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="animate-spin text-primary" size={24} />
                   </div>
                 )}
-
-                {/* Mensaje de fin de resultados */}
-                {!hasMore && results.length > 0 && (
-                  <div className="text-center py-8 text-gray-500 text-sm">
+                {!hasMore && (
+                  <div className="text-center py-4 text-gray-500 text-xs">
                     ✓ Has visto todos los resultados ({totalResults})
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Mapa lateral sticky - 100% altura */}
-            {showMap && (
-              <div className="w-1/2 h-full relative">
-                <PropertiesMap
-                  properties={results.filter(item => item.location?.latitude && item.location?.longitude).map(item => {
-                    const uniqueId = `${item.type}-${item.id}`;
-                    return {
-                      ...item,
-                      id: uniqueId, // ID único por tipo (debe sobrescribir el original)
-                      addressLatitude: item.location.latitude,
-                      addressLongitude: item.location.longitude,
-                      addressCity: item.location.city,
-                      addressCountry: item.location.country,
-                      price: item.price || 0, // Asegurar que price esté presente
-                    };
-                  })}
-                  hoveredPropertyId={hoveredItemId}
-                  onMarkerHover={setHoveredItemId}
-                />
+            {/* ESCRITORIO: lista + mapa lado a lado 50/50 */}
+            <div className="hidden lg:flex h-full">
+              <div
+                className={showMap ? 'w-1/2 overflow-y-scroll scrollbar-hide' : 'w-full overflow-y-scroll scrollbar-hide'}
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                onScroll={handleScroll}
+              >
+                <div className="max-w-screen-2xl mx-auto px-6 py-6">
+                  <div
+                    className={
+                      viewMode === 'grid'
+                        ? showMap
+                          ? 'grid grid-cols-1 lg:grid-cols-2 gap-5 relative'
+                          : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative'
+                        : 'space-y-4'
+                    }
+                  >
+                    {results.map((item) => renderResultCard(item))}
+                  </div>
+
+                  {loadingMore && (
+                    <div className="flex justify-center items-center py-8">
+                      <Loader2 className="animate-spin text-primary" size={32} />
+                      <span className="ml-3 text-gray-600">Cargando más resultados...</span>
+                    </div>
+                  )}
+
+                  {!hasMore && results.length > 0 && (
+                    <div className="text-center py-8 text-gray-500 text-sm">
+                      ✓ Has visto todos los resultados ({totalResults})
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
+
+              {showMap && (
+                <div className="w-1/2 h-full relative">
+                  <PropertiesMap
+                    properties={mapProperties}
+                    hoveredPropertyId={hoveredItemId}
+                    onMarkerHover={setHoveredItemId}
+                  />
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>
+
+      {/* Sheet de filtros - móvil */}
+      {showMobileFilters && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-black/50 flex items-end">
+          <div className="bg-white w-full rounded-t-2xl max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-4 py-3 border-b sticky top-0 bg-white">
+              <h3 className="font-semibold">Filtros de búsqueda</h3>
+              <button onClick={() => setShowMobileFilters(false)} className="p-1">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Ubicación</label>
+                <div className="flex gap-1.5">
+                  <div className="flex-1">
+                    <LocationAutocomplete value={location} onSelect={handleLocationSelect} placeholder="Ciudad o distrito..." />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleUseMyLocation}
+                    disabled={locatingMe}
+                    className="flex items-center justify-center w-10 h-10 border rounded-lg text-primary disabled:opacity-50 flex-shrink-0"
+                  >
+                    {locatingMe ? <Loader2 size={16} className="animate-spin" /> : <Locate size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Categoría</label>
+                <select
+                  value={filters.category}
+                  onChange={(e) => handleFilterChange('category', e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="all">Todos</option>
+                  <option value="hotel">Alojamientos</option>
+                  <option value="restaurant">Restaurantes</option>
+                  <option value="tours">Tours y Excursiones</option>
+                </select>
+              </div>
+
+              {filters.category === 'tours' && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
+                  <select
+                    value={filters.businessType}
+                    onChange={(e) => handleFilterChange('businessType', e.target.value)}
+                    className="w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">Agencias y guías</option>
+                    <option value="travel_agency">Agencias de Viaje</option>
+                    <option value="tour_guide">Guías de Turismo</option>
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Rating mínimo</label>
+                <select
+                  value={filters.minRating}
+                  onChange={(e) => handleFilterChange('minRating', e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">Cualquiera</option>
+                  <option value="4.5">4.5+</option>
+                  <option value="4.0">4.0+</option>
+                  <option value="3.5">3.5+</option>
+                  <option value="3.0">3.0+</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Precio mín.</label>
+                  <input
+                    type="number"
+                    value={filters.minPrice}
+                    onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                    placeholder="S/ Min"
+                    min="0"
+                    className="w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Precio máx.</label>
+                  <input
+                    type="number"
+                    value={filters.maxPrice}
+                    onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                    placeholder="S/ Max"
+                    min="0"
+                    className="w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 p-4 border-t sticky bottom-0 bg-white">
+              {hasActiveFilters() && (
+                <button
+                  onClick={clearFilters}
+                  className="flex-1 py-2.5 border rounded-lg text-sm font-medium text-gray-700"
+                >
+                  Limpiar
+                </button>
+              )}
+              <button
+                onClick={() => setShowMobileFilters(false)}
+                className="flex-1 py-2.5 bg-primary text-white rounded-lg text-sm font-medium"
+              >
+                Ver {totalResults > 0 ? totalResults : results.length} resultados
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

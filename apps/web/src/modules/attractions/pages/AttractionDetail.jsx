@@ -4,6 +4,7 @@ import { MapPin, Calendar, Eye, ArrowLeft, Share2, Heart } from 'lucide-react';
 import api, { getImageUrl } from '../../../services/api';
 import { useSidebar } from '../../../contexts/SidebarContext';
 import ReelsSidebar from '../../../components/social/ReelsSidebar';
+import AttractionLocationMap from '../components/AttractionLocationMap';
 
 const CATEGORIES = {
   naturaleza: { label: 'Naturaleza', emoji: '🌿', color: 'green' },
@@ -343,28 +344,14 @@ function AttractionDetail() {
             {attraction.latitude && attraction.longitude && (
               <div className="bg-white rounded-lg p-6 shadow-sm sticky top-24">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Ubicación</h3>
-                <div className="h-64 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
-                  <MapPin size={48} className="text-gray-400" />
-                  <div className="ml-2 text-sm text-gray-600">
-                    <p>Lat: {attraction.latitude}</p>
-                    <p>Lng: {attraction.longitude}</p>
-                  </div>
-                </div>
-                {attraction.city && (
-                  <div className="text-sm text-gray-600">
-                    <p className="font-medium">{attraction.city}</p>
-                    {attraction.region && <p>{attraction.region}</p>}
-                    {attraction.country && <p>{attraction.country}</p>}
-                  </div>
-                )}
-                <a
-                  href={`https://www.google.com/maps?q=${attraction.latitude},${attraction.longitude}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 block w-full bg-primary text-white text-center py-2 rounded-lg hover:bg-primary-dark transition"
-                >
-                  Ver en Google Maps
-                </a>
+                <AttractionLocationMap
+                  latitude={attraction.latitude}
+                  longitude={attraction.longitude}
+                  title={attraction.title}
+                  city={attraction.city}
+                  region={attraction.region}
+                  country={attraction.country}
+                />
               </div>
             )}
 

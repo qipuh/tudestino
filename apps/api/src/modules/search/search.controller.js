@@ -479,6 +479,7 @@ export const searchAll = async (req, res) => {
       longitude,
       radius = 50,
       category,  // hotel, restaurant, event, entertainment, all
+      businessType, // sub-filtro dentro de 'tours': travel_agency, tour_guide
       minRating,
       sortBy = 'relevance',
       page = 1,
@@ -525,6 +526,26 @@ export const searchAll = async (req, res) => {
           stateField ? { [stateField]: { [Op.like]: `%${location}%` } } : null
         ].filter(Boolean)
       };
+    };
+
+    // Filtro de ubicación en JS para negocios de la tabla `businesses` - su
+    // dirección vive en una columna JSON, así que a diferencia de Property
+    // (columnas planas addressCity/addressState) no se puede filtrar en el
+    // WHERE de Sequelize sin JSON_EXTRACT. Antes esto se ignoraba por
+    // completo para hotel/restaurant/entertainment/spa/tours: el parámetro
+    // "location" no tenía ningún efecto en esas categorías.
+    const matchesLocation = (addressData) => {
+      if (!location) return true;
+      if (!addressData) return false;
+      const haystack = [addressData.city, addressData.state, addressData.country]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return location
+        .split(',')
+        .map((part) => part.trim().toLowerCase())
+        .filter(Boolean)
+        .some((part) => haystack.includes(part));
     };
 
     // Buscar en Properties (Hoteles/Alojamientos) si category es 'hotel', 'property', 'all' o no está definido
@@ -610,6 +631,7 @@ export const searchAll = async (req, res) => {
         results = results.concat(restaurants.map(r => {
           const data = r.toJSON();
           const addressData = typeof data.address === 'string' ? JSON.parse(data.address) : data.address;
+          if (!matchesLocation(addressData)) return null;
           let distance = null;
 
           if (lat && lng && addressData?.latitude && addressData?.longitude) {
@@ -634,7 +656,7 @@ export const searchAll = async (req, res) => {
             distance: distance ? Math.round(distance * 10) / 10 : null,
             url: `/businesses/${data.id}`
           };
-        }));
+        }).filter(Boolean));
       } catch (error) {
         console.error('Error fetching restaurants:', error.message);
       }
@@ -684,6 +706,7 @@ export const searchAll = async (req, res) => {
             addressData = {};
           }
 
+          if (!matchesLocation(addressData)) return null;
           let distance = null;
 
           if (lat && lng && addressData?.latitude && addressData?.longitude) {
@@ -711,7 +734,7 @@ export const searchAll = async (req, res) => {
             distance: distance ? Math.round(distance * 10) / 10 : null,
             url: `/businesses/${data.id}`
           };
-        }));
+        }).filter(Boolean));
       } catch (error) {
         console.error('Error fetching hotels:', error.message);
       }
@@ -793,6 +816,7 @@ export const searchAll = async (req, res) => {
         results = results.concat(entertainment.map(e => {
           const data = e.toJSON();
           const addressData = typeof data.address === 'string' ? JSON.parse(data.address) : data.address;
+          if (!matchesLocation(addressData)) return null;
           let distance = null;
 
           if (lat && lng && addressData?.latitude && addressData?.longitude) {
@@ -817,7 +841,7 @@ export const searchAll = async (req, res) => {
             distance: distance ? Math.round(distance * 10) / 10 : null,
             url: `/businesses/${data.id}`
           };
-        }));
+        }).filter(Boolean));
       } catch (error) {
         console.error('Error fetching entertainment:', error.message);
       }
@@ -845,6 +869,7 @@ export const searchAll = async (req, res) => {
         results = results.concat(spas.map(s => {
           const data = s.toJSON();
           const addressData = typeof data.address === 'string' ? JSON.parse(data.address) : data.address;
+          if (!matchesLocation(addressData)) return null;
           let distance = null;
 
           if (lat && lng && addressData?.latitude && addressData?.longitude) {
@@ -869,19 +894,25 @@ export const searchAll = async (req, res) => {
             distance: distance ? Math.round(distance * 10) / 10 : null,
             url: `/businesses/${data.id}`
           };
-        }));
+        }).filter(Boolean));
       } catch (error) {
         console.error('Error fetching spa:', error.message);
       }
     }
 
-    // Buscar en Tours desde businesses table
-    if (!category || category === 'all' || category === 'tours') {
+    // Buscar en Tours/Agencias de viaje/Guías desde businesses table - los
+    // importados desde MINCETUR quedan guardados como businessType
+    // 'travel_agency'/'tour_guide', no 'tours', así que antes nunca
+    // aparecían aquí sin importar el filtro de ubicación.
+    if (!category || category === 'all' || category === 'tours' || category === 'travel_agency' || category === 'tour_guide') {
       try {
+        const toursTypes = ['tours', 'travel_agency', 'tour_guide'];
         const toursWhere = {
           status: 'active',
           isActive: true,
-          businessType: 'tours'
+          businessType: toursTypes.includes(businessType)
+            ? businessType
+            : { [Op.in]: toursTypes }
         };
 
         if (minRating) {
@@ -897,6 +928,7 @@ export const searchAll = async (req, res) => {
         results = results.concat(toursBusinesses.map(t => {
           const data = t.toJSON();
           const addressData = typeof data.address === 'string' ? JSON.parse(data.address) : data.address;
+          if (!matchesLocation(addressData)) return null;
           let distance = null;
 
           if (lat && lng && addressData?.latitude && addressData?.longitude) {
@@ -905,7 +937,7 @@ export const searchAll = async (req, res) => {
 
           return {
             id: data.id,
-            type: 'tours',
+            type: data.businessType === 'tour_guide' ? 'tour_guide' : data.businessType === 'travel_agency' ? 'travel_agency' : 'tours',
             name: data.name,
             description: data.description,
             image: data.logo || data.coverImage,
@@ -921,7 +953,7 @@ export const searchAll = async (req, res) => {
             distance: distance ? Math.round(distance * 10) / 10 : null,
             url: `/businesses/${data.id}`
           };
-        }));
+        }).filter(Boolean));
       } catch (error) {
         console.error('Error fetching tours businesses:', error.message);
       }

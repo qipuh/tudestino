@@ -3,6 +3,7 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { MapPin, Star, SlidersHorizontal, Grid, List, Loader2, Map as MapIcon, Calendar, Search } from 'lucide-react';
 import api, { getImageUrl } from '@services/api';
 import PropertiesMap from '@components/PropertiesMap';
+import LocationAutocomplete from '@components/LocationAutocomplete';
 
 function SearchResultsPage() {
   const [searchParams] = useSearchParams();
@@ -142,6 +143,22 @@ function SearchResultsPage() {
 
   const handleFilterChange = (name, value) => {
     setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Cambia de ciudad/departamento/distrito sin volver al home - actualiza
+  // la URL (location/lat/lng) y el useEffect existente vuelve a buscar.
+  const handleLocationSelect = ({ label, lat, lon }) => {
+    const params = new URLSearchParams(searchParams);
+    if (label) {
+      params.set('location', label);
+      params.set('lat', lat);
+      params.set('lng', lon);
+    } else {
+      params.delete('location');
+      params.delete('lat');
+      params.delete('lng');
+    }
+    navigate(`/search?${params.toString()}`);
   };
 
   const clearFilters = () => {
@@ -296,102 +313,103 @@ function SearchResultsPage() {
             </div>
           </div>
 
-          {/* Panel de filtros - COMPACTO */}
-          {showFilters && (
-            <div className="bg-gray-50 rounded-lg p-4 mt-3 border">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-gray-700">Filtros de búsqueda</h3>
-                {hasActiveFilters() && (
-                  <button
-                    onClick={clearFilters}
-                    className="text-xs text-primary hover:text-primary-dark font-medium transition"
-                  >
-                    Limpiar filtros
-                  </button>
-                )}
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Categoría
-                  </label>
-                  <select
-                    value={filters.category}
-                    onChange={(e) => handleFilterChange('category', e.target.value)}
-                    className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="all">Todos</option>
-                    <option value="hotel">Alojamientos</option>
-                    <option value="restaurant">Restaurantes</option>
-                    <option value="event">Eventos</option>
-                    <option value="entertainment">Entretenimiento</option>
-                    <option value="spa">Spa y Bienestar</option>
-                    <option value="tours">Tours y Excursiones</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Tipo de negocio
-                  </label>
-                  <select
-                    value={filters.businessType}
-                    onChange={(e) => handleFilterChange('businessType', e.target.value)}
-                    className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="">Todos</option>
-                    <option value="tour">Agencias de Tours</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Rating mínimo
-                  </label>
-                  <select
-                    value={filters.minRating}
-                    onChange={(e) => handleFilterChange('minRating', e.target.value)}
-                    className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="">Cualquiera</option>
-                    <option value="4.5">4.5+</option>
-                    <option value="4.0">4.0+</option>
-                    <option value="3.5">3.5+</option>
-                    <option value="3.0">3.0+</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Precio mínimo
-                  </label>
-                  <input
-                    type="number"
-                    value={filters.minPrice}
-                    onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                    placeholder="S/ Min"
-                    min="0"
-                    className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Precio máximo
-                  </label>
-                  <input
-                    type="number"
-                    value={filters.maxPrice}
-                    onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                    placeholder="S/ Max"
-                    min="0"
-                    className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Contenido principal - Resultados con Mapa */}
+      {/* Contenido principal - Filtros (sidebar) + Resultados + Mapa */}
       <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar de filtros - togglable con el botón "Filtros" de arriba */}
+        {showFilters && (
+          <div className="w-72 flex-shrink-0 border-r bg-white overflow-y-auto p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-700">Filtros de búsqueda</h3>
+              {hasActiveFilters() && (
+                <button
+                  onClick={clearFilters}
+                  className="text-xs text-primary hover:text-primary-dark font-medium transition"
+                >
+                  Limpiar
+                </button>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Ubicación</label>
+              <LocationAutocomplete value={location} onSelect={handleLocationSelect} />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Categoría</label>
+              <select
+                value={filters.category}
+                onChange={(e) => handleFilterChange('category', e.target.value)}
+                className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="all">Todos</option>
+                <option value="hotel">Alojamientos</option>
+                <option value="restaurant">Restaurantes</option>
+                <option value="event">Eventos</option>
+                <option value="entertainment">Entretenimiento</option>
+                <option value="spa">Spa y Bienestar</option>
+                <option value="tours">Tours y Excursiones</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de negocio</label>
+              <select
+                value={filters.businessType}
+                onChange={(e) => handleFilterChange('businessType', e.target.value)}
+                className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">Todos</option>
+                <option value="travel_agency">Agencias de Viaje</option>
+                <option value="tour_guide">Guías de Turismo</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Rating mínimo</label>
+              <select
+                value={filters.minRating}
+                onChange={(e) => handleFilterChange('minRating', e.target.value)}
+                className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">Cualquiera</option>
+                <option value="4.5">4.5+</option>
+                <option value="4.0">4.0+</option>
+                <option value="3.5">3.5+</option>
+                <option value="3.0">3.0+</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Precio mín.</label>
+                <input
+                  type="number"
+                  value={filters.minPrice}
+                  onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                  placeholder="S/ Min"
+                  min="0"
+                  className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Precio máx.</label>
+                <input
+                  type="number"
+                  value={filters.maxPrice}
+                  onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                  placeholder="S/ Max"
+                  min="0"
+                  className="w-full px-2 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {results.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
@@ -432,6 +450,8 @@ function SearchResultsPage() {
                     case 'entertainment': return '🎵';
                     case 'spa': return '💆';
                     case 'tours': return '🗺️';
+                    case 'travel_agency': return '🧳';
+                    case 'tour_guide': return '🧭';
                     default: return '📍';
                   }
                 };
@@ -445,6 +465,8 @@ function SearchResultsPage() {
                     case 'entertainment': return 'Entretenimiento';
                     case 'spa': return 'Spa y Bienestar';
                     case 'tours': return 'Tours';
+                    case 'travel_agency': return 'Agencia de Viaje';
+                    case 'tour_guide': return 'Guía de Turismo';
                     default: return '';
                   }
                 };

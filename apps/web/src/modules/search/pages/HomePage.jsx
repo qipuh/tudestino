@@ -296,20 +296,21 @@ function HomePage() {
                         </div>
                       )}
                       <div className="mt-3 pt-2 border-t border-gray-100">
-                        {isProperty && item.price && (
+                        {isProperty && item.price ? (
                           <>
                             <span className="text-base sm:text-lg font-bold text-primary-dark">S/ {item.price}</span>
                             <span className="text-xs sm:text-sm text-gray-600"> / noche</span>
                           </>
-                        )}
-                        {!isProperty && item.priceRange && (
-                          <span className="text-sm text-gray-600">{'S/'.repeat(item.priceRange)}</span>
-                        )}
-                        {isProperty && !item.price && (
+                        ) : isProperty && getBusinessPrice(item) ? (
                           <>
                             <span className="text-base sm:text-lg font-bold text-primary-dark">S/ {getBusinessPrice(item)}</span>
                             <span className="text-xs sm:text-sm text-gray-600"> / noche</span>
                           </>
+                        ) : isProperty ? (
+                          <span className="text-xs sm:text-sm text-gray-500">Consultar precio</span>
+                        ) : null}
+                        {!isProperty && item.priceRange && (
+                          <span className="text-sm text-gray-600">{'S/'.repeat(item.priceRange)}</span>
                         )}
                       </div>
                     </div>
@@ -575,11 +576,13 @@ function HomePage() {
                           </div>
                         )}
                         <div className="mt-3 pt-2 border-t border-gray-100">
-                          {isProperty ? (
+                          {isProperty && (item.price || getBusinessPrice(item)) ? (
                             <>
                               <span className="text-base sm:text-lg font-bold text-primary-dark">S/ {item.price || getBusinessPrice(item)}</span>
                               <span className="text-xs sm:text-sm text-gray-600"> / noche</span>
                             </>
+                          ) : isProperty ? (
+                            <span className="text-xs sm:text-sm text-gray-500">Consultar precio</span>
                           ) : item.priceRange ? (
                             <span className="text-xs sm:text-sm text-gray-600">{'S/'.repeat(item.priceRange)}</span>
                           ) : null}

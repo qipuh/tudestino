@@ -196,6 +196,61 @@ export const getOrsApiKey = async () => {
   return getSetting('ors_api_key', process.env.ORS_API_KEY || null);
 };
 
+// ==================== LUGARES (Geoapify + Foursquare) ====================
+// Usadas server-side para buscar hoteles/restaurantes reales al crear
+// propiedades - nunca se exponen al cliente (web/mobile llaman a nuestros
+// propios endpoints, nunca a Geoapify/Foursquare directo).
+
+export const getPlacesSettings = async () => {
+  const [geoapifyApiKey, fsqServiceApiKey, fsqClientId, fsqClientSecret, fsqApiKey] = await Promise.all([
+    getSetting('geoapify_api_key', process.env.GEOAPIFY_API_KEY || null),
+    getSetting('foursquare_service_api_key', process.env.FOURSQUARE_SERVICE_API_KEY || null),
+    getSetting('foursquare_client_id', process.env.FOURSQUARE_CLIENT_ID || null),
+    getSetting('foursquare_client_secret', process.env.FOURSQUARE_CLIENT_SECRET || null),
+    getSetting('foursquare_api_key', process.env.FOURSQUARE_API_KEY || null),
+  ]);
+
+  return {
+    geoapifyApiKeyMasked: mask(geoapifyApiKey),
+    geoapifyApiKeyConfigured: !!geoapifyApiKey,
+    foursquareServiceApiKeyMasked: mask(fsqServiceApiKey),
+    foursquareServiceApiKeyConfigured: !!fsqServiceApiKey,
+    foursquareClientIdMasked: mask(fsqClientId),
+    foursquareClientIdConfigured: !!fsqClientId,
+    foursquareClientSecretMasked: mask(fsqClientSecret),
+    foursquareClientSecretConfigured: !!fsqClientSecret,
+    foursquareApiKeyMasked: mask(fsqApiKey),
+    foursquareApiKeyConfigured: !!fsqApiKey,
+  };
+};
+
+export const updatePlacesSettings = async ({
+  geoapifyApiKey,
+  foursquareServiceApiKey,
+  foursquareClientId,
+  foursquareClientSecret,
+  foursquareApiKey,
+}) => {
+  if (geoapifyApiKey) await setSetting('geoapify_api_key', geoapifyApiKey);
+  if (foursquareServiceApiKey) await setSetting('foursquare_service_api_key', foursquareServiceApiKey);
+  if (foursquareClientId) await setSetting('foursquare_client_id', foursquareClientId);
+  if (foursquareClientSecret) await setSetting('foursquare_client_secret', foursquareClientSecret);
+  if (foursquareApiKey) await setSetting('foursquare_api_key', foursquareApiKey);
+  return getPlacesSettings();
+};
+
+/**
+ * Credenciales reales (sin enmascarar) para llamar a Geoapify/Foursquare -
+ * solo se usan server-side.
+ */
+export const getPlacesConfig = async () => {
+  const [geoapifyApiKey, foursquareServiceApiKey] = await Promise.all([
+    getSetting('geoapify_api_key', process.env.GEOAPIFY_API_KEY || null),
+    getSetting('foursquare_service_api_key', process.env.FOURSQUARE_SERVICE_API_KEY || null),
+  ]);
+  return { geoapifyApiKey, foursquareServiceApiKey };
+};
+
 // Pública - web/mobile la usan para mostrar contacto de soporte real en
 // vez de tenerlo hardcodeado en el código cliente.
 export const getSupportContact = async () => {

@@ -40,4 +40,14 @@ export const settingsService = {
     const response = await api.put('/settings/routing', payload);
     return response.data;
   },
+
+  getPlacesSettings: async () => {
+    const response = await api.get('/settings/places');
+    return response.data;
+  },
+
+  updatePlacesSettings: async (payload) => {
+    const response = await api.put('/settings/places', payload);
+    return response.data;
+  },
 };

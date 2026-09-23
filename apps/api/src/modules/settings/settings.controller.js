@@ -140,6 +140,24 @@ export const updateRoutingSettings = async (req, res) => {
   }
 };
 
+export const getPlacesSettings = async (req, res) => {
+  try {
+    const settings = await settingsService.getPlacesSettings();
+    res.json({ success: true, data: settings });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updatePlacesSettings = async (req, res) => {
+  try {
+    const settings = await settingsService.updatePlacesSettings(req.body);
+    res.json({ success: true, message: 'Credenciales de lugares actualizadas', data: settings });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // Pública - para que web/mobile muestren contacto de soporte real
 export const getSupportContact = async (req, res) => {
   try {

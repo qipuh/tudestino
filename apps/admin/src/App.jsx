@@ -12,6 +12,8 @@ import SlidersManagement from '@modules/sliders/SlidersManagement';
 import AttractionsManagement from '@modules/attractions/AttractionsManagement';
 import PaymentSettings from '@modules/settings/PaymentSettings';
 import RoutingSettings from '@modules/settings/RoutingSettings';
+import PlacesSettings from '@modules/settings/PlacesSettings';
+import PlacesImport from '@modules/places/PlacesImport';
 import CommunicationsSettings from '@modules/communications/CommunicationsSettings';
 import LoginPage from './pages/LoginPage';
 import useAuthStore from './store/authStore';
@@ -59,6 +61,8 @@ function App() {
         <Route path="attractions" element={<AttractionsManagement />} />
         <Route path="settings/payment" element={<PaymentSettings />} />
         <Route path="settings/routing" element={<RoutingSettings />} />
+        <Route path="settings/places" element={<PlacesSettings />} />
+        <Route path="places/import" element={<PlacesImport />} />
         <Route path="settings/communications" element={<CommunicationsSettings />} />
       </Route>
       {/* Catch-all route para rutas no encontradas */}

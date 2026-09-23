@@ -14,6 +14,8 @@ import {
   updateWhatsAppSettings,
   getRoutingSettings,
   updateRoutingSettings,
+  getPlacesSettings,
+  updatePlacesSettings,
   getSupportContact,
 } from './settings.controller.js';
 
@@ -36,5 +38,7 @@ router.get('/whatsapp', getWhatsAppSettings);
 router.put('/whatsapp', updateWhatsAppSettings);
 router.get('/routing', getRoutingSettings);
 router.put('/routing', updateRoutingSettings);
+router.get('/places', getPlacesSettings);
+router.put('/places', updatePlacesSettings);
 
 export default router;

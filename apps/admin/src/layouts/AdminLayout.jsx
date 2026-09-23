@@ -18,7 +18,8 @@ import {
   MapPin,
   CreditCard,
   MessageCircle,
-  Map
+  Map,
+  Search
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 
@@ -40,6 +41,8 @@ function AdminLayout() {
     { path: '/attractions', icon: MapPin, label: 'Atractivos Turísticos' },
     { path: '/settings/payment', icon: CreditCard, label: 'Pasarela de pago' },
     { path: '/settings/routing', icon: Map, label: 'Ruteo (OpenRouteService)' },
+    { path: '/places/import', icon: Search, label: 'Importar hoteles/restaurantes' },
+    { path: '/settings/places', icon: MapPin, label: 'Lugares (Geoapify/Foursquare)' },
     { path: '/settings/communications', icon: MessageCircle, label: 'Comunicaciones' },
   ];
 

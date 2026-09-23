@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { MapPin, Star, SlidersHorizontal, Grid, List, Loader2, Map as MapIcon, Calendar, Locate, X } from 'lucide-react';
 import api, { getImageUrl } from '@services/api';
@@ -24,12 +24,15 @@ function SearchResultsPage() {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list' | 'map'
   const [showFilters, setShowFilters] = useState(true); // Mostrar filtros por defecto
   const [hoveredItemId, setHoveredItemId] = useState(null);
+  const [selectedItemId, setSelectedItemId] = useState(null);
   const [showMap, setShowMap] = useState(true); // Mostrar mapa por defecto
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [totalResults, setTotalResults] = useState(0);
   const [locatingMe, setLocatingMe] = useState(false);
-  const [sheetExpanded, setSheetExpanded] = useState(false); // bottom sheet móvil
+  const [sheetHeightVh, setSheetHeightVh] = useState(32); // alto del bottom sheet móvil, arrastrable
+  const [sheetDragging, setSheetDragging] = useState(false);
+  const sheetDragRef = useRef({ startY: 0, startHeight: 32, moved: false });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Filtros adicionales
@@ -110,8 +113,12 @@ function SearchResultsPage() {
 
       if (response.success && response.data) {
         const newResults = response.data.results || [];
-        const total = response.data.total || newResults.length;
-        const totalPages = Math.ceil(total / 24);
+        // El total real vive en pagination.total, no en la raíz - leerlo
+        // de response.data.total (undefined) hacía que "total" cayera
+        // siempre a newResults.length (24), mostrando "has visto todos
+        // los resultados (24)" sin importar cuántos hubiera en realidad.
+        const total = response.data.pagination?.total ?? newResults.length;
+        const totalPages = response.data.pagination?.totalPages ?? Math.ceil(total / 24);
 
         // Debug: Log resultados de búsqueda
         console.log('🔍 Search Results Debug:', {
@@ -212,6 +219,45 @@ function SearchResultsPage() {
     );
   };
 
+  // Click en un marcador del mapa - resalta y hace scroll a ese negocio en
+  // el listado (móvil: expande el sheet para que se vea) en vez de navegar
+  // directo al detalle, así el usuario puede seguir comparando antes de
+  // entrar a uno.
+  const handleMarkerClick = (property) => {
+    setSelectedItemId(property.id);
+    setSheetHeightVh((h) => (h < 50 ? 60 : h));
+    requestAnimationFrame(() => {
+      const el =
+        document.getElementById(`card-m-${property.id}`) || document.getElementById(`card-d-${property.id}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  };
+
+  // Arrastre real del bottom sheet móvil, tomando el borde superior
+  // (handle). Pointer Events unifica mouse/touch y setPointerCapture
+  // mantiene el drag activo aunque el dedo/cursor salga del handle.
+  const handleSheetPointerDown = (e) => {
+    sheetDragRef.current = { startY: e.clientY, startHeight: sheetHeightVh, moved: false };
+    setSheetDragging(true);
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+
+  const handleSheetPointerMove = (e) => {
+    if (!sheetDragging) return;
+    const deltaY = sheetDragRef.current.startY - e.clientY; // arrastrar hacia arriba = positivo
+    if (Math.abs(deltaY) > 4) sheetDragRef.current.moved = true;
+    const deltaVh = (deltaY / window.innerHeight) * 100;
+    setSheetHeightVh(Math.min(90, Math.max(14, sheetDragRef.current.startHeight + deltaVh)));
+  };
+
+  const handleSheetPointerUp = () => {
+    setSheetDragging(false);
+    if (!sheetDragRef.current.moved) {
+      // fue un tap, no un arrastre: alterna entre peek y expandido
+      setSheetHeightVh((h) => (h > 50 ? 32 : 90));
+    }
+  };
+
   const clearFilters = () => {
     setFilters({
       category: 'all',
@@ -289,11 +335,12 @@ function SearchResultsPage() {
   const renderResultCard = (item, compact = false) => (
     <Link
       key={`${item.type}-${item.id}`}
+      id={`card-${compact ? 'm' : 'd'}-${item.type}-${item.id}`}
       to={getBusinessUrl(item)}
       onMouseEnter={() => setHoveredItemId(`${item.type}-${item.id}`)}
       onMouseLeave={() => setHoveredItemId(null)}
       className={`group bg-white border rounded-[18px] overflow-hidden transition-all duration-200 ${
-        hoveredItemId === `${item.type}-${item.id}`
+        hoveredItemId === `${item.type}-${item.id}` || selectedItemId === `${item.type}-${item.id}`
           ? 'border-primary shadow-lg'
           : 'border-line hover:border-primary hover:shadow-md'
       }`}
@@ -656,16 +703,27 @@ function SearchResultsPage() {
               <PropertiesMap
                 properties={mapProperties}
                 hoveredPropertyId={hoveredItemId}
+                selectedPropertyId={selectedItemId}
                 onMarkerHover={setHoveredItemId}
+                onMarkerClick={handleMarkerClick}
               />
             </div>
             <div
-              className="lg:hidden absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl flex flex-col z-10 transition-[height] duration-300 ease-out"
-              style={{ height: sheetExpanded ? '90vh' : '32vh', boxShadow: '0 -4px 16px rgba(0,0,0,0.15)' }}
+              className={`lg:hidden absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl flex flex-col z-10 ${
+                sheetDragging ? '' : 'transition-[height] duration-200 ease-out'
+              }`}
+              style={{ height: `${sheetHeightVh}vh`, boxShadow: '0 -4px 16px rgba(0,0,0,0.15)' }}
             >
-              <button type="button" onClick={() => setSheetExpanded((v) => !v)} className="flex-shrink-0 w-full pt-2.5 pb-2">
+              <div
+                onPointerDown={handleSheetPointerDown}
+                onPointerMove={handleSheetPointerMove}
+                onPointerUp={handleSheetPointerUp}
+                onPointerCancel={handleSheetPointerUp}
+                className="flex-shrink-0 w-full pt-2.5 pb-2 cursor-grab touch-none"
+                style={{ touchAction: 'none' }}
+              >
                 <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto" />
-              </button>
+              </div>
               <div className="flex items-center justify-between px-4 pb-1.5 flex-shrink-0">
                 <span className="text-sm font-semibold text-ink">
                   {loading
@@ -750,7 +808,9 @@ function SearchResultsPage() {
                   <PropertiesMap
                     properties={mapProperties}
                     hoveredPropertyId={hoveredItemId}
+                    selectedPropertyId={selectedItemId}
                     onMarkerHover={setHoveredItemId}
+                    onMarkerClick={handleMarkerClick}
                   />
                 </div>
               )}

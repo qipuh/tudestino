@@ -432,6 +432,22 @@ function BusinessServices() {
                         Eliminar
                       </button>
                     </div>
+                    {business.businessType === 'hotel' && (
+                      <button
+                        onClick={() => navigate(`/business/${id}/rooms/${room.id}/units`)}
+                        className="w-full mt-2 border border-primary text-primary py-2 px-4 rounded-lg hover:bg-primary/5 transition text-sm font-medium"
+                      >
+                        Gestionar unidades físicas
+                      </button>
+                    )}
+                    {business.businessType === 'hotel' && (
+                      <button
+                        onClick={() => navigate(`/business/${id}/rooms/${room.id}/rates`)}
+                        className="w-full mt-2 border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 transition text-sm font-medium"
+                      >
+                        Gestionar tarifas
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

@@ -34,7 +34,7 @@ export const getMyBookings = async (req, res) => {
     let bookings;
 
     // Si el usuario es HOST, buscar reservas de sus propiedades
-    if (userRole === 'host' || userRole === 'admin') {
+    if (userRole === 'host' || userRole === 'business_owner' || userRole === 'admin') {
       bookings = await bookingsService.getHostBookings(userId);
     } else {
       // Si es GUEST, buscar sus propias reservas

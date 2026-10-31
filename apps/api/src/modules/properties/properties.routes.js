@@ -21,6 +21,13 @@ import {
   getRooms,
   getRoomById,
 } from './room.controller.js';
+import {
+  createRoomUnit,
+  bulkCreateRoomUnits,
+  getRoomUnits,
+  updateRoomUnit,
+  deleteRoomUnit,
+} from './room-unit.controller.js';
 
 const router = express.Router();
 
@@ -64,22 +71,29 @@ router.post('/', authenticate, authorize('host', 'admin', 'business_owner'), cre
 // RUTAS CON PARÁMETROS AL FINAL
 // Rutas para propiedad completa con habitaciones
 router.get('/:id/full', getPropertyFull);
-router.put('/:id/full', authenticate, authorize('host', 'admin'), updatePropertyFull);
+router.put('/:id/full', authenticate, authorize('host', 'business_owner', 'admin'), updatePropertyFull);
 
 // Rutas para gestión de habitaciones individuales
 router.get('/:propertyId/rooms', getRooms);
 router.get('/:propertyId/rooms/:roomId', getRoomById);
-router.post('/:propertyId/rooms', authenticate, authorize('host', 'admin'), addRoom);
-router.put('/:propertyId/rooms/:roomId', authenticate, authorize('host', 'admin'), updateRoom);
-router.delete('/:propertyId/rooms/:roomId', authenticate, authorize('host', 'admin'), deleteRoom);
+router.post('/:propertyId/rooms', authenticate, authorize('host', 'business_owner', 'admin'), addRoom);
+router.put('/:propertyId/rooms/:roomId', authenticate, authorize('host', 'business_owner', 'admin'), updateRoom);
+router.delete('/:propertyId/rooms/:roomId', authenticate, authorize('host', 'business_owner', 'admin'), deleteRoom);
+
+// Rutas para unidades físicas de habitación (PMS: front-desk / housekeeping)
+router.get('/:propertyId/rooms/:roomId/units', authenticate, authorize('host', 'business_owner', 'admin'), getRoomUnits);
+router.post('/:propertyId/rooms/:roomId/units/bulk', authenticate, authorize('host', 'business_owner', 'admin'), bulkCreateRoomUnits);
+router.post('/:propertyId/rooms/:roomId/units', authenticate, authorize('host', 'business_owner', 'admin'), createRoomUnit);
+router.put('/:propertyId/rooms/:roomId/units/:unitId', authenticate, authorize('host', 'business_owner', 'admin'), updateRoomUnit);
+router.delete('/:propertyId/rooms/:roomId/units/:unitId', authenticate, authorize('host', 'business_owner', 'admin'), deleteRoomUnit);
 
 // Ruta pública: ver detalle de propiedad
 router.get('/:id', getPropertyById);
 
 // Rutas protegidas con parámetros
 // Nueva ruta para actualizar solo configuración (sin tocar habitaciones)
-router.put('/:id', authenticate, authorize('host', 'admin'), updatePropertyConfig);
-router.delete('/:id', authenticate, authorize('host', 'admin'), deleteProperty);
-router.post('/:id/images', authenticate, authorize('host', 'admin'), uploadImages);
+router.put('/:id', authenticate, authorize('host', 'business_owner', 'admin'), updatePropertyConfig);
+router.delete('/:id', authenticate, authorize('host', 'business_owner', 'admin'), deleteProperty);
+router.post('/:id/images', authenticate, authorize('host', 'business_owner', 'admin'), uploadImages);
 
 export default router;

@@ -22,7 +22,11 @@ import {
   ExternalLink,
   Bell,
   LogOut,
-  Send
+  Send,
+  DoorOpen,
+  Sparkles,
+  Receipt,
+  TrendingUp
 } from 'lucide-react';
 import api, { getImageUrl } from '../../../services/api';
 import useAuthStore from '../../../store/authStore';
@@ -142,6 +146,13 @@ function BusinessLayout({ children, activeMenu }) {
     // Mostrar Menú solo para restaurantes y entretenimiento
     ...(business.businessType === 'restaurant' || business.businessType === 'entertainment' ? [
       { to: `/business/${id}/menu`, label: business.businessType === 'entertainment' ? 'Carta' : 'Menú', icon: Utensils, key: 'menu' }
+    ] : []),
+    // Recepción y Housekeeping solo para hoteles (necesitan unidades físicas de habitación)
+    ...(business.businessType === 'hotel' ? [
+      { to: `/business/${id}/front-desk`, label: 'Recepción', icon: DoorOpen, key: 'front-desk' },
+      { to: `/business/${id}/housekeeping`, label: 'Housekeeping', icon: Sparkles, key: 'housekeeping' },
+      { to: `/business/${id}/billing`, label: 'Facturación', icon: Receipt, key: 'billing' },
+      { to: `/business/${id}/revenue`, label: 'Revenue', icon: TrendingUp, key: 'revenue' },
     ] : []),
     { to: `/business/${id}/reservations`, label: 'Reservas', icon: Calendar, key: 'reservations' },
     { to: `/business/${id}/posts`, label: 'Posts', icon: MessageSquare, key: 'posts' },

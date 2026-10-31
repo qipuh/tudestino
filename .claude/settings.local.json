@@ -355,7 +355,19 @@
       "Bash(plink -i \"C:\\\\Users\\\\Edwin\\\\.ssh\\\\tudestino_rsa\" root@38.250.161.113 \"cd /var/www/tudestino && node apps/api/scripts/seed-attractions-15.js\")",
       "Bash(plink -i \"C:\\\\Users\\\\Edwin\\\\.ssh\\\\id_rsa\" root@38.250.161.113 \"cd /var/www/tudestino && git pull origin main\")",
       "Bash(plink -i \"C:\\\\Users\\\\Edwin\\\\.ssh\\\\vivelo_deploy_key\" root@38.250.161.113 \"cd /var/www/tudestino && git pull origin main && node apps/api/scripts/seed-attractions-15.js\")",
-      "Bash(ssh -i ~/.ssh/id_rsa root@38.250.161.113 \"cd /var/www/tudestino && git pull origin main && node apps/api/scripts/seed-attractions-15.js\")"
+      "Bash(ssh -i ~/.ssh/id_rsa root@38.250.161.113 \"cd /var/www/tudestino && git pull origin main && node apps/api/scripts/seed-attractions-15.js\")",
+      "PowerShell(plink -l root -pw \"4D4pptik@A1225\" 38.250.161.113 \"cd /var/www/tudestino && npm list | grep -E 'express|sequelize|mysql' || echo 'Checking PM2 processes...'; pm2 list\" 2>&1)",
+      "PowerShell(head -30)",
+      "PowerShell(plink -l root -pw \"4D4pptik@A1225\" 38.250.161.113 \"pm2 list && echo '---' && curl -s http://localhost:3000/health\" 2>&1)",
+      "PowerShell(plink -l root -pw \"4D4pptik@A1225\" 38.250.161.113 $cmd 2>&1)",
+      "PowerShell(plink -l root -pw \"4D4pptik@A1225\" 38.250.161.113 \"pm2 logs tudestino-api --lines 30 --nostream\" 2>&1)",
+      "PowerShell(plink -l root -pw \"4D4pptik@A1225\" 38.250.161.113 \"pm2 logs tudestino-api --lines 20 --nostream 2>&1 | grep -i 'error\\\\|failed' | tail -5\")",
+      "PowerShell(plink -l root -pw \"4D4pptik@A1225\" 38.250.161.113 \"sed -n '215,230p' /var/www/tudestino/apps/api/src/modules/businesses/business.service.js\")",
+      "PowerShell(plink -l root -pw \"4D4pptik@A1225\" 38.250.161.113 \"curl -s 'http://localhost:3000/api/businesses/search?businessType=hotel' 2>&1 | head -20\")",
+      "PowerShell(plink -l root -pw \"4D4pptik@A1225\" 38.250.161.113 \"pm2 flush && echo 'Logs cleared'\")",
+      "PowerShell(plink -l root -pw \"4D4pptik@A1225\" 38.250.161.113 \"curl -s 'http://localhost:3000/api/businesses/search?businessType=hotel' | jq '{total: .data.total, count: \\(.data.businesses | length\\), first_hotel: .data.businesses[0] | {name, serviceCount: \\(.businessServices | length\\)}}'  2>&1\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "Bash(python check_business.py)"
     ],
     "deny": [],
     "ask": []

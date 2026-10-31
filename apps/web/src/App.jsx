@@ -46,6 +46,12 @@ import RestaurantMenu from '@modules/business/pages/RestaurantMenu';
 import SpaServices from '@modules/business/pages/SpaServices';
 import CreatePropertySimplified from '@modules/business/pages/CreatePropertySimplified';
 import CreateRoomsSimplified from '@modules/business/pages/CreateRoomsSimplified';
+import RoomUnitsManager from '@modules/business/pages/RoomUnitsManager';
+import FrontDesk from '@modules/business/pages/FrontDesk';
+import Housekeeping from '@modules/business/pages/Housekeeping';
+import Billing from '@modules/business/pages/Billing';
+import RateRulesManager from '@modules/business/pages/RateRulesManager';
+import RevenueDashboard from '@modules/business/pages/RevenueDashboard';
 import BusinessTours from '@modules/business/pages/BusinessTours';
 import CreateTourSteps from '@modules/business/pages/CreateTourSteps';
 import TourDetailPage from '@modules/tours/pages/TourDetailPage';
@@ -155,6 +161,12 @@ function App() {
         <Route path="business/:id/spa-services" element={<SpaServices />} />
         <Route path="business/:id/property/create" element={<CreatePropertySimplified />} />
         <Route path="business/:id/property/create-rooms" element={<CreateRoomsSimplified />} />
+        <Route path="business/:id/rooms/:roomId/units" element={<RoomUnitsManager />} />
+        <Route path="business/:id/front-desk" element={<FrontDesk />} />
+        <Route path="business/:id/housekeeping" element={<Housekeeping />} />
+        <Route path="business/:id/billing" element={<Billing />} />
+        <Route path="business/:id/rooms/:roomId/rates" element={<RateRulesManager />} />
+        <Route path="business/:id/revenue" element={<RevenueDashboard />} />
         <Route path="business/:id/tours" element={<BusinessTours />} />
         <Route path="business/:id/tours/create" element={<CreateTourSteps />} />
         <Route path="business/:id/tours/:tourId/edit" element={<CreateTourSteps />} />
